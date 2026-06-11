@@ -37,6 +37,8 @@ public partial class BattleHud : CanvasLayer
 
     [Export, RequiredExport] public ProgressBar SummonBar { get; set; } = null!;
 
+    [Export, RequiredExport] public Label SynergyLabel { get; set; } = null!;
+
     [Export, RequiredExport] public HBoxContainer DeployBar { get; set; } = null!;
 
     [Export, RequiredExport] public HBoxContainer ConduitRow { get; set; } = null!;
@@ -131,6 +133,17 @@ public partial class BattleHud : CanvasLayer
         BreathBar.Value = 100.0 * player.BreathEnergySeconds / config.BreathMaxSeconds;
         SummonBar.Value = 100.0 * player.SummoningProgress / config.SummoningCost;
         SummonBar.Visible = tier >= 4;
+
+        var synergyText = string.Empty;
+        foreach (var element in System.Enum.GetValues<DraconicWars.Sim.Units.Element>())
+        {
+            var synergyTier = ElementSynergies.TierFor(state, _side, element);
+            if (synergyTier > 0)
+            {
+                synergyText += $"{element} {(synergyTier >= 2 ? "II" : "I")}  ";
+            }
+        }
+        SynergyLabel.Text = synergyText;
 
         foreach (var card in _cards)
         {

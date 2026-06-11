@@ -92,10 +92,15 @@ public class CombatTest
     public void AreaAttackHitsAllEnemiesInRange()
     {
         var mage = TestUnits.Mage();
+        // pillar2 takes a different element: two distinct Stone defenders would form a
+        // Stone synergy pair and soak 10% of the area damage.
         var (sim, state) = CreateBattle(
             mage,
             TestUnits.Grunt(id: "pillar", moveSpeed: 0f),
-            TestUnits.Grunt(id: "pillar2", moveSpeed: 0f));
+            TestUnits.Grunt(id: "pillar2", moveSpeed: 0f) with
+            {
+                Element = DraconicWars.Sim.Units.Element.Fire,
+            });
         var caster = Spawn(sim, state, PlayerSide.Left, "mage", 10f);
         var near = Spawn(sim, state, PlayerSide.Right, "pillar", 12f);
         var far = Spawn(sim, state, PlayerSide.Right, "pillar2", 14f);

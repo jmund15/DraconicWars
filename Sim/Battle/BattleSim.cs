@@ -593,6 +593,14 @@ public sealed class BattleSim
             {
                 unit.IFrameTicks--;
             }
+            if (unit.SlowTicks > 0)
+            {
+                unit.SlowTicks--;
+                if (unit.SlowTicks == 0)
+                {
+                    unit.SlowPct = 0f;
+                }
+            }
 
             if (unit.AttackPhase == AttackPhase.None && HasAnyTargetInBand(state, unit))
             {
@@ -631,6 +639,11 @@ public sealed class BattleSim
     private static int ScaledTicks(BattleState state, SimUnit unit, int baseTicks)
     {
         var speedPct = state.Player(unit.Side).Buffs.SpeedPct;
+        if (unit.Def.Element == Element.Storm)
+        {
+            speedPct += ElementSynergies.StormAttackSpeedPct[
+                ElementSynergies.TierFor(state, unit.Side, Element.Storm)];
+        }
         if (speedPct <= 0f || baseTicks <= 0)
         {
             return baseTicks;
@@ -665,10 +678,31 @@ public sealed class BattleSim
         }
     }
 
-    private static int ScaledDamage(BattleState state, SimUnit attacker)
+    private static int ScaledDamage(BattleState state, SimUnit attacker, SimUnit? defender = null)
     {
-        var damagePct = state.Player(attacker.Side).Buffs.DamagePct;
-        return (int)MathF.Round(attacker.Def.Damage * (1f + damagePct));
+        var multiplier = 1f + state.Player(attacker.Side).Buffs.DamagePct;
+
+        if (attacker.Def.Element == Element.Fire)
+        {
+            multiplier += ElementSynergies.FireDamagePct[
+                ElementSynergies.TierFor(state, attacker.Side, Element.Fire)];
+        }
+        if (attacker.Def.Element == Element.Venom
+            && defender is not null
+            && defender.Hp < defender.Def.MaxHp * ElementSynergies.VenomExecuteHpThreshold)
+        {
+            multiplier += ElementSynergies.VenomExecutePct[
+                ElementSynergies.TierFor(state, attacker.Side, Element.Venom)];
+        }
+
+        var reduction = 0f;
+        if (defender is not null && defender.Def.Element == Element.Stone)
+        {
+            reduction = ElementSynergies.StoneDamageReductionPct[
+                ElementSynergies.TierFor(state, defender.Side, Element.Stone)];
+        }
+
+        return (int)MathF.Round(attacker.Def.Damage * multiplier * (1f - reduction));
     }
 
     private void DealDamage(BattleState state, SimUnit attacker, SimUnit defender)
@@ -678,9 +712,20 @@ public sealed class BattleSim
             return;
         }
 
-        if (!ApplyDirectDamage(state, attacker.Side, defender, ScaledDamage(state, attacker)))
+        if (!ApplyDirectDamage(state, attacker.Side, defender, ScaledDamage(state, attacker, defender)))
         {
             return;
+        }
+
+        if (attacker.Def.Element == Element.Frost)
+        {
+            var frostTier = ElementSynergies.TierFor(state, attacker.Side, Element.Frost);
+            var slowPct = ElementSynergies.FrostSlowPct[frostTier];
+            if (slowPct > 0f && slowPct >= defender.SlowPct)
+            {
+                defender.SlowPct = slowPct;
+                defender.SlowTicks = ElementSynergies.FrostSlowTicks;
+            }
         }
 
         var def = defender.Def;
@@ -877,6 +922,10 @@ public sealed class BattleSim
 
             var step = unit.Def.MoveSpeed / state.Config.TickRate
                 * (1f + state.Player(unit.Side).Buffs.SpeedPct);
+            if (unit.SlowTicks > 0)
+            {
+                step *= 1f - unit.SlowPct;
+            }
             var enemyPlayer = state.Player(
                 unit.Side == PlayerSide.Left ? PlayerSide.Right : PlayerSide.Left);
             if (enemyPlayer.Buffs.SlowAuraPct > 0f && spireDistance <= _config.SlowAuraRange)

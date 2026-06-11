@@ -22,6 +22,10 @@ public sealed class SimUnit
 
     public int IFrameTicks { get; set; }
 
+    public int SlowTicks { get; set; }
+
+    public float SlowPct { get; set; }
+
     public bool IsAlive => Hp > 0;
 
     public Stratum Stratum => Def.Stratum;
