@@ -28,6 +28,20 @@ public class BattleSceneTest
     }
 
     [TestCase]
+    public async Task HudBuildsCardsAndTracksMana()
+    {
+        var runner = ISceneRunner.Load("res://scenes/battle/battle_scene.tscn");
+        var controller = (BattleSceneController)runner.Scene();
+
+        await runner.SimulateFrames(10, 16);
+        AssertThat(controller.Hud._TestCards.Count).IsEqual(3);
+        var manaBefore = controller.Hud.ManaLabel.Text;
+
+        await runner.SimulateFrames(90, 16);
+        AssertThat(controller.Hud.ManaLabel.Text != manaBefore).IsTrue();
+    }
+
+    [TestCase]
     public async Task SimAdvancesAtThirtyTicksPerSecond()
     {
         var runner = ISceneRunner.Load("res://scenes/battle/battle_scene.tscn");

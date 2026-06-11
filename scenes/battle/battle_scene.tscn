@@ -1,17 +1,16 @@
-[gd_scene load_steps=4 format=3]
+[gd_scene load_steps=5 format=3]
 
 [ext_resource type="Script" path="res://Game/Battle/BattleSceneController.cs" id="1"]
 [ext_resource type="Script" path="res://Game/Battle/BattleRunner.cs" id="2"]
+[ext_resource type="Script" path="res://Game/Battle/Hud/BattleHud.cs" id="3"]
+[ext_resource type="PackedScene" path="res://scenes/battle/unit_card.tscn" id="4"]
 
-[sub_resource type="LabelSettings" id="dbg"]
-font_size = 8
-
-[node name="BattleScene" type="Node2D" node_paths=PackedStringArray("Runner", "UnitLayer", "Background", "DebugLabel")]
+[node name="BattleScene" type="Node2D" node_paths=PackedStringArray("Runner", "UnitLayer", "Background", "Hud")]
 script = ExtResource("1")
 Runner = NodePath("Runner")
 UnitLayer = NodePath("UnitLayer")
 Background = NodePath("Background")
-DebugLabel = NodePath("HUD/DebugLabel")
+Hud = NodePath("Hud")
 
 [node name="Background" type="Sprite2D" parent="."]
 centered = false
@@ -24,11 +23,85 @@ script = ExtResource("2")
 [node name="Camera" type="Camera2D" parent="."]
 anchor_mode = 0
 
-[node name="HUD" type="CanvasLayer" parent="."]
+[node name="Hud" type="CanvasLayer" parent="." node_paths=PackedStringArray("ManaLabel", "ClockLabel", "LeftSpireBar", "RightSpireBar", "AscensionBar", "AscensionLabel", "BreathBar", "SummonBar", "DeployBar", "ConduitRow")]
+script = ExtResource("3")
+ManaLabel = NodePath("TopBar/ManaLabel")
+ClockLabel = NodePath("TopBar/ClockLabel")
+LeftSpireBar = NodePath("TopBar/LeftSpireBar")
+RightSpireBar = NodePath("TopBar/RightSpireBar")
+AscensionBar = NodePath("TopBar/AscensionBar")
+AscensionLabel = NodePath("TopBar/AscensionLabel")
+BreathBar = NodePath("TopBar/BreathBar")
+SummonBar = NodePath("TopBar/SummonBar")
+DeployBar = NodePath("DeployBar")
+ConduitRow = NodePath("ConduitRow")
+UnitCardScene = ExtResource("4")
 
-[node name="DebugLabel" type="Label" parent="HUD"]
+[node name="TopBar" type="HBoxContainer" parent="Hud"]
+anchors_preset = 10
+anchor_right = 1.0
 offset_left = 4.0
 offset_top = 2.0
-offset_right = 636.0
-offset_bottom = 14.0
-label_settings = SubResource("dbg")
+offset_right = -4.0
+offset_bottom = 16.0
+theme_override_constants/separation = 6
+
+[node name="ManaLabel" type="Label" parent="Hud/TopBar"]
+text = "0/600"
+
+[node name="BreathBar" type="ProgressBar" parent="Hud/TopBar"]
+custom_minimum_size = Vector2(50, 10)
+size_flags_vertical = 4
+show_percentage = false
+
+[node name="LeftSpireBar" type="ProgressBar" parent="Hud/TopBar"]
+custom_minimum_size = Vector2(120, 12)
+size_flags_horizontal = 3
+size_flags_vertical = 4
+value = 100.0
+show_percentage = false
+
+[node name="ClockLabel" type="Label" parent="Hud/TopBar"]
+text = "0:00"
+
+[node name="RightSpireBar" type="ProgressBar" parent="Hud/TopBar"]
+custom_minimum_size = Vector2(120, 12)
+size_flags_horizontal = 3
+size_flags_vertical = 4
+value = 100.0
+show_percentage = false
+
+[node name="AscensionLabel" type="Label" parent="Hud/TopBar"]
+text = "Tier 1"
+
+[node name="AscensionBar" type="ProgressBar" parent="Hud/TopBar"]
+custom_minimum_size = Vector2(50, 10)
+size_flags_vertical = 4
+show_percentage = false
+
+[node name="SummonBar" type="ProgressBar" parent="Hud/TopBar"]
+custom_minimum_size = Vector2(50, 10)
+size_flags_vertical = 4
+show_percentage = false
+visible = false
+
+[node name="ConduitRow" type="HBoxContainer" parent="Hud"]
+anchors_preset = 2
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_left = 4.0
+offset_top = -78.0
+offset_bottom = -48.0
+theme_override_constants/separation = 2
+
+[node name="DeployBar" type="HBoxContainer" parent="Hud"]
+anchors_preset = 12
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 4.0
+offset_top = -44.0
+offset_right = -4.0
+offset_bottom = -2.0
+alignment = 1
+theme_override_constants/separation = 4

@@ -1,6 +1,7 @@
 namespace DraconicWars.Game.Battle;
 
 using System.Collections.Generic;
+using DraconicWars.Game.Battle.Hud;
 using DraconicWars.Game.Content;
 using DraconicWars.Sim.Battle;
 using DraconicWars.Sim.Conduits;
@@ -9,14 +10,15 @@ using Jmodot.Core.Shared.Attributes;
 using Jmodot.Implementation.Shared;
 
 /// <summary>
-/// Battle scene root: wires the BattleRunner's sim diffs to UnitView nodes, loads the
-/// generated background, and provides debug deploy keys until the HUD Part lands.
-/// The scene owns structure; this script owns behavior (scene_authoring rule).
+/// Battle scene root: wires the BattleRunner's sim diffs to UnitView nodes and the
+/// HUD's intents to SimCommands. Local player verbs: cards/keys deploy, conduit row
+/// builds/sells, right-mouse-hold aims breath, Q casts Wrath, E channels summoning.
 /// </summary>
 public partial class BattleSceneController : Node2D
 {
     private const string SheetRoot = "res://art_pipeline/output/units";
     private const string BackgroundPath = "res://art_pipeline/output/backgrounds/battle_bg.png";
+    private const int ChannelPerTick = 15;
 
     [Export, RequiredExport] public BattleRunner Runner { get; set; } = null!;
 
@@ -24,10 +26,11 @@ public partial class BattleSceneController : Node2D
 
     [Export, RequiredExport] public Sprite2D Background { get; set; } = null!;
 
-    [Export, RequiredExport] public Label DebugLabel { get; set; } = null!;
+    [Export, RequiredExport] public BattleHud Hud { get; set; } = null!;
 
     private readonly Dictionary<int, UnitView> _views = new();
     private UnitSpriteLibrary _sprites = null!;
+    private PlayerSide _localSide = PlayerSide.Left;
 
     public override void _Ready()
     {
@@ -42,10 +45,27 @@ public partial class BattleSceneController : Node2D
 
         Runner.UnitSpawned += OnUnitSpawned;
         Runner.UnitDied += OnUnitDied;
-        Runner.TickAdvanced += OnTickAdvanced;
         Runner.Initialize(
             BattleConfig.Default, UnitCatalog.FirstPlayable, ConduitDefs.All, seed: 1UL);
+
+        Hud.Initialize(Runner, _localSide, UnitCatalog.FirstPlayable, ConduitDefs.All);
+        Hud.DeployRequested += id => Runner.EnqueueCommand(SimCommand.Deploy(_localSide, id));
+        Hud.ConduitBuildRequested += OnConduitBuildRequested;
+        Hud.ConduitSellRequested += id => Runner.EnqueueCommand(SimCommand.SellConduit(_localSide, id));
         JmoLogger.Info(this, "[Battle] Scene ready");
+    }
+
+    public override void _Process(double delta)
+    {
+        if (Input.IsMouseButtonPressed(MouseButton.Right))
+        {
+            var laneX = GetGlobalMousePosition().X / LaneGeometry.PixelsPerMeter;
+            Runner.EnqueueCommand(SimCommand.FireBreath(_localSide, laneX));
+        }
+        if (Input.IsKeyPressed(Key.E))
+        {
+            Runner.EnqueueCommand(SimCommand.ChannelMana(_localSide, ChannelPerTick));
+        }
     }
 
     public override void _UnhandledKeyInput(InputEvent @event)
@@ -54,21 +74,19 @@ public partial class BattleSceneController : Node2D
         {
             return;
         }
-
-        SimCommand? command = key.Keycode switch
+        if (key.Keycode == Key.Q)
         {
-            Key.Key1 => SimCommand.Deploy(PlayerSide.Left, "kobold_spearman"),
-            Key.Key2 => SimCommand.Deploy(PlayerSide.Left, "forest_archer"),
-            Key.Key3 => SimCommand.Deploy(PlayerSide.Left, "frost_whelp"),
-            Key.Key8 => SimCommand.Deploy(PlayerSide.Right, "kobold_spearman"),
-            Key.Key9 => SimCommand.Deploy(PlayerSide.Right, "forest_archer"),
-            Key.Key0 => SimCommand.Deploy(PlayerSide.Right, "frost_whelp"),
-            _ => null,
-        };
-        if (command is { } deploy)
-        {
-            Runner.EnqueueCommand(deploy);
+            Runner.EnqueueCommand(SimCommand.CastWrath(_localSide));
         }
+    }
+
+    private void OnConduitBuildRequested(string conduitId)
+    {
+        var player = Runner.State.Player(_localSide);
+        var command = player.Conduits.ContainsKey(conduitId)
+            ? SimCommand.UpgradeConduit(_localSide, conduitId)
+            : SimCommand.BuildConduit(_localSide, conduitId);
+        Runner.EnqueueCommand(command);
     }
 
     private void OnUnitSpawned(SimUnit unit)
@@ -91,16 +109,6 @@ public partial class BattleSceneController : Node2D
             return;
         }
         view.PlayDeathAndFree(laneX, stratum);
-    }
-
-    private void OnTickAdvanced()
-    {
-        var state = Runner.State;
-        DebugLabel.Text =
-            $"t {state.Tick / state.Config.TickRate}s  "
-            + $"L mana {(int)state.Left.Mana} spire {(int)state.LeftSpireHp}  "
-            + $"R mana {(int)state.Right.Mana} spire {(int)state.RightSpireHp}  "
-            + $"asc {state.Left.AscensionTier}/{state.Right.AscensionTier}";
     }
 
     #region Test Helpers
