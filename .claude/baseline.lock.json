@@ -1,0 +1,1136 @@
+{
+  "baseline_repo": "https://github.com/jmund15/DraconicWars.git",
+  "baseline_ref": "main",
+  "synced_commit": "b272ce524706f449d1af4494421c23433e37c218",
+  "substitutions": {
+    "{{PROJECT_NAME}}": "DraconicWars",
+    "{{VAULT_ROOT}}": "C:\\Users\\jmund\\OneDrive\\Documents\\ObsidianVault\\DevProjects\\DraconicWars",
+    "{{PROJECT_ROOT}}": "C:\\Users\\jmund\\Game_Dev\\Godot_Projects\\DraconicWars"
+  },
+  "files": {
+    ".claude/CLAUDE.md": {
+      "status": "watch",
+      "layer": "universal"
+    },
+    ".claude/auto-memory/Blackboard_NullStorage_Asymmetry.md": {
+      "status": "tracked",
+      "hash": "87322282322278112fd89bdae182ef8c20efed6803516b443af03eaaca72a6ef",
+      "layer": "jmodot"
+    },
+    ".claude/auto-memory/MEMORY.md": {
+      "status": "tracked",
+      "hash": "f8ac5b7a338a1acda318dc2376b3f45d8778ef81edca31c58478299e0b34d8ef",
+      "layer": "universal"
+    },
+    ".claude/auto-memory/arch_rule_atomic_rename_tmp_is_durable.md": {
+      "status": "tracked",
+      "hash": "2936eff61a081db371f7769283cc9df95e3418d1ee8ecee48d919deb547791f4",
+      "layer": "jmodot"
+    },
+    ".claude/auto-memory/arch_rule_autoload_line_earns_its_place.md": {
+      "status": "tracked",
+      "hash": "f20792e952eeb293708f9a122e791e8f2ceebf09d46cd29390f0a8573a94880f",
+      "layer": "jmodot"
+    },
+    ".claude/auto-memory/arch_rule_autonomous_loop_positive_liveness.md": {
+      "status": "tracked",
+      "hash": "c0a586ab3ac2bf6d0edd314964c5ed70815f1e520ea5a8d096c218d7b756fce7",
+      "layer": "jmodot"
+    },
+    ".claude/auto-memory/arch_rule_bb_flag_cross_system.md": {
+      "status": "tracked",
+      "hash": "9f4f209e673563c4abee04c7034d3ed539fc072f9b4d9a4bf765dde41a8afdda",
+      "layer": "jmodot"
+    },
+    ".claude/auto-memory/arch_rule_closed_set_switch.md": {
+      "status": "tracked",
+      "hash": "199a9aa3a371f5375e382698322c5d3a5bf9449b019d2ad364e65b8b82b738d7",
+      "layer": "jmodot"
+    },
+    ".claude/auto-memory/arch_rule_constraint_scope_match_input_axis.md": {
+      "status": "tracked",
+      "hash": "f04f4643564b5df8aa780d4707dba7ae6e302f5674c48a5f0e50c6568da2fecb",
+      "layer": "jmodot"
+    },
+    ".claude/auto-memory/arch_rule_hysteresis_for_analog_hsm_boundaries.md": {
+      "status": "tracked",
+      "hash": "8b9dfca924191d51c4013f2e0805c4169c3203e0542ed53863a95415aa1f6203",
+      "layer": "jmodot"
+    },
+    ".claude/auto-memory/arch_rule_onexit_must_not_clobber_consumer_onenter.md": {
+      "status": "tracked",
+      "hash": "beff24f16b2355197f53236a8139767609e9a275f552eabd911aab5c2934cf3d",
+      "layer": "jmodot"
+    },
+    ".claude/auto-memory/arch_rule_packedscene_resource_inline_copy.md": {
+      "status": "tracked",
+      "hash": "e42b3e3ead620d3b37a6f0f2cb2f9add31ba9f70cc90f2fa61da7321d78eb0dd",
+      "layer": "jmodot"
+    },
+    ".claude/auto-memory/arch_rule_pragmatic_narrowing_at_boundary.md": {
+      "status": "tracked",
+      "hash": "ca410bef664a2c75219e68e543ccb71eb2fce6a38a61fb07eed984e8c94a2196",
+      "layer": "jmodot"
+    },
+    ".claude/auto-memory/arch_rule_resource_config_runtime_split.md": {
+      "status": "tracked",
+      "hash": "54338f05763fbf75b8084c56fb9bc2494b390958cf36bba40da5e13280b12cb4",
+      "layer": "jmodot"
+    },
+    ".claude/auto-memory/arch_rule_test_namespace_matches_gate_filter.md": {
+      "status": "watch",
+      "layer": "jmodot"
+    },
+    ".claude/auto-memory/arch_rule_transition_condition_stateless.md": {
+      "status": "tracked",
+      "hash": "de391a475a0b7438153d059fd1f9ed96b88b606bf5dcc99d73277f77e36e1592",
+      "layer": "jmodot"
+    },
+    ".claude/auto-memory/arch_rule_windowed_history_component_condition_split.md": {
+      "status": "tracked",
+      "hash": "a842bfde7aeeb0adea961b04b200ed4a001145c764383d8f9da546469ee515f6",
+      "layer": "jmodot"
+    },
+    ".claude/auto-memory/feedback_command_descriptions_one_line.md": {
+      "status": "tracked",
+      "hash": "27dbe9050a5bd7e8f9d5f07920537779e8433c71f09efbf27d152acbecbb00a9",
+      "layer": "universal"
+    },
+    ".claude/auto-memory/feedback_doc_revision_in_place.md": {
+      "status": "tracked",
+      "hash": "e324e12e66bff69f1b2323193442c53d3ad07df55144507369b68f80371ad565",
+      "layer": "universal"
+    },
+    ".claude/auto-memory/feedback_dont_compress_socratic_on_rich_prompt.md": {
+      "status": "tracked",
+      "hash": "49166f0595c0f35f42952e0412a841e57dbe04f8654f7452695c4e8051e49864",
+      "layer": "universal"
+    },
+    ".claude/auto-memory/feedback_dont_defer_existing_framework_abstractions.md": {
+      "status": "tracked",
+      "hash": "fc229399326d9aea14bdd46cf2b5b2e31252529b3641a010652d091b5e5984f8",
+      "layer": "jmodot"
+    },
+    ".claude/auto-memory/feedback_dont_defer_immediately_addressable.md": {
+      "status": "tracked",
+      "hash": "0cbfbb3e4691a08741f9385c358df6b1a3b16355bb19aa207d05beee0411f587",
+      "layer": "universal"
+    },
+    ".claude/auto-memory/feedback_dont_unilaterally_reduce_planned_scope.md": {
+      "status": "tracked",
+      "hash": "f0e4009756281c7f4ee99551b602d2fe75d4834443331f7baba85980741ef342",
+      "layer": "universal"
+    },
+    ".claude/auto-memory/feedback_fix_self_introduced_regression_immediately.md": {
+      "status": "tracked",
+      "hash": "2a9df097ac7244e0c6786b5b2082d680c6918d5189a46078dfc3d25b92b29415",
+      "layer": "universal"
+    },
+    ".claude/auto-memory/feedback_godot_signal_test_via_emitsignal.md": {
+      "status": "tracked",
+      "hash": "826f838a85f66828971a9872f4c2722c30e9d2c2bcb9e7182cf938a819d80b2e",
+      "layer": "godot"
+    },
+    ".claude/auto-memory/feedback_honor_execution_directive.md": {
+      "status": "tracked",
+      "hash": "64b86a8c94b83f9cf2fc9fa76c303f19090acf95196c12fd8fee8566f9883c9b",
+      "layer": "universal"
+    },
+    ".claude/auto-memory/feedback_inspect_existing_abstractions_first.md": {
+      "status": "tracked",
+      "hash": "f818e509d2e2aeae17c7e4480a66190fcfbd8b00df79735589d519748ea71f89",
+      "layer": "universal"
+    },
+    ".claude/auto-memory/feedback_invoke_named_skill_not_manual_equivalent.md": {
+      "status": "tracked",
+      "hash": "4633a3607bb75045f8706900de49185d22d75d2f6ebfed5c9debbdbcb282dbb6",
+      "layer": "universal"
+    },
+    ".claude/auto-memory/feedback_lsp_default_for_csharp.md": {
+      "status": "tracked",
+      "hash": "ad22510d72e1d62ba565e10bc87bfb4f98785c8623009ceb53b423017dc6e720",
+      "layer": "godot"
+    },
+    ".claude/auto-memory/feedback_memory_file_refs_no_markdown_links.md": {
+      "status": "tracked",
+      "hash": "98f8c99f7e54cfbcb429a99cfa8e3e81d609c7f8aaee1fd611c44fd2a12f7fb5",
+      "layer": "universal"
+    },
+    ".claude/auto-memory/feedback_memory_md_is_auto_managed.md": {
+      "status": "tracked",
+      "hash": "5e1f43d63f0cc1d4c36cf42121587982b114bf97b84c99dc49d92470a0ce9894",
+      "layer": "universal"
+    },
+    ".claude/auto-memory/feedback_no_performative_agreement.md": {
+      "status": "tracked",
+      "hash": "01daa25c819ca6eebabbf28feeae13ac4b16ae91f1fa4d7ad05a27b168a29edc",
+      "layer": "universal"
+    },
+    ".claude/auto-memory/feedback_no_unilateral_condensation.md": {
+      "status": "tracked",
+      "hash": "b5e15faeea3c7967ac8631953ae548017c5c7ef2f5bc7403d248b173cfaeec6c",
+      "layer": "universal"
+    },
+    ".claude/auto-memory/feedback_plan_check_auto_surface_on_exit.md": {
+      "status": "tracked",
+      "hash": "2aa307e26933311a7a51426701c2ec6738d54bd8c45f9deee12b75efc6adfd3a",
+      "layer": "universal"
+    },
+    ".claude/auto-memory/feedback_plan_mode_is_claude_code_built_in.md": {
+      "status": "tracked",
+      "hash": "9c049a45082d68bad32c026b55b5db90078d0f94c169686ee5a5606dc11ae6a2",
+      "layer": "universal"
+    },
+    ".claude/auto-memory/feedback_plan_pending_requires_impl_arch_not_seam.md": {
+      "status": "tracked",
+      "hash": "eb2d90ea4e75af47f549ea63205ebafd12cb591a17cea79a530bad2465d5c455",
+      "layer": "universal"
+    },
+    ".claude/auto-memory/feedback_plan_worklog_items_from_source_not_mirror.md": {
+      "status": "tracked",
+      "hash": "b6ee1f8a7d6cfce3b2dd33950ce9c5f3570bb35ccc356ddc3ea50ba097d5387e",
+      "layer": "universal"
+    },
+    ".claude/auto-memory/feedback_prefer_data_params_over_injected_delegates.md": {
+      "status": "tracked",
+      "hash": "cbb0d43b30442e9dd56ac194f21349c765a6a68c3799b5ece441a2defc3fa3d9",
+      "layer": "jmodot"
+    },
+    ".claude/auto-memory/feedback_prefer_typed_shapes_over_empty_markers.md": {
+      "status": "tracked",
+      "hash": "a1948b3a26535c01f424f6a754ca2c9cc9f3335faa8be6010a8e6db014ab3eb5",
+      "layer": "jmodot"
+    },
+    ".claude/auto-memory/feedback_read_files_enumerate_first.md": {
+      "status": "tracked",
+      "hash": "48801ddf955556a15b78e3b7e8d59ccb6b6ad0ba3fa329f2b69edf8a7be180ee",
+      "layer": "universal"
+    },
+    ".claude/auto-memory/feedback_read_files_multifile_completeness_directive.md": {
+      "status": "tracked",
+      "hash": "e32532e51fa9e3c451f549b75581cf5e1114a2369ee2eeb451b15ca078a6284e",
+      "layer": "universal"
+    },
+    ".claude/auto-memory/feedback_read_files_output_volume_governs_spill.md": {
+      "status": "tracked",
+      "hash": "fb8fa91c127c55412a98d2ba6c8fcdb0e56e1e2f0e7c8183281c24eb48a71303",
+      "layer": "universal"
+    },
+    ".claude/auto-memory/feedback_recommended_fix_means_implement.md": {
+      "status": "tracked",
+      "hash": "295fcc954db9589dc9ff3c0f942dae46e6ba39ab45b584702aaa98e29da6281a",
+      "layer": "universal"
+    },
+    ".claude/auto-memory/feedback_reconcile_structure_against_existing_subsystems.md": {
+      "status": "tracked",
+      "hash": "0b63d9bd3f5848f791dd2b7ae74c655ffcc8d6cfe2e74bf8887bbc7f65e2d2c6",
+      "layer": "universal"
+    },
+    ".claude/auto-memory/feedback_refactor_parity_audit.md": {
+      "status": "tracked",
+      "hash": "90040e17d874ebb52272b74b083326e6fd211fd89af461b6115a5bf335e7e346",
+      "layer": "universal"
+    },
+    ".claude/auto-memory/feedback_resolve_questions_in_plan_not_execution.md": {
+      "status": "tracked",
+      "hash": "8a6b9367db051a28b151f24a3524c613b301248794a1f7aea11d788deff02dca",
+      "layer": "universal"
+    },
+    ".claude/auto-memory/feedback_separate_preexisting_changes_before_commit.md": {
+      "status": "tracked",
+      "hash": "8c1242f6928fec3cc1697a896d8219afbf5c392e3fd056d79395113f22de91a6",
+      "layer": "universal"
+    },
+    ".claude/auto-memory/feedback_session_end_command_over_passive_nudge.md": {
+      "status": "tracked",
+      "hash": "03e814f64c56a7b227cd758881e53fd333dc49183bb8c43553f3b9cb6d79f10e",
+      "layer": "universal"
+    },
+    ".claude/auto-memory/feedback_session_end_full_scope.md": {
+      "status": "tracked",
+      "hash": "29faec607de146fe817ee8591d037baa3cdf0799966ed0023e7c77525b3c8fe3",
+      "layer": "universal"
+    },
+    ".claude/auto-memory/feedback_session_start_hook_does_not_override_skill_procedure.md": {
+      "status": "tracked",
+      "hash": "a92d32926b8a68962536b8c3852f8c684195717e2b3cb56b08d2115337ef0c7d",
+      "layer": "universal"
+    },
+    ".claude/auto-memory/feedback_skill_vs_command_frontmatter_convention.md": {
+      "status": "tracked",
+      "hash": "4d42d371cf42c2b6ed3028ce30e955ecd74984b45f79a7b568f106f8a6e2f363",
+      "layer": "universal"
+    },
+    ".claude/auto-memory/feedback_slash_command_naming.md": {
+      "status": "tracked",
+      "hash": "f887b2978c857e6a049cd5835a7d02ba38acb5231023b42aa404efbbfdaf914b",
+      "layer": "universal"
+    },
+    ".claude/auto-memory/feedback_tool_routing_discipline.md": {
+      "status": "tracked",
+      "hash": "1a03c30e703f419617a09473a6189e8e9f87023ef713ff4bffac52a725b47aed",
+      "layer": "universal"
+    },
+    ".claude/auto-memory/feedback_typed_state_over_bb_flag_soup.md": {
+      "status": "tracked",
+      "hash": "2dc6129d158facbff862b46440689ee58259877fa1c1afc3dca0b11ea60491d4",
+      "layer": "jmodot"
+    },
+    ".claude/auto-memory/feedback_user_distress_lexicon.md": {
+      "status": "tracked",
+      "hash": "030538a2d74cd75fcd58d9d9bc9b65ae7d06f90b79942eb9686fdcc43d89f631",
+      "layer": "universal"
+    },
+    ".claude/auto-memory/feedback_verbatim_content_to_review_agents.md": {
+      "status": "tracked",
+      "hash": "8b27cb5b13ff1ba0bdbefce8094abdf5497057b320e115cd811ef261fc8cec10",
+      "layer": "universal"
+    },
+    ".claude/auto-memory/feedback_verify_explore_agent_empirical_claims.md": {
+      "status": "tracked",
+      "hash": "fcf19e5352ce333b70bd9927dad8a90f72a41f50ab13304e5de47af81fabd7fe",
+      "layer": "universal"
+    },
+    ".claude/auto-memory/gotcha_blackboard_stringname_variant_boxing.md": {
+      "status": "tracked",
+      "hash": "fad9d419e425fa9bbd60ef9c6085b0328b2edb36c69ff17cb3bcea528f39c8b9",
+      "layer": "jmodot"
+    },
+    ".claude/auto-memory/gotcha_component_caches_bb_dependency_post_init_injection_noop.md": {
+      "status": "tracked",
+      "hash": "511686ff91521edecf45b410d65be5d4272f1a392ddf4d21fccd15520d8993d6",
+      "layer": "jmodot"
+    },
+    ".claude/auto-memory/gotcha_config_exception_node_bound_not_static.md": {
+      "status": "tracked",
+      "hash": "536ff6cbcf871dc7d4a2438ade04d4113c24e3ab21d5596dab0ef84d7ffa6dc9",
+      "layer": "universal"
+    },
+    ".claude/auto-memory/gotcha_default_interface_method_for_base_member.md": {
+      "status": "tracked",
+      "hash": "16560f4f3500d9cf32d62534afdfd99ebc3128831f828a77e6f594e0412af060",
+      "layer": "universal"
+    },
+    ".claude/auto-memory/gotcha_editor_reserialize_value_export_null_strip.md": {
+      "status": "tracked",
+      "hash": "885ce42064d9b524a910689386e662463af259d5b8ddf53bb5b1cc6bc0092075",
+      "layer": "godot"
+    },
+    ".claude/auto-memory/gotcha_errorsonly_build_hides_cref_drift.md": {
+      "status": "tracked",
+      "hash": "44d522856de16135d73ad8cf3fd0e1a6c9f5cdb987c067c0e734f99819dcbbe5",
+      "layer": "universal"
+    },
+    ".claude/auto-memory/gotcha_explicit_dim_orphans_on_base_interface_removal.md": {
+      "status": "tracked",
+      "hash": "e12d313c396e074d4161a9b3affd861d85f7650714dedad7c424f4b9d779f4a2",
+      "layer": "universal"
+    },
+    ".claude/auto-memory/gotcha_export_enum_out_of_range_silent_false.md": {
+      "status": "tracked",
+      "hash": "77aaf13fc714dc3a46f1d3cfd4d175056baa223794241c3d0bb78b92ab67fcc0",
+      "layer": "godot"
+    },
+    ".claude/auto-memory/gotcha_gdunit4_filter_uses_test_class_name.md": {
+      "status": "watch",
+      "layer": "godot"
+    },
+    ".claude/auto-memory/gotcha_godot4_uid_only_refs_break_orphan_detection.md": {
+      "status": "tracked",
+      "hash": "6913e8b9b5f37bf057139da09acabd77bd4a4c0806fb5d8131e416e8ccc675a6",
+      "layer": "godot"
+    },
+    ".claude/auto-memory/gotcha_godot_editor_plugin_pair_conflict.md": {
+      "status": "watch",
+      "layer": "godot"
+    },
+    ".claude/auto-memory/gotcha_godot_resourcesaver_extension_dispatch.md": {
+      "status": "tracked",
+      "hash": "c90759582c2b9c191ee1367aba029f96699fd65ded22a9e2f4f5a94234f290b8",
+      "layer": "godot"
+    },
+    ".claude/auto-memory/gotcha_godot_typed_dictionary.md": {
+      "status": "tracked",
+      "hash": "d6bb58d8400383068adf5968729a39186771dd92b0ce42d1e709b5f8b38f4d2a",
+      "layer": "godot"
+    },
+    ".claude/auto-memory/gotcha_godot_variant_int64_fold.md": {
+      "status": "tracked",
+      "hash": "c78746a0a7ccef4a712e92510906b6d2aada1d6f08f7e6c0719451e4f2e708ad",
+      "layer": "godot"
+    },
+    ".claude/auto-memory/gotcha_inherited_scene_empty_resource_slot.md": {
+      "status": "tracked",
+      "hash": "570e98ce5091e38092a4df98b6746cff4bccaec0d127853a33d633907ba53d66",
+      "layer": "godot"
+    },
+    ".claude/auto-memory/gotcha_namespace_rename_breaks_relative_using.md": {
+      "status": "watch",
+      "layer": "universal"
+    },
+    ".claude/auto-memory/gotcha_schema_version_bump_breaks_version_tests.md": {
+      "status": "tracked",
+      "hash": "c06308b9ca3a54d62601bff8fbbbed56e3de1a5901329a37a7d818ae7ae63fba",
+      "layer": "universal"
+    },
+    ".claude/auto-memory/gotcha_semantic_search_restricttodir_posix.md": {
+      "status": "tracked",
+      "hash": "5255fa848ddc48a3e705a7add5d803024db0b7e4ff9e4abb693d0cea827383b8",
+      "layer": "universal"
+    },
+    ".claude/auto-memory/gotcha_type_name_equals_namespace_leaf.md": {
+      "status": "watch",
+      "layer": "universal"
+    },
+    ".claude/auto-memory/jmodot_2d_movement_architecture.md": {
+      "status": "watch",
+      "layer": "jmodot"
+    },
+    ".claude/auto-memory/jmodot_combat_factory_defaults_seam.md": {
+      "status": "watch",
+      "layer": "jmodot"
+    },
+    ".claude/auto-memory/jmodot_framework_boundary_rule.md": {
+      "status": "watch",
+      "layer": "jmodot"
+    },
+    ".claude/auto-memory/precedent_is_evidence_not_authority.md": {
+      "status": "tracked",
+      "hash": "ed8f72ca343b1da955835705a8aa3af77a54cd288efd8b3b03c6805db3e108bd",
+      "layer": "universal"
+    },
+    ".claude/auto-memory/process_rule_plan_high_execute_lower.md": {
+      "status": "tracked",
+      "hash": "7d83d7aefdd8d06826775ccf8078fca95694220c6080f566a856f987485fbd39",
+      "layer": "universal"
+    },
+    ".claude/auto-memory/process_rule_spec_doc_coverage.md": {
+      "status": "watch",
+      "layer": "universal"
+    },
+    ".claude/cloud-install.sh": {
+      "status": "watch",
+      "layer": "godot"
+    },
+    ".claude/commands/agents/doc_before_writing.md": {
+      "status": "tracked",
+      "hash": "04c3700b43f1aabb09d4b64df9843fd71f45ab6fdb5e7b5297ac5c9ad566afd6",
+      "layer": "universal"
+    },
+    ".claude/commands/agents/documentation_structure.md": {
+      "status": "watch",
+      "layer": "universal"
+    },
+    ".claude/commands/agents/jmodot_submodule_procedure.md": {
+      "status": "watch",
+      "layer": "jmodot"
+    },
+    ".claude/commands/agents/orchestrator_action_protocol.md": {
+      "status": "tracked",
+      "hash": "9534df4b6ec64ef5b1f5c0d5840231ef520bdfabc1480a41b37cefea9cd7c646",
+      "layer": "universal"
+    },
+    ".claude/commands/agents/plan_check_agents.md": {
+      "status": "watch",
+      "layer": "universal"
+    },
+    ".claude/commands/agents/pr_classification.md": {
+      "status": "tracked",
+      "hash": "0cef3657f3ededfc77c38703d48bf019ed11c559013f3b6c14c7b872b093d91f",
+      "layer": "universal"
+    },
+    ".claude/commands/agents/pr_test_checklist_conventions.md": {
+      "status": "tracked",
+      "hash": "7fcea52b34f56dc2d7f27203d5b01cf8f58cd7df6eb5395dc3700ca04ddc38fc",
+      "layer": "godot"
+    },
+    ".claude/commands/agents/review_agents.md": {
+      "status": "watch",
+      "layer": "universal"
+    },
+    ".claude/commands/agents/session_audit_agents.md": {
+      "status": "tracked",
+      "hash": "c5aac943b64bf323b6ad81f4eda9bf523099de26753dc131750159df5bd1d12c",
+      "layer": "universal"
+    },
+    ".claude/commands/agents/session_file_identification.md": {
+      "status": "tracked",
+      "hash": "816d26b3207478d2af9b96068de3182ee7b2fe753c04139a633d0cf2b39a4bc2",
+      "layer": "universal"
+    },
+    ".claude/commands/agents/structure_audit_agents.md": {
+      "status": "watch",
+      "layer": "universal"
+    },
+    ".claude/commands/agents/transcript_nuance_recall.md": {
+      "status": "tracked",
+      "hash": "ad83ef0230bb0d1cd2d5b35ec85c44153b4167ee221a8506c51b2237beded87a",
+      "layer": "universal"
+    },
+    ".claude/commands/agents/worklog_plan_triage.md": {
+      "status": "watch",
+      "layer": "universal"
+    },
+    ".claude/commands/aiworker_write_doc_audit.md": {
+      "status": "watch",
+      "layer": "universal"
+    },
+    ".claude/commands/analyze_godot_logs.md": {
+      "status": "watch",
+      "layer": "godot"
+    },
+    ".claude/commands/architecture_brainstorm_redteam.md": {
+      "status": "watch",
+      "layer": "universal"
+    },
+    ".claude/commands/audit_test_accessors.md": {
+      "status": "watch",
+      "layer": "godot"
+    },
+    ".claude/commands/autolearn.md": {
+      "status": "watch",
+      "layer": "universal"
+    },
+    ".claude/commands/checklists/code_quality.md": {
+      "status": "tracked",
+      "hash": "0c9ad3cfeee7c35c0f3d07f181e78159e6211d8414bb1515c2b3270a27ce82be",
+      "layer": "universal"
+    },
+    ".claude/commands/checklists/known_failure_modes.md": {
+      "status": "watch",
+      "layer": "universal"
+    },
+    ".claude/commands/checklists/test_quality.md": {
+      "status": "tracked",
+      "hash": "95288994e66b36d839aaa5b64951dbfdaecfa23df61505ab534f4a74b9b3b5bf",
+      "layer": "universal"
+    },
+    ".claude/commands/claudemd_compact.md": {
+      "status": "tracked",
+      "hash": "c11c149708a4748976c242f37d35b53072082a12c8a064ae3fd9879148f5eb5f",
+      "layer": "universal"
+    },
+    ".claude/commands/clean_pull.md": {
+      "status": "watch",
+      "layer": "godot"
+    },
+    ".claude/commands/clean_push.md": {
+      "status": "watch",
+      "layer": "universal"
+    },
+    ".claude/commands/commit_push.md": {
+      "status": "watch",
+      "layer": "universal"
+    },
+    ".claude/commands/create_obsidian_design_doc.md": {
+      "status": "watch",
+      "layer": "universal"
+    },
+    ".claude/commands/create_pr.md": {
+      "status": "watch",
+      "layer": "universal"
+    },
+    ".claude/commands/doc_architecture.md": {
+      "status": "watch",
+      "layer": "universal"
+    },
+    ".claude/commands/doc_architecture_audit.md": {
+      "status": "watch",
+      "layer": "universal"
+    },
+    ".claude/commands/doc_audit_fix.md": {
+      "status": "watch",
+      "layer": "universal"
+    },
+    ".claude/commands/doc_full.md": {
+      "status": "tracked",
+      "hash": "e9da8f616ef0360439ed46d5e646f771189241d3c5e772f6a9c7f2f7c450f720",
+      "layer": "universal"
+    },
+    ".claude/commands/doc_retrospective.md": {
+      "status": "watch",
+      "layer": "universal"
+    },
+    ".claude/commands/doc_start_here_update.md": {
+      "status": "watch",
+      "layer": "universal"
+    },
+    ".claude/commands/doc_usage.md": {
+      "status": "watch",
+      "layer": "universal"
+    },
+    ".claude/commands/doc_workflow_battery.md": {
+      "status": "watch",
+      "layer": "universal"
+    },
+    ".claude/commands/eval_dashboard.md": {
+      "status": "watch",
+      "layer": "universal"
+    },
+    ".claude/commands/instruction_audit.md": {
+      "status": "tracked",
+      "hash": "147b64690592304851eaf5fb5135afbca7e4f473b7980646a9a90a5297837331",
+      "layer": "universal"
+    },
+    ".claude/commands/memory_audit.md": {
+      "status": "tracked",
+      "hash": "9a0f720f3096e1460ee922f56cc270e6cc417425e9d4fb00e0e8c893a8c33c99",
+      "layer": "universal"
+    },
+    ".claude/commands/memory_graph.md": {
+      "status": "watch",
+      "layer": "universal"
+    },
+    ".claude/commands/merge_pr.md": {
+      "status": "watch",
+      "layer": "universal"
+    },
+    ".claude/commands/mvp_plan.md": {
+      "status": "tracked",
+      "hash": "e970bf3c04965330169d2d967cb92dc395eec8b8562a56dc1862b28d326afafc",
+      "layer": "universal"
+    },
+    ".claude/commands/part_execute.md": {
+      "status": "tracked",
+      "hash": "444cdc81110bc21c5ceb3feb2676c276062defa94e4a0cb7649779bc93faeedc",
+      "layer": "universal"
+    },
+    ".claude/commands/plan_check.md": {
+      "status": "tracked",
+      "hash": "ec64e7cf6cc18513ac741ee9365491e22694e916d8e69b64b5ab2a61fb071eae",
+      "layer": "universal"
+    },
+    ".claude/commands/plan_drive.md": {
+      "status": "tracked",
+      "hash": "a5a9d4773f9677d4bc456439253c983018b07710ca9b12101c9ce28a1811f7b4",
+      "layer": "universal"
+    },
+    ".claude/commands/plan_handoff.md": {
+      "status": "tracked",
+      "hash": "1d07fdea3c033d1d0cf7637ccab2df2772cd4256ab00941a803c5538eff083ad",
+      "layer": "universal"
+    },
+    ".claude/commands/plan_part.md": {
+      "status": "tracked",
+      "hash": "caa31188f6a62fb864704002620de5e6193ca7d4a97cb6b48bc91bff860d707d",
+      "layer": "universal"
+    },
+    ".claude/commands/pr_ready.md": {
+      "status": "watch",
+      "layer": "universal"
+    },
+    ".claude/commands/pr_test_checklist.md": {
+      "status": "watch",
+      "layer": "godot"
+    },
+    ".claude/commands/regression_gate.md": {
+      "status": "watch",
+      "layer": "godot"
+    },
+    ".claude/commands/reindex_search.md": {
+      "status": "watch",
+      "layer": "universal"
+    },
+    ".claude/commands/review_pr.md": {
+      "status": "watch",
+      "layer": "universal"
+    },
+    ".claude/commands/review_prs.md": {
+      "status": "watch",
+      "layer": "universal"
+    },
+    ".claude/commands/roadmap_audit.md": {
+      "status": "watch",
+      "layer": "universal"
+    },
+    ".claude/commands/roadmap_next.md": {
+      "status": "watch",
+      "layer": "universal"
+    },
+    ".claude/commands/routing_audit.md": {
+      "status": "tracked",
+      "hash": "c3bc8589a181752c64917295465a356fde8c8031e1d2a2af3ac50c1924421bee",
+      "layer": "universal"
+    },
+    ".claude/commands/routing_battery.md": {
+      "status": "watch",
+      "layer": "universal"
+    },
+    ".claude/commands/rule_consistency.md": {
+      "status": "tracked",
+      "hash": "b66e957c8fc19cfaf8a375def30b85c8e463eb49f4fa154b851d1d2bd6145eea",
+      "layer": "universal"
+    },
+    ".claude/commands/self_evaluate.md": {
+      "status": "tracked",
+      "hash": "0637b49b72579b33e72a68ad0ea7242f66d320df43beb05fc4c7de19161d0db1",
+      "layer": "universal"
+    },
+    ".claude/commands/session_audit.md": {
+      "status": "tracked",
+      "hash": "63664dc37b4ae493a4b76cf211334a3f65760c5d1cd202d0b3772d200c24a201",
+      "layer": "universal"
+    },
+    ".claude/commands/session_end.md": {
+      "status": "tracked",
+      "hash": "1a4bacf9a00a2c2af31212f966aa1522340e2bef9b6c751bf4891d7f75f80c97",
+      "layer": "universal"
+    },
+    ".claude/commands/session_refresh.md": {
+      "status": "watch",
+      "layer": "universal"
+    },
+    ".claude/commands/structure_audit.md": {
+      "status": "watch",
+      "layer": "universal"
+    },
+    ".claude/commands/sync_baseline.md": {
+      "status": "watch",
+      "layer": "universal"
+    },
+    ".claude/commands/sync_permissions.md": {
+      "status": "watch",
+      "layer": "universal"
+    },
+    ".claude/commands/sync_subsystems.md": {
+      "status": "tracked",
+      "hash": "90e2a9f1731eee166f483469b9e9599585cb76cac3a738da7c4fa94c7bd868ac",
+      "layer": "universal"
+    },
+    ".claude/commands/system_check.md": {
+      "status": "watch",
+      "layer": "universal"
+    },
+    ".claude/commands/test_agents.md": {
+      "status": "tracked",
+      "hash": "b058954edbb232dab5fb6971687a17fe4fe14df876850c61dfe87c8daec1a2fe",
+      "layer": "universal"
+    },
+    ".claude/commands/test_compact.md": {
+      "status": "tracked",
+      "hash": "cb11e4e454dd6a3981b5a6841e63298297f2977fb0feba43ea946d4af2de804d",
+      "layer": "universal"
+    },
+    ".claude/commands/test_skill.md": {
+      "status": "tracked",
+      "hash": "b02d503308cd5869bbc00bee2830b10008ae4b0f102728d7596a41f30504b170",
+      "layer": "universal"
+    },
+    ".claude/commands/update_roadmap.md": {
+      "status": "tracked",
+      "hash": "140d4a05d5915fcfcb03095f17fcfe28953145d6d7cbaffa616240f3e05a661c",
+      "layer": "universal"
+    },
+    ".claude/commands/worklog.md": {
+      "status": "watch",
+      "layer": "universal"
+    },
+    ".claude/hooks/README.md": {
+      "status": "tracked",
+      "hash": "89aeb84a59b439ceba70d01d6150d26ad5261d740f189d681c7c8efe96430dce",
+      "layer": "universal"
+    },
+    ".claude/hooks/_transcript_summary.py": {
+      "status": "tracked",
+      "hash": "201499a52d172134950fecf06038d7ceaa7a55d755bd6139a392aeec24238a86",
+      "layer": "universal"
+    },
+    ".claude/hooks/analyze_godot_logs.py": {
+      "status": "watch",
+      "layer": "godot"
+    },
+    ".claude/hooks/apply_blanket_tool.py": {
+      "status": "watch",
+      "layer": "godot"
+    },
+    ".claude/hooks/check_logger_tag_prefix.py": {
+      "status": "watch",
+      "layer": "jmodot"
+    },
+    ".claude/hooks/cloud_test_enforcer.py": {
+      "status": "tracked",
+      "hash": "b21f72a0e238739c66a2933be794815d907c3b8b48d4097655121d8d15781088",
+      "layer": "godot"
+    },
+    ".claude/hooks/compound_cd_approver.py": {
+      "status": "tracked",
+      "hash": "2a11fbc045650ee29806717748be5bee487d822850660d6bbaaaf83c57b689ca",
+      "layer": "universal"
+    },
+    ".claude/hooks/critical_analysis_reminder.py": {
+      "status": "tracked",
+      "hash": "b1a3b51e3024565947f1cdbb504f666f5e56d907e0abddbb919c9e596c4699db",
+      "layer": "universal"
+    },
+    ".claude/hooks/file_size_preblock.py": {
+      "status": "tracked",
+      "hash": "b528c6b54349288e5dc30aea6938dabff267d7fcdfaab7536203b984674d9675",
+      "layer": "universal"
+    },
+    ".claude/hooks/json_merge.py": {
+      "status": "tracked",
+      "hash": "523401a5ce556a3726818ae63982a5359d415de7d4697b38ce30aeea27b744c0",
+      "layer": "universal"
+    },
+    ".claude/hooks/log_instruction_loads.py": {
+      "status": "tracked",
+      "hash": "b426dd5a2afa446860bc3f6f21f7b187dad5ea2f1ef6a44052adaeee846f0a8e",
+      "layer": "universal"
+    },
+    ".claude/hooks/pattern_enforcer.py": {
+      "status": "tracked",
+      "hash": "c28e28d5b76f202281c73a99cc0409c38e519bc23b0e808cf109dd439d5fc95f",
+      "layer": "godot"
+    },
+    ".claude/hooks/plan_memory_reminder.py": {
+      "status": "tracked",
+      "hash": "1440fc04e371f304357555e3c3afd5983d525731fc78bf9e287fcdc1b9744d80",
+      "layer": "universal"
+    },
+    ".claude/hooks/post_read_dispatch.py": {
+      "status": "tracked",
+      "hash": "ae4bd6fccdd88474dac57a6a3c15988b8c4f2404298712d99be998f1f05158ef",
+      "layer": "universal"
+    },
+    ".claude/hooks/pre_read_dispatch.py": {
+      "status": "tracked",
+      "hash": "67be1759c2c815a24b8cded9f28a4d6e3c1db976e67503a9a4b9603652fa67d3",
+      "layer": "universal"
+    },
+    ".claude/hooks/prompt_git_state_delta.py": {
+      "status": "tracked",
+      "hash": "ec55fa104309f0e7e4c79fce620d4039430ba89cc6b61f8dd194203689f5dfa2",
+      "layer": "universal"
+    },
+    ".claude/hooks/prompt_memory_loader.py": {
+      "status": "watch",
+      "layer": "universal"
+    },
+    ".claude/hooks/routing_audit.py": {
+      "status": "tracked",
+      "hash": "e95f89f4a68268e36023ffb694c972a437c237a622c7963866c5160ff7a7ca63",
+      "layer": "universal"
+    },
+    ".claude/hooks/routing_classifier.py": {
+      "status": "tracked",
+      "hash": "2a6e9379ee6de59a725e86d9c21359a83321dc4224e5a092405c5426790a5cc5",
+      "layer": "universal"
+    },
+    ".claude/hooks/session_context_loader.py": {
+      "status": "watch",
+      "layer": "godot"
+    },
+    ".claude/hooks/tool_cascade_audit.py": {
+      "status": "watch",
+      "layer": "godot"
+    },
+    ".claude/hooks/tool_routing_cumulative.py": {
+      "status": "tracked",
+      "hash": "4fca180553f8aeb9c2492894fb3625932f35f3b82b4777a3be0ccb6611d34f4c",
+      "layer": "universal"
+    },
+    ".claude/hooks/tool_routing_cumulative_block.py": {
+      "status": "tracked",
+      "hash": "a3d4eedef2c5508ec47aaeb9fd38846d0d60cb85273e3faa80a09a3eb3bbebd6",
+      "layer": "universal"
+    },
+    ".claude/hooks/tool_routing_cumulative_reset.py": {
+      "status": "tracked",
+      "hash": "696a2dd9aba4206360091f4097772823c429a748eb9161d95b21a1888b52c767",
+      "layer": "universal"
+    },
+    ".claude/hooks/tool_routing_nudge.py": {
+      "status": "tracked",
+      "hash": "b59c5343cd25315aa581a917a810f02ec6290e2c369cfa34fec2b6bcef641f3c",
+      "layer": "universal"
+    },
+    ".claude/hooks/tool_routing_post_grep.py": {
+      "status": "tracked",
+      "hash": "761b0100fccf9895a417fa97a3949084c6adc25451b4bd8cf330e8d5f0d1822e",
+      "layer": "universal"
+    },
+    ".claude/hooks/tool_routing_prompt_synthesis.py": {
+      "status": "tracked",
+      "hash": "e30320e1684bf70dff4d096a637459cb529e89f4d7a6ed20790d420cd946771e",
+      "layer": "universal"
+    },
+    ".claude/hooks/transcript_backup.py": {
+      "status": "tracked",
+      "hash": "988beb4bce47ac5f64a8c53a318f5ea61305b11ceecc1e5969e8f02fd7b74b0b",
+      "layer": "universal"
+    },
+    ".claude/hooks/tres_nullstrip_guard.py": {
+      "status": "tracked",
+      "hash": "23515b8c75f1084f5f6d04232e5e368bdd8dad7ef1e31cbe54d9d157a0c9256a",
+      "layer": "godot"
+    },
+    ".claude/rules/cloud_dev.md": {
+      "status": "watch",
+      "layer": "godot"
+    },
+    ".claude/rules/csharp_lsp.md": {
+      "status": "tracked",
+      "hash": "a9ae822b0cdd59f131f861b7930e1d000eeec25e61af9420870e4677fb087956",
+      "layer": "godot"
+    },
+    ".claude/rules/csharp_patterns.md": {
+      "status": "tracked",
+      "hash": "142fae43ca191f7c226138eef3d28f0fb6fa3ba332f913a8cd6b48e32e3b691f",
+      "layer": "godot"
+    },
+    ".claude/rules/godot_files.md": {
+      "status": "watch",
+      "layer": "godot"
+    },
+    ".claude/rules/hsm_bt_patterns.md": {
+      "status": "tracked",
+      "hash": "773231a48657650ceb74cb1369e5c61673b3d374a45433ec953a1839fc627d8c",
+      "layer": "jmodot"
+    },
+    ".claude/rules/jmodot_framework_authoring.md": {
+      "status": "watch",
+      "layer": "jmodot"
+    },
+    ".claude/rules/jmodot_submodule.md": {
+      "status": "watch",
+      "layer": "jmodot"
+    },
+    ".claude/rules/jmodot_utilities.md": {
+      "status": "watch",
+      "layer": "jmodot"
+    },
+    ".claude/rules/physics_patterns.md": {
+      "status": "tracked",
+      "hash": "3170676bde4e45d6aad6b79610b1d4c4de9aa8b28ebf0d919923171091c86e08",
+      "layer": "godot"
+    },
+    ".claude/rules/scene_authoring.md": {
+      "status": "tracked",
+      "hash": "f49de9f2ae8f081ae84bd4e2ad1af39ca2a6ac0fdca2eff51a76e6a42772d80b",
+      "layer": "godot"
+    },
+    ".claude/rules/visual_layers.md": {
+      "status": "tracked",
+      "hash": "6d2a0158b2156af1097c9139edc8be0ab97cd411973a50fd7094b67413e03ab1",
+      "layer": "jmodot"
+    },
+    ".claude/scripts/autolearn.sh": {
+      "status": "tracked",
+      "hash": "e5671a4f7a83e8a3794710c4d43a266ad5b8220f499197b99c738e02ce28218d",
+      "layer": "universal"
+    },
+    ".claude/scripts/check_learnings.sh": {
+      "status": "tracked",
+      "hash": "854063c43598af3d05489c456fa35fd22a7e39ed9b640e2de26e329149ed821c",
+      "layer": "universal"
+    },
+    ".claude/scripts/run_test_suite.ps1": {
+      "status": "watch",
+      "layer": "godot"
+    },
+    ".claude/scripts/validate_commands.py": {
+      "status": "tracked",
+      "hash": "12336e92238e91268c8c58bfb0891db59b250ceae70dd3092fe7af5a863b0b9b",
+      "layer": "universal"
+    },
+    ".claude/settings.json": {
+      "status": "watch",
+      "layer": "universal"
+    },
+    ".claude/skills/_brainstorm_shared/appetite_invariant.md": {
+      "status": "tracked",
+      "hash": "39fc853b8ed53eb5429bf18e4787fb31ab4f8a826b317aa66f8f5ca989b83730",
+      "layer": "universal"
+    },
+    ".claude/skills/_brainstorm_shared/common.md": {
+      "status": "watch",
+      "layer": "universal"
+    },
+    ".claude/skills/architecture_brainstorm/SKILL.md": {
+      "status": "watch",
+      "layer": "universal"
+    },
+    ".claude/skills/architecture_philosophy/SKILL.md": {
+      "status": "watch",
+      "layer": "universal"
+    },
+    ".claude/skills/architecture_philosophy/structure_rules.md": {
+      "status": "watch",
+      "layer": "universal"
+    },
+    ".claude/skills/debugging/SKILL.md": {
+      "status": "watch",
+      "layer": "universal"
+    },
+    ".claude/skills/game_vision/SKILL.md": {
+      "status": "watch",
+      "layer": "universal"
+    },
+    ".claude/skills/idea_brainstorm/SKILL.md": {
+      "status": "tracked",
+      "hash": "34c16756e75d1e20f68001fefadc2bf0fe96821062e485eaa81a2f20999ea6ad",
+      "layer": "universal"
+    },
+    ".claude/skills/instruction_quality/SKILL.md": {
+      "status": "tracked",
+      "hash": "420c688c176de329d9d39f2b29c3d18d377850ced2a218e79536c44648ec9751",
+      "layer": "universal"
+    },
+    ".claude/skills/jmodot/SKILL.md": {
+      "status": "watch",
+      "layer": "jmodot"
+    },
+    ".claude/skills/jmodot/ai.md": {
+      "status": "tracked",
+      "hash": "863b91ea1e59b01579558108845ba1d67be36145411c3860b952e531aba0bdb0",
+      "layer": "jmodot"
+    },
+    ".claude/skills/jmodot/combat.md": {
+      "status": "tracked",
+      "hash": "4623c4aa0af413ccc7b8e99fd134e10f324c71401f0d659fab9023bea7ef5df1",
+      "layer": "jmodot"
+    },
+    ".claude/skills/jmodot/components.md": {
+      "status": "tracked",
+      "hash": "dae782ab6cd14c7fe02f21f66214f9dde0e8db35e5d0b333cf15de37792467ef",
+      "layer": "jmodot"
+    },
+    ".claude/skills/jmodot/movement.md": {
+      "status": "tracked",
+      "hash": "4845e7f92da46bef21108d444edb22eaedef25a3b3cf505a342c677e8b7e4a57",
+      "layer": "jmodot"
+    },
+    ".claude/skills/jmodot/squad_formations.md": {
+      "status": "tracked",
+      "hash": "67b530f7de149580b5085432685764701144b086704d1c7691915a4805d9d2cc",
+      "layer": "jmodot"
+    },
+    ".claude/skills/jmodot/stat_driven_ai.md": {
+      "status": "tracked",
+      "hash": "004df52e256e26e57625f24347d6fa6b928210167ef3e0216431ddb16398d025",
+      "layer": "jmodot"
+    },
+    ".claude/skills/jmodot/stats.md": {
+      "status": "tracked",
+      "hash": "e3a98a33117fe39cab7952418af5cb0a2f0f57351cf0b9e3924f917f0be31f61",
+      "layer": "jmodot"
+    },
+    ".claude/skills/logging_methodology/SKILL.md": {
+      "status": "watch",
+      "layer": "jmodot"
+    },
+    ".claude/skills/mermaid_diagrams/SKILL.md": {
+      "status": "tracked",
+      "hash": "5064d4999b7f912048d242dfe767506e67fba7ad3f23acc582b8cf4b2292d042",
+      "layer": "universal"
+    },
+    ".claude/skills/obsidian_conventions/SKILL.md": {
+      "status": "watch",
+      "layer": "universal"
+    },
+    ".claude/skills/parallel_agents/SKILL.md": {
+      "status": "tracked",
+      "hash": "5066da3beb155f926a011549d6fb0b3e74679cb6609bfe803e8116bd151e1d70",
+      "layer": "universal"
+    },
+    ".claude/skills/project_subsystems/SKILL.md": {
+      "status": "watch",
+      "layer": "universal"
+    },
+    ".claude/skills/refactor_procedure/SKILL.md": {
+      "status": "watch",
+      "layer": "godot"
+    },
+    ".claude/skills/shader_authoring/SKILL.md": {
+      "status": "tracked",
+      "hash": "4df7a29b00552d43ac90e1e56ede493752a7725e935f09a3c76414b8fe58650a",
+      "layer": "godot"
+    },
+    ".claude/skills/sprite_authoring/SKILL.md": {
+      "status": "watch",
+      "layer": "godot"
+    },
+    ".claude/skills/status_effect_authoring/SKILL.md": {
+      "status": "watch",
+      "layer": "jmodot"
+    },
+    ".claude/skills/testing/SKILL.md": {
+      "status": "watch",
+      "layer": "godot"
+    },
+    ".claude/skills/testing/advanced.md": {
+      "status": "tracked",
+      "hash": "86e649ef1eea5b63e8f59dcd203dce1d12298d1e03e982ad55adf737c1951890",
+      "layer": "godot"
+    },
+    ".claude/skills/testing/scene_runner.md": {
+      "status": "tracked",
+      "hash": "ab9d41088a16dddb192de1658d467c860bbc8fe2db99f81afcb5946ebcf1e397",
+      "layer": "godot"
+    },
+    ".claude/skills/vfx_patterns/SKILL.md": {
+      "status": "watch",
+      "layer": "jmodot"
+    },
+    ".claude/skills/worklog_reference/SKILL.md": {
+      "status": "watch",
+      "layer": "universal"
+    },
+    ".claude/tools/aggregate_routing_audit.py": {
+      "status": "tracked",
+      "hash": "e041d06515744a37ebd2162f5d2104140bd38e0a5b1f336b8b8d580b62689bd5",
+      "layer": "universal"
+    },
+    ".claude/tools/analyze_eval_archive.py": {
+      "status": "tracked",
+      "hash": "3312a5d0cfa3def70a93a3b94902aedc99e32b7fd889f512f111c99be35b2475",
+      "layer": "universal"
+    },
+    ".claude/tools/baseline_sync.py": {
+      "status": "watch",
+      "layer": "universal"
+    },
+    ".claude/tools/csharp-ls-adapter.js": {
+      "status": "tracked",
+      "hash": "63e78a6e40b3ec9efa209d1db2871e2ebef1e96fc6050879fffd86d58dd4e253",
+      "layer": "godot"
+    },
+    ".claude/tools/extract_subagent_tools.py": {
+      "status": "watch",
+      "layer": "universal"
+    },
+    ".claude/tools/score_routing_battery.py": {
+      "status": "tracked",
+      "hash": "18a76d049eef7dc2e85855f6fd6337e364c4bb9a9282109f67353d7adecace08",
+      "layer": "universal"
+    },
+    ".claude/tools/setup-csharp-ls.sh": {
+      "status": "watch",
+      "layer": "godot"
+    },
+    ".claude/workflows/doc_architecture_audit.js": {
+      "status": "tracked",
+      "hash": "15901f13d7ad53e03cb8b461ed1ad6467cf7f9aa56414c9659ca6bd59823f68e",
+      "layer": "universal"
+    },
+    ".claude/workflows/review_fanout.js": {
+      "status": "tracked",
+      "hash": "fb3f5e548fd99ac5161294436d0663eb2fd3cee8fea25b1b1638375fa82acc99",
+      "layer": "universal"
+    },
+    ".claude/workflows/test_agents_fixtures.js": {
+      "status": "tracked",
+      "hash": "010d4e668241633a67c98b9fdb3a0a5fa73bd2ae4bfe45405fb377b1f0a68918",
+      "layer": "universal"
+    },
+    ".claude/workflows/test_skill_pressure.js": {
+      "status": "tracked",
+      "hash": "a826c342cb97ee6513fb708123aadff9a234cad0d47cbb1da87b710d43356121",
+      "layer": "universal"
+    },
+    ".claude/worklog-titles.md": {
+      "status": "watch",
+      "layer": "universal"
+    }
+  }
+}
