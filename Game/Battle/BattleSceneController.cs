@@ -43,6 +43,9 @@ public partial class BattleSceneController : Node2D
     private PlayerSide _localSide = PlayerSide.Left;
     private bool _resultApplied;
     private bool _fastForward;
+    private BreathBeamView _breathBeam = null!;
+    private int _lastWrathCooldown;
+    private int _lastAscensionTier = 1;
 
     public override void _Ready()
     {
@@ -76,6 +79,9 @@ public partial class BattleSceneController : Node2D
         Hud.ConduitBuildRequested += OnConduitBuildRequested;
         Hud.ConduitSellRequested += id => Runner.EnqueueCommand(SimCommand.SellConduit(_localSide, id));
 
+        _breathBeam = new BreathBeamView();
+        UnitLayer.AddChild(_breathBeam);
+
         ContinueButton.Pressed += () =>
             GetTree().ChangeSceneToFile("res://scenes/menu/level_select.tscn");
         OutcomePanel.Visible = false;
@@ -89,11 +95,17 @@ public partial class BattleSceneController : Node2D
             return;
         }
         var breathHeld = Input.IsMouseButtonPressed(MouseButton.Right);
+        var player = Runner.State.Player(_localSide);
+        var hasEnergy = player.BreathEnergySeconds >= 1f / Runner.State.Config.TickRate;
         if (breathHeld)
         {
             var laneX = GetGlobalMousePosition().X / LaneGeometry.PixelsPerMeter;
             Runner.EnqueueCommand(SimCommand.FireBreath(_localSide, laneX));
         }
+        var perchX = _localSide == PlayerSide.Left ? 1.2f : Runner.State.Config.LaneLength - 1.2f;
+        var perch = new Vector2(perchX * LaneGeometry.PixelsPerMeter, LaneGeometry.AirY - 36f);
+        var aim = GetGlobalMousePosition();
+        _breathBeam.UpdateBeam(perch, aim, breathHeld && hasEnergy, delta);
         if (Input.IsKeyPressed(Key.E))
         {
             Runner.EnqueueCommand(SimCommand.ChannelMana(_localSide, ChannelPerTick));
@@ -135,11 +147,40 @@ public partial class BattleSceneController : Node2D
 
     private void OnTickAdvanced()
     {
+        var player = Runner.State.Player(_localSide);
+
+        if (player.WrathCooldownTicks > _lastWrathCooldown)
+        {
+            FlashScreen(new Color(0.95f, 0.76f, 0.17f, 0.28f));
+        }
+        _lastWrathCooldown = player.WrathCooldownTicks;
+
+        if (player.AscensionTier > _lastAscensionTier)
+        {
+            _lastAscensionTier = player.AscensionTier;
+            FlashScreen(new Color(0.66f, 0.52f, 0.95f, 0.35f));
+        }
+
         if (Runner.State.Outcome != BattleOutcome.Ongoing && !_resultApplied)
         {
             ApplyResultAndShowOutcome(
                 won: Runner.State.Outcome == BattleOutcome.LeftVictory, retreated: false);
         }
+    }
+
+    private void FlashScreen(Color color)
+    {
+        var flash = new ColorRect
+        {
+            Color = color,
+            MouseFilter = Control.MouseFilterEnum.Ignore,
+            AnchorRight = 1f,
+            AnchorBottom = 1f,
+        };
+        Hud.AddChild(flash);
+        var tween = flash.CreateTween();
+        tween.TweenProperty(flash, "modulate:a", 0f, 0.45);
+        tween.TweenCallback(Callable.From(flash.QueueFree));
     }
 
     private void ApplyResultAndShowOutcome(bool won, bool retreated)
