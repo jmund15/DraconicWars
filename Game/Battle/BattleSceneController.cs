@@ -42,6 +42,7 @@ public partial class BattleSceneController : Node2D
     private CampaignLevelDef _level = null!;
     private PlayerSide _localSide = PlayerSide.Left;
     private bool _resultApplied;
+    private bool _fastForward;
 
     public override void _Ready()
     {
@@ -63,7 +64,7 @@ public partial class BattleSceneController : Node2D
         Runner.TickAdvanced += OnTickAdvanced;
         Runner.Initialize(
             _level.Config,
-            CampaignCatalog.BuildBattleDefs(_level),
+            CampaignCatalog.BuildBattleDefs(_level, GameSession.Profile),
             ConduitDefs.All,
             seed: LevelSeed(_level.Id));
         Runner.Director = new WaveDirector(_level.Waves, _level.RepeatingWaves);
@@ -87,7 +88,8 @@ public partial class BattleSceneController : Node2D
         {
             return;
         }
-        if (Input.IsMouseButtonPressed(MouseButton.Right))
+        var breathHeld = Input.IsMouseButtonPressed(MouseButton.Right);
+        if (breathHeld)
         {
             var laneX = GetGlobalMousePosition().X / LaneGeometry.PixelsPerMeter;
             Runner.EnqueueCommand(SimCommand.FireBreath(_localSide, laneX));
@@ -96,6 +98,8 @@ public partial class BattleSceneController : Node2D
         {
             Runner.EnqueueCommand(SimCommand.ChannelMana(_localSide, ChannelPerTick));
         }
+        // PvE 2x speed toggle (design.md §12) — drops to 1x while breath is aimed.
+        Runner.SpeedMultiplier = _fastForward && !breathHeld ? 2f : 1f;
     }
 
     public override void _UnhandledKeyInput(InputEvent @event)
@@ -107,6 +111,10 @@ public partial class BattleSceneController : Node2D
         if (key.Keycode == Key.Q)
         {
             Runner.EnqueueCommand(SimCommand.CastWrath(_localSide));
+        }
+        if (key.Keycode == Key.T)
+        {
+            _fastForward = !_fastForward;
         }
         if (key.Keycode == Key.R
             && Runner.State.Outcome == BattleOutcome.Ongoing

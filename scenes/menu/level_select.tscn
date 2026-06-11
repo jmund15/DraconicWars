@@ -2,7 +2,7 @@
 
 [ext_resource type="Script" path="res://Game/Menu/LevelSelect.cs" id="1"]
 
-[node name="LevelSelect" type="Control" node_paths=PackedStringArray("LevelList", "GoldLabel", "RankLabel", "BackButton")]
+[node name="LevelSelect" type="Control" node_paths=PackedStringArray("LevelList", "GoldLabel", "RankLabel", "BackButton", "UpgradeList")]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -12,6 +12,7 @@ LevelList = NodePath("Center/VBox/Levels")
 GoldLabel = NodePath("Center/VBox/TopRow/Gold")
 RankLabel = NodePath("Center/VBox/TopRow/Rank")
 BackButton = NodePath("Center/VBox/Back")
+UpgradeList = NodePath("Center/VBox/Upgrades")
 
 [node name="Center" type="CenterContainer" parent="."]
 layout_mode = 1
@@ -44,6 +45,15 @@ text = "Dragon Rank: 0"
 [node name="Levels" type="VBoxContainer" parent="Center/VBox"]
 layout_mode = 2
 theme_override_constants/separation = 4
+
+[node name="UpgradeHeader" type="Label" parent="Center/VBox"]
+layout_mode = 2
+text = "Warband"
+horizontal_alignment = 1
+
+[node name="Upgrades" type="VBoxContainer" parent="Center/VBox"]
+layout_mode = 2
+theme_override_constants/separation = 2
 
 [node name="Back" type="Button" parent="Center/VBox"]
 layout_mode = 2

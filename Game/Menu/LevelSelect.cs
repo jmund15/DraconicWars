@@ -15,14 +15,17 @@ public partial class LevelSelect : Control
 
     [Export, RequiredExport] public Button BackButton { get; set; } = null!;
 
+    [Export, RequiredExport] public VBoxContainer UpgradeList { get; set; } = null!;
+
     public override void _Ready()
     {
         this.ValidateRequiredExports();
         GameSession.EnsureProfileLoaded();
         var profile = GameSession.Profile;
+        EnsureStarterRoster(profile);
 
-        GoldLabel.Text = $"Gold: {profile.Gold}";
-        RankLabel.Text = $"Dragon Rank: {MetaProgression.DragonRank(profile)}";
+        RefreshHeader();
+        BuildUpgradeRows();
 
         for (var i = 0; i < CampaignCatalog.Levels.Count; i++)
         {
@@ -47,4 +50,77 @@ public partial class LevelSelect : Control
         BackButton.Pressed += () =>
             GetTree().ChangeSceneToFile("res://scenes/menu/main_menu.tscn");
     }
+
+    /// <summary>Fresh profiles own the FP roster at entry level (gift drip comes later).</summary>
+    private static void EnsureStarterRoster(PlayerProfile profile)
+    {
+        foreach (var def in Content.UnitCatalog.FirstPlayable)
+        {
+            if (def.Tier < 4 && !profile.UnitLevels.ContainsKey(def.Id))
+            {
+                profile.UnitLevels[def.Id] = MetaProgression.EntryLevel(def.Tier);
+            }
+        }
+    }
+
+    private void RefreshHeader()
+    {
+        var profile = GameSession.Profile;
+        GoldLabel.Text = $"Gold: {profile.Gold}";
+        RankLabel.Text = $"Dragon Rank: {MetaProgression.DragonRank(profile)}"
+            + $"  (cap Lv{MetaProgression.LevelCap(MetaProgression.DragonRank(profile))})";
+    }
+
+    private void BuildUpgradeRows()
+    {
+        var profile = GameSession.Profile;
+        foreach (var def in Content.UnitCatalog.FirstPlayable)
+        {
+            if (def.Tier >= 4)
+            {
+                continue;
+            }
+            var row = new HBoxContainer();
+            var label = new Label { CustomMinimumSize = new Vector2(170, 0) };
+            var buy = new Button { CustomMinimumSize = new Vector2(80, 0) };
+            row.AddChild(label);
+            row.AddChild(buy);
+            UpgradeList.AddChild(row);
+
+            var defId = def.Id;
+            void Refresh()
+            {
+                var unitLevel = profile.UnitLevels[defId];
+                label.Text = $"{def.DisplayName}  Lv{unitLevel}";
+                var atCap = unitLevel >= System.Math.Min(
+                    MetaProgression.MaxLevel,
+                    MetaProgression.LevelCap(MetaProgression.DragonRank(profile)));
+                buy.Text = atCap ? "MAX" : $"+ {MetaProgression.CostForLevel(unitLevel + 1)}g";
+                buy.Disabled = atCap
+                    || profile.Gold < MetaProgression.CostForLevel(unitLevel + 1);
+            }
+
+            buy.Pressed += () =>
+            {
+                if (MetaProgression.TryBuyLevel(profile, defId))
+                {
+                    GameSession.SaveProfile();
+                    RefreshHeader();
+                    RefreshAllRows();
+                }
+            };
+            _rowRefreshers.Add(Refresh);
+            Refresh();
+        }
+    }
+
+    private void RefreshAllRows()
+    {
+        foreach (var refresh in _rowRefreshers)
+        {
+            refresh();
+        }
+    }
+
+    private readonly System.Collections.Generic.List<System.Action> _rowRefreshers = new();
 }

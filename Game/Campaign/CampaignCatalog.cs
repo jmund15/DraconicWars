@@ -110,10 +110,20 @@ public static class CampaignCatalog
             BaseGoldReward: 150),
     };
 
-    /// <summary>Player defs + the level's magnified, id-prefixed enemy defs.</summary>
-    public static IReadOnlyList<UnitDef> BuildBattleDefs(CampaignLevelDef level)
+    /// <summary>
+    /// Player defs (scaled by profile unit levels) + the level's magnified, id-prefixed
+    /// enemy defs (always base stats — the mirrored AI plays at War Standard).
+    /// </summary>
+    public static IReadOnlyList<UnitDef> BuildBattleDefs(
+        CampaignLevelDef level, DraconicWars.Meta.PlayerProfile? profile = null)
     {
-        var defs = new List<UnitDef>(UnitCatalog.FirstPlayable);
+        var defs = new List<UnitDef>();
+        foreach (var def in UnitCatalog.FirstPlayable)
+        {
+            defs.Add(profile is not null && profile.UnitLevels.TryGetValue(def.Id, out var unitLevel)
+                ? ApplyLevel(def, unitLevel)
+                : def);
+        }
         foreach (var enemyId in level.EnemyUnitIds)
         {
             var baseDef = UnitCatalog.FirstPlayable.First(def => def.Id == enemyId);
@@ -121,5 +131,15 @@ public static class CampaignCatalog
                 baseDef, level.MagnificationPct, CampaignLevelDef.EnemyIdPrefix));
         }
         return defs;
+    }
+
+    private static UnitDef ApplyLevel(UnitDef def, int unitLevel)
+    {
+        var multiplier = DraconicWars.Meta.MetaProgression.StatMultiplier(unitLevel, def.Tier);
+        return def with
+        {
+            MaxHp = (int)System.MathF.Round(def.MaxHp * multiplier),
+            Damage = (int)System.MathF.Round(def.Damage * multiplier),
+        };
     }
 }

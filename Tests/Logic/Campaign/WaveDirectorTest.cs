@@ -174,6 +174,22 @@ public class CampaignProgressTest
     }
 
     [TestCase]
+    public void PlayerUnitLevelsScaleBattleDefsButNotEnemies()
+    {
+        var profile = new DraconicWars.Meta.PlayerProfile();
+        profile.UnitLevels["kobold_spearman"] = 3;
+
+        var defs = CampaignCatalog.BuildBattleDefs(CampaignCatalog.Levels[0], profile);
+
+        var player = defs.First(d => d.Id == "kobold_spearman");
+        var enemy = defs.First(d => d.Id == "enemy:kobold_spearman");
+        AssertThat(player.MaxHp).IsEqual((int)System.MathF.Round(110 * 1.21f));
+        AssertThat(player.Damage).IsEqual((int)System.MathF.Round(12 * 1.21f));
+        AssertThat(enemy.MaxHp).IsEqual(110);
+        AssertThat(enemy.Damage).IsEqual(12);
+    }
+
+    [TestCase]
     public void OnlyLevelOneUnlockedOnFreshProfile()
     {
         var profile = new DraconicWars.Meta.PlayerProfile();
