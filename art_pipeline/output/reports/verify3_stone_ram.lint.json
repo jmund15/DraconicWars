@@ -1,0 +1,62 @@
+{
+  "sheet": "C:\\Users\\jmund\\Game_Dev\\Godot_Projects\\DraconicWars\\art_pipeline\\output\\units\\stone_ram_sheet.png",
+  "manifest": "C:\\Users\\jmund\\Game_Dev\\Godot_Projects\\DraconicWars\\art_pipeline\\output\\units\\stone_ram.manifest.json",
+  "passed": true,
+  "checks": {
+    "on_palette": {
+      "passed": true,
+      "off_palette_colors": {}
+    },
+    "no_aa": {
+      "passed": true,
+      "semi_transparent_pixels": 0,
+      "samples": []
+    },
+    "orphan_pixels": {
+      "passed": true,
+      "count": 0,
+      "offenders": [],
+      "whitelist": [
+        "92a984",
+        "ffffff"
+      ]
+    },
+    "outline_1px": {
+      "passed": true,
+      "boundary_dark_coverage": 1.0,
+      "light_boundary_samples": [],
+      "ink_2x2_blocks": []
+    },
+    "frames": {
+      "passed": true,
+      "failures": []
+    },
+    "banding": {
+      "passed": true,
+      "max_run": 6,
+      "offenders": []
+    },
+    "manifest_contract": {
+      "passed": true,
+      "errors": []
+    },
+    "body_size": {
+      "passed": true,
+      "errors": [],
+      "warnings": [],
+      "measured": {
+        "width": 26,
+        "height": 21
+      },
+      "rules": {
+        "min_h": 20,
+        "min_w": 26
+      }
+    },
+    "whitelist_cap": {
+      "passed": true,
+      "cap": 6,
+      "offenders": []
+    }
+  }
+}

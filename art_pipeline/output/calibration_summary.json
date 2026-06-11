@@ -1,38 +1,111 @@
-[
-  {
-    "name": "kobold_spearman",
-    "lint_pass": true,
-    "sheet": "C:\\Users\\jmund\\Game_Dev\\Godot_Projects\\DraconicWars\\art_pipeline\\output\\units\\kobold_spearman_sheet.png",
-    "manifest": "C:\\Users\\jmund\\Game_Dev\\Godot_Projects\\DraconicWars\\art_pipeline\\output\\units\\kobold_spearman.manifest.json",
-    "lint_report": "C:\\Users\\jmund\\Game_Dev\\Godot_Projects\\DraconicWars\\art_pipeline\\output\\reports\\kobold_spearman.lint.json",
-    "contact_sheets": [
-      "C:\\Users\\jmund\\Game_Dev\\Godot_Projects\\DraconicWars\\art_pipeline\\output\\contact_sheets\\kobold_spearman_contact_1x.png",
-      "C:\\Users\\jmund\\Game_Dev\\Godot_Projects\\DraconicWars\\art_pipeline\\output\\contact_sheets\\kobold_spearman_contact_3x.png"
-    ],
-    "failed_checks": []
-  },
-  {
-    "name": "goblin_slinger",
-    "lint_pass": true,
-    "sheet": "C:\\Users\\jmund\\Game_Dev\\Godot_Projects\\DraconicWars\\art_pipeline\\output\\units\\goblin_slinger_sheet.png",
-    "manifest": "C:\\Users\\jmund\\Game_Dev\\Godot_Projects\\DraconicWars\\art_pipeline\\output\\units\\goblin_slinger.manifest.json",
-    "lint_report": "C:\\Users\\jmund\\Game_Dev\\Godot_Projects\\DraconicWars\\art_pipeline\\output\\reports\\goblin_slinger.lint.json",
-    "contact_sheets": [
-      "C:\\Users\\jmund\\Game_Dev\\Godot_Projects\\DraconicWars\\art_pipeline\\output\\contact_sheets\\goblin_slinger_contact_1x.png",
-      "C:\\Users\\jmund\\Game_Dev\\Godot_Projects\\DraconicWars\\art_pipeline\\output\\contact_sheets\\goblin_slinger_contact_3x.png"
-    ],
-    "failed_checks": []
-  },
-  {
-    "name": "frost_whelp",
-    "lint_pass": true,
-    "sheet": "C:\\Users\\jmund\\Game_Dev\\Godot_Projects\\DraconicWars\\art_pipeline\\output\\units\\frost_whelp_sheet.png",
-    "manifest": "C:\\Users\\jmund\\Game_Dev\\Godot_Projects\\DraconicWars\\art_pipeline\\output\\units\\frost_whelp.manifest.json",
-    "lint_report": "C:\\Users\\jmund\\Game_Dev\\Godot_Projects\\DraconicWars\\art_pipeline\\output\\reports\\frost_whelp.lint.json",
-    "contact_sheets": [
-      "C:\\Users\\jmund\\Game_Dev\\Godot_Projects\\DraconicWars\\art_pipeline\\output\\contact_sheets\\frost_whelp_contact_1x.png",
-      "C:\\Users\\jmund\\Game_Dev\\Godot_Projects\\DraconicWars\\art_pipeline\\output\\contact_sheets\\frost_whelp_contact_3x.png"
-    ],
-    "failed_checks": []
-  }
-]
+{
+  "units": [
+    {
+      "name": "kobold_spearman",
+      "typeclass": "melee_biped",
+      "lint_pass": true,
+      "sheet": "C:\\Users\\jmund\\Game_Dev\\Godot_Projects\\DraconicWars\\art_pipeline\\output\\units\\kobold_spearman_sheet.png",
+      "manifest": "C:\\Users\\jmund\\Game_Dev\\Godot_Projects\\DraconicWars\\art_pipeline\\output\\units\\kobold_spearman.manifest.json",
+      "lint_report": "C:\\Users\\jmund\\Game_Dev\\Godot_Projects\\DraconicWars\\art_pipeline\\output\\reports\\kobold_spearman.lint.json",
+      "contact_sheets": [
+        "C:\\Users\\jmund\\Game_Dev\\Godot_Projects\\DraconicWars\\art_pipeline\\output\\contact_sheets\\kobold_spearman_contact_1x.png",
+        "C:\\Users\\jmund\\Game_Dev\\Godot_Projects\\DraconicWars\\art_pipeline\\output\\contact_sheets\\kobold_spearman_contact_3x.png"
+      ],
+      "body_size": {
+        "width": 16,
+        "height": 26
+      },
+      "failed_checks": []
+    },
+    {
+      "name": "forest_archer",
+      "typeclass": "ranged_biped",
+      "lint_pass": true,
+      "sheet": "C:\\Users\\jmund\\Game_Dev\\Godot_Projects\\DraconicWars\\art_pipeline\\output\\units\\forest_archer_sheet.png",
+      "manifest": "C:\\Users\\jmund\\Game_Dev\\Godot_Projects\\DraconicWars\\art_pipeline\\output\\units\\forest_archer.manifest.json",
+      "lint_report": "C:\\Users\\jmund\\Game_Dev\\Godot_Projects\\DraconicWars\\art_pipeline\\output\\reports\\forest_archer.lint.json",
+      "contact_sheets": [
+        "C:\\Users\\jmund\\Game_Dev\\Godot_Projects\\DraconicWars\\art_pipeline\\output\\contact_sheets\\forest_archer_contact_1x.png",
+        "C:\\Users\\jmund\\Game_Dev\\Godot_Projects\\DraconicWars\\art_pipeline\\output\\contact_sheets\\forest_archer_contact_3x.png"
+      ],
+      "body_size": {
+        "width": 16,
+        "height": 27
+      },
+      "failed_checks": []
+    },
+    {
+      "name": "frost_whelp",
+      "typeclass": "aerial_flyer",
+      "lint_pass": true,
+      "sheet": "C:\\Users\\jmund\\Game_Dev\\Godot_Projects\\DraconicWars\\art_pipeline\\output\\units\\frost_whelp_sheet.png",
+      "manifest": "C:\\Users\\jmund\\Game_Dev\\Godot_Projects\\DraconicWars\\art_pipeline\\output\\units\\frost_whelp.manifest.json",
+      "lint_report": "C:\\Users\\jmund\\Game_Dev\\Godot_Projects\\DraconicWars\\art_pipeline\\output\\reports\\frost_whelp.lint.json",
+      "contact_sheets": [
+        "C:\\Users\\jmund\\Game_Dev\\Godot_Projects\\DraconicWars\\art_pipeline\\output\\contact_sheets\\frost_whelp_contact_1x.png",
+        "C:\\Users\\jmund\\Game_Dev\\Godot_Projects\\DraconicWars\\art_pipeline\\output\\contact_sheets\\frost_whelp_contact_3x.png"
+      ],
+      "body_size": {
+        "width": 25,
+        "height": 18,
+        "wingspan": 25
+      },
+      "failed_checks": []
+    },
+    {
+      "name": "dune_marksman",
+      "typeclass": "sniper_biped",
+      "lint_pass": true,
+      "sheet": "C:\\Users\\jmund\\Game_Dev\\Godot_Projects\\DraconicWars\\art_pipeline\\output\\units\\dune_marksman_sheet.png",
+      "manifest": "C:\\Users\\jmund\\Game_Dev\\Godot_Projects\\DraconicWars\\art_pipeline\\output\\units\\dune_marksman.manifest.json",
+      "lint_report": "C:\\Users\\jmund\\Game_Dev\\Godot_Projects\\DraconicWars\\art_pipeline\\output\\reports\\dune_marksman.lint.json",
+      "contact_sheets": [
+        "C:\\Users\\jmund\\Game_Dev\\Godot_Projects\\DraconicWars\\art_pipeline\\output\\contact_sheets\\dune_marksman_contact_1x.png",
+        "C:\\Users\\jmund\\Game_Dev\\Godot_Projects\\DraconicWars\\art_pipeline\\output\\contact_sheets\\dune_marksman_contact_3x.png"
+      ],
+      "body_size": {
+        "width": 19,
+        "height": 43
+      },
+      "failed_checks": []
+    },
+    {
+      "name": "stone_ram",
+      "typeclass": "siege_machine",
+      "lint_pass": true,
+      "sheet": "C:\\Users\\jmund\\Game_Dev\\Godot_Projects\\DraconicWars\\art_pipeline\\output\\units\\stone_ram_sheet.png",
+      "manifest": "C:\\Users\\jmund\\Game_Dev\\Godot_Projects\\DraconicWars\\art_pipeline\\output\\units\\stone_ram.manifest.json",
+      "lint_report": "C:\\Users\\jmund\\Game_Dev\\Godot_Projects\\DraconicWars\\art_pipeline\\output\\reports\\stone_ram.lint.json",
+      "contact_sheets": [
+        "C:\\Users\\jmund\\Game_Dev\\Godot_Projects\\DraconicWars\\art_pipeline\\output\\contact_sheets\\stone_ram_contact_1x.png",
+        "C:\\Users\\jmund\\Game_Dev\\Godot_Projects\\DraconicWars\\art_pipeline\\output\\contact_sheets\\stone_ram_contact_3x.png"
+      ],
+      "body_size": {
+        "width": 26,
+        "height": 21
+      },
+      "failed_checks": []
+    },
+    {
+      "name": "vale_chanter",
+      "typeclass": "support_robed",
+      "lint_pass": true,
+      "sheet": "C:\\Users\\jmund\\Game_Dev\\Godot_Projects\\DraconicWars\\art_pipeline\\output\\units\\vale_chanter_sheet.png",
+      "manifest": "C:\\Users\\jmund\\Game_Dev\\Godot_Projects\\DraconicWars\\art_pipeline\\output\\units\\vale_chanter.manifest.json",
+      "lint_report": "C:\\Users\\jmund\\Game_Dev\\Godot_Projects\\DraconicWars\\art_pipeline\\output\\reports\\vale_chanter.lint.json",
+      "contact_sheets": [
+        "C:\\Users\\jmund\\Game_Dev\\Godot_Projects\\DraconicWars\\art_pipeline\\output\\contact_sheets\\vale_chanter_contact_1x.png",
+        "C:\\Users\\jmund\\Game_Dev\\Godot_Projects\\DraconicWars\\art_pipeline\\output\\contact_sheets\\vale_chanter_contact_3x.png"
+      ],
+      "body_size": {
+        "width": 16,
+        "height": 24
+      },
+      "failed_checks": []
+    }
+  ],
+  "silhouette_strip": [
+    "C:\\Users\\jmund\\Game_Dev\\Godot_Projects\\DraconicWars\\art_pipeline\\output\\contact_sheets\\silhouette_strip_1x.png",
+    "C:\\Users\\jmund\\Game_Dev\\Godot_Projects\\DraconicWars\\art_pipeline\\output\\contact_sheets\\silhouette_strip_4x.png"
+  ]
+}

@@ -115,6 +115,65 @@ def make_contact_sheets(sheet_path: str | Path, manifest_path: str | Path | None
     return out
 
 
+def make_silhouette_strip(units: list[tuple[str, str]], outdir: str | Path | None = None,
+                          name: str = "silhouette_strip") -> list[str]:
+    """1-bit silhouette comparison strip (art rule 1 gate at 1x).
+
+    ``units`` is a list of (sheet_path, manifest_path). Two rows per unit
+    column: idle frame 0 and move (walk/fly) frame 0, rendered white-on-ink.
+    The TypeClass silhouettes (melee / ranged / sniper / aerial / siege /
+    support) must be mutually distinguishable at 1x; the 4x copy exists for
+    review notes only. Returns [path_1x, path_4x].
+    """
+    pal = get_palette()
+    ink = pal.get("ink", 0)
+    cells = []  # (unit_name, [idle_img, move_img])
+    max_fw = max_fh = 0
+    for sheet_path, manifest_path in units:
+        with open(manifest_path, "r", encoding="utf-8") as f:
+            manifest = json.load(f)
+        sheet = Image.open(sheet_path).convert("RGBA")
+        fw, fh = manifest["frame_w"], manifest["frame_h"]
+        max_fw, max_fh = max(max_fw, fw), max(max_fh, fh)
+        frames = []
+        for anim_row in (0, 1):  # idle row, move row
+            cell = sheet.crop((0, anim_row * fh, fw, (anim_row + 1) * fh))
+            mask = cell.split()[3].point(lambda a: 255 if a > 0 else 0)
+            sil = Image.new("RGBA", (fw, fh), ink + (255,))
+            sil.paste((255, 255, 255, 255), (0, 0), mask)
+            frames.append(sil)
+        cells.append((manifest["name"], frames))
+
+    gap = 4
+    strip_w = len(cells) * (max_fw + gap) + gap
+    strip_h = 2 * (max_fh + gap) + gap
+    strip = Image.new("RGBA", (strip_w, strip_h), ink + (255,))
+    for col, (_, frames) in enumerate(cells):
+        for row, sil in enumerate(frames):
+            strip.alpha_composite(sil, (gap + col * (max_fw + gap),
+                                        gap + row * (max_fh + gap)))
+
+    outdir = Path(outdir) if outdir else DEFAULT_OUTDIR
+    outdir.mkdir(parents=True, exist_ok=True)
+    out = []
+    p1 = outdir / f"{name}_1x.png"
+    strip.save(p1)
+    out.append(str(p1))
+
+    big = strip.resize((strip_w * 4, strip_h * 4), Image.NEAREST)
+    labeled = Image.new("RGBA", (big.width, big.height + 14), ink + (255,))
+    labeled.alpha_composite(big, (0, 0))
+    draw = ImageDraw.Draw(labeled)
+    font = _font(10)
+    for col, (unit_name, _) in enumerate(cells):
+        draw.text((4 * (gap + col * (max_fw + gap)), big.height + 1),
+                  unit_name[:14], fill=pal.get("mauve_grey", 3), font=font)
+    p4 = outdir / f"{name}_4x.png"
+    labeled.save(p4)
+    out.append(str(p4))
+    return out
+
+
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser(description="Composite a unit sheet over the battle background at 1x and 3x.")
     ap.add_argument("sheet", help="path to <name>_sheet.png")

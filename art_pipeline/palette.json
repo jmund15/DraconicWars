@@ -35,7 +35,7 @@
     "frost":  { "primary": "frost",      "secondary": "frost_teal", "accent_index": 4 },
     "storm":  { "primary": "storm",      "secondary": "leather",    "accent_index": 3 },
     "venom":  { "primary": "venom",      "secondary": "storm",      "accent_index": 2 },
-    "stone":  { "primary": "stone",      "secondary": "leather",    "accent_index": 3 },
+    "stone":  { "primary": "leather",    "secondary": "stone",      "accent_index": 3 },
     "shadow": { "primary": "shadow",     "secondary": "ink",        "accent_index": 3 },
     "radiant": { "primary": "radiant",   "secondary": "mauve_grey", "accent_index": 4 }
   },

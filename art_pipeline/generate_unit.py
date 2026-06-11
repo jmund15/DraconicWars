@@ -88,6 +88,18 @@ def resolve_colors(template, element: str, overrides: dict, pal: Palette) -> dic
     return out
 
 
+def _body_bbox_size(buf) -> tuple[int, int]:
+    """(w, h) of the non-prop silhouette (parts prefixed ``prop_`` excluded)."""
+    xs, ys = [], []
+    for (x, y), cell in buf.cells.items():
+        if not cell.part.startswith("prop_"):
+            xs.append(x)
+            ys.append(y)
+    if not xs:
+        return (0, 0)
+    return (max(xs) - min(xs) + 1, max(ys) - min(ys) + 1)
+
+
 def generate_unit(spec: dict, outdir: str | Path | None = None,
                   pal: Palette | None = None) -> dict:
     """Generate sheet + manifest for one unit spec. Returns paths + manifest."""
@@ -102,13 +114,20 @@ def generate_unit(spec: dict, outdir: str | Path | None = None,
     back = int(spec.get("backswing_ticks", 8))
     contact = contact_frame_index(fore, back)
 
-    accent_hex = pal.hex_of(*colors["accent"])
-    eye_hex = pal.hex_of(*colors["eye"])
-    wood_hex = pal.hex_of(*colors["wood"]) if "wood" in colors else None
-    protected = {accent_hex, eye_hex}
-    whitelist = sorted(protected | ({wood_hex} if wood_hex else set()))
+    # whitelist = small deliberate details (eyes, element accents), capped by
+    # lint at 6 px/frame. prop_colors = mid-tone 2 px prop bodies (shafts,
+    # stocks, prongs) -- outline-coverage exempt but NOT capped.
+    wl_roles = getattr(template, "WHITELIST_ROLES", ("accent", "eye"))
+    protected = {pal.hex_of(*colors[r]) for r in wl_roles if r in colors}
+    whitelist = sorted(protected)
+    prop_colors = sorted({pal.hex_of(*colors[r]) for r in ("wood", "metal")
+                          if r in colors})
 
-    unit = {"colors": colors, "props": list(spec.get("props", []))}
+    unit = {
+        "colors": colors,
+        "props": list(spec.get("props", [])),
+        "eye_offset": tuple(spec.get("eye_offset", (0, 0))),
+    }
 
     W, H = template.canvas
     anims = template.animations()
@@ -116,6 +135,7 @@ def generate_unit(spec: dict, outdir: str | Path | None = None,
 
     rows: list[tuple[skeletons.AnimDef, list]] = []
     ramps_used: set[str] = set()
+    body_sizes: dict[str, list[tuple[int, int]]] = {}
     for anim in anims:
         bufs = []
         for pose in template.poses(anim.name, contact):
@@ -123,12 +143,20 @@ def generate_unit(spec: dict, outdir: str | Path | None = None,
             template.draw_pose(buf, pose, unit, pal)
             skeletons.finalize(buf, pal, protected)
             ramps_used |= buf.ramps_used()
+            body_sizes.setdefault(anim.name, []).append(_body_bbox_size(buf))
             bufs.append(buf)
         if len(bufs) != anim.frames:
             raise RuntimeError(
                 f"{name}/{anim.name}: template produced {len(bufs)} frames, "
                 f"manifest declares {anim.frames}")
         rows.append((anim, bufs))
+
+    # body mass (props excluded): max over the idle + move animations.
+    move = "fly" if airborne else "walk"
+    sizes = body_sizes.get("idle", []) + body_sizes.get(move, [])
+    body_size = {"width": max(s[0] for s in sizes), "height": max(s[1] for s in sizes)}
+    if airborne:
+        body_size["wingspan"] = max(s[0] for s in body_sizes.get(move, sizes))
 
     max_frames = max(a.frames for a, _ in rows)
     sheet = Image.new("RGBA", (W * max_frames, H * len(rows)), (0, 0, 0, 0))
@@ -163,8 +191,10 @@ def generate_unit(spec: dict, outdir: str | Path | None = None,
         "pivot": "bottom_center",
         "ground_y": skeletons.ground_row(H),
         "facing": "right",
+        "body_size": body_size,
         "lint": {
             "whitelist_colors": whitelist,
+            "prop_colors": prop_colors,
             "airborne_animations": [a.name for a, _ in rows] if airborne else [],
         },
     }

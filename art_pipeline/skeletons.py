@@ -205,7 +205,8 @@ def apply_selout_outline(buf: PixelBuffer, pal: Palette) -> dict[tuple[int, int]
     return kinds
 
 
-def apply_directional_shading(buf: PixelBuffer, pal: Palette, outline: dict) -> None:
+def apply_directional_shading(buf: PixelBuffer, pal: Palette, outline: dict,
+                              protected_hexes: set[str] = frozenset()) -> None:
     """One global light, top-left 45 deg.
 
     Highlight (+1 ramp step) on interior pixels hugging lit outline above/left,
@@ -213,6 +214,9 @@ def apply_directional_shading(buf: PixelBuffer, pal: Palette, outline: dict) -> 
     lower half, plus a 1 px ambient-occlusion line under overlapping parts.
     Band depth staggers 1-2 px (middle third of each part) to avoid banding.
     Parts named ``back_*`` are pre-darkened and stay flat (depth cue).
+    Shifts that would mint a ``protected_hexes`` color (eye / element accent --
+    whitelist-capped at 6 px/frame) are skipped: deliberate-detail colors stay
+    deliberate.
     """
     boxes = buf.part_bboxes()
     updates: dict[tuple[int, int], int] = {}
@@ -250,10 +254,13 @@ def apply_directional_shading(buf: PixelBuffer, pal: Palette, outline: dict) -> 
                     and not above.no_outline and (x, y - 1) not in outline):
                 lo = True  # ambient occlusion under an overlapping part
 
+        new_idx = None
         if hi and not lo:
-            updates[(x, y)] = min(cell.idx + 1, ramp_len - 1)
+            new_idx = min(cell.idx + 1, ramp_len - 1)
         elif lo and not hi:
-            updates[(x, y)] = max(cell.idx - 1, 0)
+            new_idx = max(cell.idx - 1, 0)
+        if new_idx is not None and pal.hex_of(cell.ramp, new_idx) not in protected_hexes:
+            updates[(x, y)] = new_idx
     for px, idx in updates.items():
         buf.cells[px].idx = idx
 
@@ -308,9 +315,11 @@ def dissolve_small_clusters(buf: PixelBuffer, pal: Palette,
             if on_boundary and hexes[start] in eligible:
                 continue  # legitimate short sel-out segment -- keep it
             # prefer non-ink colors: merging interior noise into ink fakes a
-            # thick outline (lint rule d would flag the resulting 2x2 blocks)
+            # thick outline (lint rule d would flag the resulting 2x2 blocks).
+            # Never merge INTO a protected hex (whitelist cap: 6 px/frame).
             ink_hex = pal.hex_of(*INK)
-            cands = sorted(counts.items(), key=lambda kv: (kv[0] == ink_hex, -kv[1][0]))
+            cands = sorted(((h, v) for h, v in counts.items() if h not in protected_hexes),
+                           key=lambda kv: (kv[0] == ink_hex, -kv[1][0]))
             if on_boundary:
                 cands = [c for c in cands if c[0] in eligible]
             if not cands:
@@ -333,9 +342,10 @@ def dissolve_small_clusters(buf: PixelBuffer, pal: Palette,
 
 
 def finalize(buf: PixelBuffer, pal: Palette, protected_hexes=()) -> None:
+    protected = set(protected_hexes)
     outline = apply_selout_outline(buf, pal)
-    apply_directional_shading(buf, pal, outline)
-    dissolve_small_clusters(buf, pal, set(protected_hexes))
+    apply_directional_shading(buf, pal, outline, protected)
+    dissolve_small_clusters(buf, pal, protected)
 
 
 def render(buf: PixelBuffer, pal: Palette):
@@ -395,19 +405,25 @@ class BipedConfig:
     torso_h: int
     leg_h: int
     head_style: str          # 'snout' | 'round_ears' | 'plain' | 'hood'
-    attack_style: str        # 'thrust' | 'sling' | 'bow' | 'staff'
+    attack_style: str        # 'thrust' | 'bow' | 'crossbow' | 'sling' | 'staff'
     robe: bool = False
     head_fwd: int = 1
+    quiver: bool = False     # back-mounted quiver block (ranged silhouette cue)
+    eye_px: int = 2          # bright eye pixels (art fix 3: 1-2 px, light step)
 
 
+# Round-2 calibration bodies: small ground units target a 24-28 px tall x
+# 14-18 px wide body (art fix 4) on a 32x32 FP canvas. Round 3: the sniper
+# moves to the art doc section 4 sniper row -- 48x64 canvas, 40-56 px body
+# (height communicates range threat at 1x).
 BIPED_CONFIGS = {
-    "melee_biped": BipedConfig("melee_biped", (32, 32), 9, 9, 9, 9, 9,
+    "melee_biped": BipedConfig("melee_biped", (32, 32), 9, 9, 13, 10, 10,
                                "snout", "thrust"),
-    "ranged_biped": BipedConfig("ranged_biped", (32, 32), 9, 9, 7, 8, 8,
-                                "round_ears", "sling"),
-    "sniper_biped": BipedConfig("sniper_biped", (48, 64), 10, 11, 11, 16, 20,
-                                "plain", "bow"),
-    "support_robed": BipedConfig("support_robed", (32, 32), 8, 8, 9, 9, 9,
+    "ranged_biped": BipedConfig("ranged_biped", (32, 32), 9, 9, 12, 10, 9,
+                                "round_ears", "bow", quiver=True),
+    "sniper_biped": BipedConfig("sniper_biped", (48, 64), 11, 12, 16, 16, 18,
+                                "plain", "crossbow"),
+    "support_robed": BipedConfig("support_robed", (32, 32), 8, 8, 12, 10, 9,
                                  "hood", "staff", robe=True),
 }
 
@@ -426,10 +442,16 @@ ARM_POSES = {
         "drop": (0, 7), "drop2": (-1, 8),
     },
     "bow": {
-        "idle": (3, 4), "idle_b": (3, 5), "walk": (3, 4),
-        "windup": (3, 4), "windup2": (3, 4), "contact": (3, 4),
-        "recover": (3, 4), "settle": (3, 4),
+        "idle": (2, 4), "idle_b": (2, 5), "walk": (2, 4),
+        "windup": (2, 4), "windup2": (2, 4), "contact": (2, 4),
+        "recover": (2, 4), "settle": (2, 4),
         "drop": (1, 8), "drop2": (0, 10),
+    },
+    "crossbow": {
+        "idle": (0, 5), "idle_b": (0, 6), "walk": (0, 5),
+        "windup": (0, 5), "windup2": (0, 5), "contact": (-2, 5),
+        "recover": (-1, 5), "settle": (0, 5),
+        "drop": (0, 8), "drop2": (-1, 9),
     },
     "staff": {
         "idle": (1, 4), "idle_b": (1, 5), "walk": (1, 4),
@@ -444,14 +466,20 @@ WALK_LEGS = [(-2, 0, 2, 0, 0), (1, 1, 0, 0, 1), (2, 0, -2, 0, 0), (0, 0, 1, 1, 1
 
 
 class BipedTemplate:
+    # wood is a MID-TONE leather step (art fix 1: 2 px props must survive 1x;
+    # darkest-step shafts vanish into the outline). eye is a bright light-ramp
+    # step (art fix 3) -- 1-2 deliberate pixels, whitelist-capped.
     ROLE_DEFAULTS = {
         "skin": ("@secondary", 2),
         "cloth": ("@primary", 1),
-        "wood": ("leather", 0),
+        "wood": ("leather", 2),
         "metal": ("mauve_grey", 1),
         "accent": ("@primary", "@accent"),
-        "eye": ("ink", 0),
+        "eye": ("mauve_grey", 4),
     }
+    # roles whose hexes go on the lint whitelist (small deliberate details,
+    # capped at 6 px/frame). Mid-tone prop wood/metal go to ``prop_colors``.
+    WHITELIST_ROLES = ("accent", "eye")
 
     def __init__(self, cfg: BipedConfig):
         self.cfg = cfg
@@ -531,6 +559,12 @@ class BipedTemplate:
             legs_kind, phase = pose.get("legs", ("stand", 0))
             self._draw_legs(buf, legs_kind, phase, tx0, tx1, leg_top - lift, GY, skin)
 
+        # --- quiver (ranged silhouette cue, behind the torso) ---------------
+        if cfg.quiver:
+            wood = colors["wood"]
+            buf.fill_rect(tx0 - 2, ty0 + 1, tx0 - 1, ty0 + 6, wood[0],
+                          max(wood[1] - 1, 0), part="quiver")
+
         # --- torso ---------------------------------------------------------
         buf.fill_round_rect(tx0, ty0, tx1, ty1, cloth[0], cloth[1], part="torso")
 
@@ -541,7 +575,8 @@ class BipedTemplate:
                           max(skin[1] - 1, 0), part="back_arm")
 
         # --- head -----------------------------------------------------------
-        self._draw_head(buf, hx0, hy0, hx1, hy1, skin, cloth, colors, pal)
+        self._draw_head(buf, hx0, hy0, hx1, hy1, skin, cloth, colors, pal,
+                        unit.get("eye_offset", (0, 0)))
 
         # --- off-hand prop (shield carried proud of the torso front-low) ----
         for p in offhand:
@@ -596,7 +631,14 @@ class BipedTemplate:
             buf.fill_rect(cx - w // 2 + dx, y, cx - w // 2 + w - 1 + dx, y,
                           cloth[0], cloth[1], part="robe")
 
-    def _draw_head(self, buf, hx0, hy0, hx1, hy1, skin, cloth, colors, pal):
+    def _draw_eye(self, buf, eye_x, eye_y, colors, eye_offset):
+        """1-2 bright eye pixels (art fix 3), position-adjustable per spec."""
+        ex, ey = eye_x + eye_offset[0], eye_y + eye_offset[1]
+        for i in range(max(1, min(self.cfg.eye_px, 2))):
+            buf.set_px(ex - i, ey, *colors["eye"], part="eye", no_outline=True)
+
+    def _draw_head(self, buf, hx0, hy0, hx1, hy1, skin, cloth, colors, pal,
+                   eye_offset=(0, 0)):
         rx = (hx1 - hx0) / 2
         ry = (hy1 - hy0) / 2
         cx = (hx0 + hx1) / 2
@@ -605,7 +647,7 @@ class BipedTemplate:
         if style == "hood":
             buf.fill_ellipse(cx, cy, rx, ry, cloth[0], cloth[1], part="head")
             buf.fill_rect(int(cx), int(cy) - 1, hx1, int(cy) + 2, skin[0], skin[1], part="face")
-            buf.set_px(hx1 - 1, int(cy), *colors["eye"], part="eye", no_outline=True)
+            self._draw_eye(buf, hx1 - 1, int(cy), colors, eye_offset)
             return
         buf.fill_ellipse(cx, cy, rx, ry, skin[0], skin[1], part="head")
         if style == "snout":
@@ -616,18 +658,22 @@ class BipedTemplate:
                               max(skin[1] - 1, 0), part="back_ear")
         eye_x = hx1 - (1 if style == "snout" else 2)
         eye_y = hy0 + (hy1 - hy0) // 3 + 1
-        buf.set_px(eye_x, eye_y, *colors["eye"], part="eye", no_outline=True)
+        self._draw_eye(buf, eye_x, eye_y, colors, eye_offset)
 
     def _draw_lying(self, buf, unit, pal, GY):
         colors = unit["colors"]
         skin, cloth = colors["skin"], colors["cloth"]
-        W = self.cfg.canvas[0]
+        W, H = self.cfg.canvas
         cx = W // 2 - 1
-        buf.fill_ellipse(cx + 1, GY - 2, 6, 2, cloth[0], cloth[1], part="torso")
-        buf.fill_ellipse(cx - 7, GY - 2, 3, 2, skin[0], skin[1], part="head")
-        buf.fill_rect(cx + 6, GY - 1, cx + 9, GY, skin[0], skin[1], part="front_leg")
-        buf.fill_rect(cx - 1, GY - 4, cx + 2, GY - 3, skin[0], skin[1], part="arm")
-        buf.set_px(cx - 7, GY - 3, *colors["eye"], part="eye", no_outline=True)
+        # k scales the heap with the canvas (k=1 keeps the round-2 32x32 bodies
+        # byte-identical; the 48x64 sniper collapses at k=2 so the corpse mass
+        # matches its standing 40+ px read).
+        k = max(1, round(H / 32))
+        buf.fill_ellipse(cx + k, GY - 2 * k, 7 * k, 2 * k, cloth[0], cloth[1], part="torso")
+        buf.fill_ellipse(cx - 8 * k, GY - 2 * k, 3 * k, 2 * k, skin[0], skin[1], part="head")
+        buf.fill_rect(cx + 7 * k, GY - k, cx + 10 * k, GY, skin[0], skin[1], part="front_leg")
+        buf.fill_rect(cx - k, GY - 4 * k, cx + 2 * k, GY - 3 * k, skin[0], skin[1], part="arm")
+        buf.set_px(cx - 8 * k, GY - 3 * k, *colors["eye"], part="eye", no_outline=True)
 
     def _draw_props(self, buf, unit, pal, pose, hand, ground_y, head_rect):
         colors = unit["colors"]
@@ -662,8 +708,9 @@ class AerialFlyerTemplate:
         "belly": ("@secondary", 3),
         "membrane": ("@secondary", 1),
         "accent": ("@primary", "@accent"),
-        "eye": ("ink", 0),
+        "eye": ("mauve_grey", 4),
     }
+    WHITELIST_ROLES = ("accent", "eye")
 
     canvas = (32, 32)
 
@@ -705,7 +752,8 @@ class AerialFlyerTemplate:
         wing_dy = pose.get("wing", -4)
         fold = pose.get("fold", False)
 
-        # far wing (behind body): pre-darkened, flat
+        # far wing (behind body): pre-darkened, flat. Tips reach far enough
+        # that tip-to-snout wingspan clears the 24 px aerial floor (lint c).
         root_far = (bx - 2, by - 4)
         far_dark = max(membrane[1] - 1, 0)
         if fold:
@@ -713,7 +761,7 @@ class AerialFlyerTemplate:
                               (root_far[0] - 1, root_far[1] + 3),
                               membrane[0], far_dark, part="back_wing")
         else:
-            buf.fill_triangle(root_far, (root_far[0] - 9, root_far[1] + wing_dy + 1),
+            buf.fill_triangle(root_far, (root_far[0] - 12, root_far[1] + wing_dy + 1),
                               (root_far[0] - 2, root_far[1] + 3),
                               membrane[0], far_dark, part="back_wing")
 
@@ -744,7 +792,9 @@ class AerialFlyerTemplate:
         acc = colors["accent"]
         buf.set_px(hx - 1, hy - 3, acc[0], acc[1], part="horn", no_outline=True)
         buf.set_px(hx, hy - 3, acc[0], acc[1], part="horn", no_outline=True)
-        buf.set_px(hx + 1, hy - 1, *colors["eye"], part="eye", no_outline=True)
+        eo = unit.get("eye_offset", (0, 0))
+        buf.set_px(hx + 1 + eo[0], hy - 1 + eo[1], *colors["eye"], part="eye",
+                   no_outline=True)
 
         # near wing (over body), wing-finger ridge along the top edge
         root = (bx + 1, by - 3)
@@ -752,7 +802,7 @@ class AerialFlyerTemplate:
             buf.fill_triangle(root, (root[0] - 5, root[1] + 1), (root[0] - 1, root[1] + 3),
                               membrane[0], membrane[1], part="wing")
         else:
-            tip = (root[0] - 7, root[1] + wing_dy)
+            tip = (root[0] - 9, root[1] + wing_dy)
             buf.fill_triangle(root, tip, (root[0] + 2, root[1] + 2),
                               membrane[0], membrane[1], part="wing")
             # wing-finger ridge: darkest step so the boundary stays sel-out dark
@@ -761,19 +811,26 @@ class AerialFlyerTemplate:
 
 
 # ===========================================================================
-# Siege machine (mortar cart)
+# Siege machine (battering-ram cart: wide low chassis, wheels, ram beam)
 # ===========================================================================
 
 class SiegeMachineTemplate:
+    # Round 3: chassis colors come from the ELEMENT ramps (stone unit -> stone
+    # greys/moss); leather appears only as trim (wheels, ram beam). The pale
+    # 1 px crew-light satisfies art rule 11 (every unit carries an eye pixel).
     ROLE_DEFAULTS = {
-        "hull": ("leather", 1),
+        "hull": ("@primary", 1),
         "metal": ("mauve_grey", 1),
-        "wheel": ("leather", 0),
+        "wheel": ("@secondary", 0),
+        "wood": ("@secondary", 2),
         "accent": ("@primary", "@accent"),
-        "eye": ("ink", 0),
+        "eye": ("mauve_grey", 4),
     }
+    WHITELIST_ROLES = ("accent", "eye")
 
-    canvas = (48, 48)
+    # 40 px wide: a 26 px chassis + protruding ram head + the 5 px contact
+    # lunge + 2 px impact burst need the extra room over the 32 px FP canvas.
+    canvas = (40, 32)
 
     def __init__(self, cfg=None):
         pass
@@ -783,61 +840,80 @@ class SiegeMachineTemplate:
 
     def poses(self, anim: str, contact_idx: int) -> list[dict]:
         if anim == "idle":
-            return [{"spoke": 0}, {"spoke": 0, "tube_sag": 1}]
+            return [{"ram_dx": 0}, {"ram_dx": 0, "ram_dy": 1}]
         if anim == "walk":
             return [{"spoke": i, "bounce": (0, 1, 0, 1)[i]} for i in range(4)]
         if anim == "attack":
+            # contact lunges the ram 5 px past rest (art fix: readable at 1x)
             table = {
-                "windup": {"spoke": 0, "recoil": -1, "tube_sag": 1},
-                "windup2": {"spoke": 0, "recoil": -2, "tube_sag": 2},
-                "contact": {"spoke": 0, "recoil": 1, "flare": True},
-                "recover": {"spoke": 0, "recoil": 0},
-                "settle": {"spoke": 0, "recoil": 0},
+                "windup": {"ram_dx": -2},
+                "windup2": {"ram_dx": -3},
+                "contact": {"ram_dx": 5, "burst": True},
+                "recover": {"ram_dx": 2},
+                "settle": {"ram_dx": 0},
             }
             return [dict(table[k]) for k in attack_pose_keys(contact_idx)]
         if anim == "death":
-            return [{"spoke": 0, "tube_sag": 3}, {"collapse": 1}, {"collapse": 2}]
+            return [{"ram_dx": -1, "ram_dy": 2}, {"collapse": 1}, {"collapse": 2}]
         raise KeyError(anim)
 
     def draw_pose(self, buf: PixelBuffer, pose: dict, unit: dict, pal: Palette) -> None:
         colors = unit["colors"]
         hull, metal, wheel = colors["hull"], colors["metal"], colors["wheel"]
+        wood = colors["wood"]
         acc = colors["accent"]
-        GY = ground_row(48)
+        GY = ground_row(self.canvas[1])
         bounce = pose.get("bounce", 0)
         collapse = pose.get("collapse", 0)
 
         if collapse:
-            top = 34 + collapse * 2
-            buf.fill_round_rect(10, top, 37, GY, hull[0], hull[1], part="chassis")
-            buf.line(14, GY - 1, 30, GY - 1, metal[0], metal[1], part="tube", width=2)
-            for wx in (12, 35):
+            off = collapse
+            for wx in (9 - off, 17, 25 + off):
                 buf.fill_ellipse(wx, GY - 3, 3, 3, wheel[0], wheel[1], part="wheel")
+            buf.fill_round_rect(4, 17 + collapse * 2, 29, GY - 3, hull[0], hull[1],
+                                part="chassis")
+            # ram beam dropped flat on the ground in front
+            buf.fill_rect(8, GY - 2, 30, GY - 1, wood[0], wood[1],
+                          part="prop_ram", no_outline=True)
+            buf.fill_rect(31, GY - 3, 32, GY, metal[0], metal[1],
+                          part="prop_ram_head", no_outline=True)
             return
 
-        # wheels (grounded)
+        # wheels (grounded), rotating 3 px spoke line during the roll (a 1 px
+        # spoke is sub-cluster and would be dissolved by the cleanup pass)
         spoke = pose.get("spoke", 0)
-        for i, wx in enumerate((15, 24, 33)):
-            buf.fill_ellipse(wx, GY - 4, 4, 4, wheel[0], wheel[1], part=f"wheel{i}")
-            buf.fill_rect(wx, GY - 4, wx + 1, GY - 3, metal[0], metal[1], part=f"hub{i}")
-            ddx, ddy = ((0, -3), (3, 0), (0, 3), (-3, 0))[spoke % 4]
-            buf.set_px(wx + ddx, GY - 4 + ddy, metal[0], metal[1], part=f"hub{i}")
+        for i, wx in enumerate((9, 17, 25)):
+            buf.fill_ellipse(wx, GY - 3, 3, 3, wheel[0], wheel[1], part=f"wheel{i}")
+            ddx, ddy = ((0, -2), (2, 0), (0, 2), (-2, 0))[spoke % 4]
+            buf.line(wx, GY - 3, wx + ddx, GY - 3 + ddy, metal[0], metal[1],
+                     part=f"hub{i}", no_outline=True)
 
-        # chassis + accent stripe
-        cy0 = 29 - bounce
-        buf.fill_round_rect(10, cy0, 37, 38 - bounce, hull[0], hull[1], part="chassis")
-        buf.fill_rect(13, cy0 + 4, 30, cy0 + 4, acc[0], acc[1], part="stripe", no_outline=True)
+        # chassis: 26 px wide with a 2-tier roof -- with the wheels the body
+        # clears the siege mass floor (26w x 20h; a siege engine outweighs
+        # infantry). Tiers share the chassis part/color so the shading pass
+        # treats them as one mass (a pre-darkened cap reads as 1px banding).
+        cy0 = 14 - bounce
+        buf.fill_round_rect(4, cy0, 29, 23 - bounce, hull[0], hull[1], part="chassis")
+        buf.fill_rect(6, cy0 - 2, 27, cy0 - 1, hull[0], hull[1], part="chassis")
+        buf.fill_rect(8, cy0 - 4, 25, cy0 - 3, hull[0], hull[1], part="chassis")
+        buf.fill_rect(16, cy0 + 2, 17, cy0 + 2, acc[0], acc[1], part="emblem",
+                      no_outline=True)
+        # pale crew-light in the front viewing slit (art rule 11, 1 px)
+        buf.set_px(27, cy0 + 1, *colors["eye"], part="eye", no_outline=True)
 
-        # mortar tube
-        recoil = pose.get("recoil", 0)
-        sag = pose.get("tube_sag", 0)
-        bx0, by0 = 22 + recoil, cy0 + 2
-        bx1, by1 = 34 + recoil * 2, cy0 - 8 + sag * 2
-        buf.line(bx0, by0, bx1, by1, metal[0], metal[1], part="tube", width=2)
-        buf.line(bx0 + 1, by0 + 1, bx1 + 1, by1 + 1, metal[0], metal[1], part="tube", width=2)
-        if pose.get("flare"):
-            buf.fill_rect(bx1 + 1, by1 - 2, bx1 + 2, by1 - 1, acc[0], acc[1],
-                          part="muzzle", no_outline=True)
+        # battering ram: mid-tone 2 px beam protruding past the chassis front
+        # into a tall metal head; the assembly slides on attack (pull -> slam)
+        dx = pose.get("ram_dx", 0)
+        by0 = 19 + pose.get("ram_dy", 0) - bounce
+        buf.fill_rect(10 + dx, by0, 30 + dx, by0 + 1, wood[0], wood[1],
+                      part="prop_ram", no_outline=True)
+        buf.fill_rect(31 + dx, by0 - 2, 32 + dx, by0 + 3, metal[0], metal[1],
+                      part="prop_ram_head", no_outline=True)
+        if pose.get("burst"):
+            # 2 px impact burst at the strike point -- pale light color (the
+            # whitelisted eye hex), not the muted stone accent: it must pop at 1x
+            buf.set_px(33 + dx, by0, *colors["eye"], part="burst", no_outline=True)
+            buf.set_px(33 + dx, by0 + 1, *colors["eye"], part="burst", no_outline=True)
 
 
 # ===========================================================================
