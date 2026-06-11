@@ -228,9 +228,17 @@ See [Architecture Philosophy Skill](skills/architecture_philosophy/SKILL.md) for
 ### Project Domains (extends Proactive Context Loading table)
 | Domain | Search Term | Avoid (broad) | Also Check Skill? |
 |--------|-------------|---------------|-------------------|
-| <your content domain> | "<term>" | "<too-broad term>" | <skill> |
+| **Battle Sim** | "sim" or "tick" | "battle" | Yes — game_vision |
+| **Units/Roster** | "unit stats" or "rarity" | "unit" | No |
+| **Economy/Conduits** | "conduit" or "mana" | "economy" | Yes — game_vision |
+| **Augments/Draft** | "augment" or "draft" | | No |
+| **Ascension** | "ascension" or "escrow" | | No |
+| **Art Pipeline** | "palette" or "spritesheet" | "art" | Yes — sprite_authoring |
+| **Campaign/AI** | "persona" or "wave" | "level" | No |
 
 ### Project-Specific Conventions
-*   <add conventions that only make sense in this game — content taxonomies, naming, subsystem invariants>
+*   **Sim purity:** the battle sim (`Sim/` namespaces) is pure C# — no Godot types, no JmoRng (sim owns its own deterministic PRNG); the Godot view layer renders sim state and never mutates it. Sim owns ALL combat timing; art manifests are validated against stat sheets at import.
+*   **Palette contract:** every generated asset selects colors ONLY via `art_pipeline/palette.json` (ramp, index) lookups — computed shades are forbidden.
+*   **Design source of truth:** vault `Claude/BrainstormingDesigns/2026-06-11-game-foundation/` (`design.md`, `design-meta.md`, `art-direction.md`, `roadmap.md`).
 *   Register subsystems in `skills/project_subsystems/SKILL.md` (consumed by `/sync_subsystems`, `/structure_audit`, and brainstorm scope litmus).
 *   Capture the game's design bible in `skills/game_vision/SKILL.md`.
