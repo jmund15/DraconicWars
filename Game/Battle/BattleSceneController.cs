@@ -46,6 +46,7 @@ public partial class BattleSceneController : Node2D
     private BreathBeamView _breathBeam = null!;
     private int _lastWrathCooldown;
     private int _lastAscensionTier = 1;
+    private PanelContainer? _draftPanel;
 
     public override void _Ready()
     {
@@ -69,7 +70,8 @@ public partial class BattleSceneController : Node2D
             _level.Config,
             CampaignCatalog.BuildBattleDefs(_level, GameSession.Profile),
             ConduitDefs.All,
-            seed: LevelSeed(_level.Id));
+            seed: LevelSeed(_level.Id),
+            DraconicWars.Sim.Augments.AugmentCatalog.All);
         Runner.Director = new WaveDirector(_level.Waves, _level.RepeatingWaves);
         Runner.State.Left.EquippedDragonId = UnitCatalog.RentalDragonId;
         Runner.State.Right.EquippedDragonId = UnitCatalog.RentalDragonId;
@@ -148,6 +150,7 @@ public partial class BattleSceneController : Node2D
     private void OnTickAdvanced()
     {
         var player = Runner.State.Player(_localSide);
+        UpdateDraftState();
 
         if (player.WrathCooldownTicks > _lastWrathCooldown)
         {
@@ -166,6 +169,88 @@ public partial class BattleSceneController : Node2D
             ApplyResultAndShowOutcome(
                 won: Runner.State.Outcome == BattleOutcome.LeftVictory, retreated: false);
         }
+    }
+
+    private void UpdateDraftState()
+    {
+        var state = Runner.State;
+        var opponent = state.Player(
+            _localSide == PlayerSide.Left ? PlayerSide.Right : PlayerSide.Left);
+        if (opponent.AwaitingDraft && opponent.PendingOffers.Count > 0)
+        {
+            // Scripted opponent picks its first offer (persona AI is a later Part).
+            Runner.EnqueueCommand(SimCommand.PickAugment(
+                _localSide == PlayerSide.Left ? PlayerSide.Right : PlayerSide.Left,
+                opponent.PendingOffers[0]));
+        }
+
+        var local = state.Player(_localSide);
+        if (local.AwaitingDraft && _draftPanel is null)
+        {
+            ShowDraftPanel(local);
+        }
+        else if (!local.AwaitingDraft && _draftPanel is not null)
+        {
+            _draftPanel.QueueFree();
+            _draftPanel = null;
+        }
+    }
+
+    private void ShowDraftPanel(PlayerState local)
+    {
+        var panel = new PanelContainer();
+        var vbox = new VBoxContainer();
+        panel.AddChild(vbox);
+        vbox.AddChild(new Label
+        {
+            Text = "DRACONIC AUGMENT — choose one",
+            HorizontalAlignment = HorizontalAlignment.Center,
+        });
+
+        foreach (var offerId in local.PendingOffers)
+        {
+            var def = DraconicWars.Sim.Augments.AugmentCatalog.ById(offerId);
+            var button = new Button
+            {
+                Text = $"[{def.Tier}] {def.DisplayName}  ({def.Category})",
+                CustomMinimumSize = new Vector2(240, 26),
+            };
+            var pickedId = offerId;
+            button.Pressed += () =>
+                Runner.EnqueueCommand(SimCommand.PickAugment(_localSide, pickedId));
+            vbox.AddChild(button);
+        }
+
+        var reroll = new Button
+        {
+            Text = $"Reroll ({local.RerollsLeft} left)",
+            Disabled = local.RerollsLeft <= 0,
+            CustomMinimumSize = new Vector2(240, 22),
+        };
+        reroll.Pressed += () =>
+        {
+            Runner.EnqueueCommand(SimCommand.RerollOffers(_localSide));
+            _draftPanel?.QueueFree();
+            _draftPanel = null;
+        };
+        vbox.AddChild(reroll);
+
+        var center = new CenterContainer
+        {
+            AnchorRight = 1f,
+            AnchorBottom = 1f,
+        };
+        center.AddChild(panel);
+        Hud.AddChild(center);
+        _draftPanel = panel;
+
+        panel.TreeExited += () =>
+        {
+            if (IsInstanceValid(center))
+            {
+                center.QueueFree();
+            }
+        };
     }
 
     private void FlashScreen(Color color)

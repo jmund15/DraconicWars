@@ -39,5 +39,13 @@ public sealed class PlayerState
 
     public int WrathCooldownTicks { get; set; }
 
+    public bool AwaitingDraft { get; set; }
+
+    public List<string> PendingOffers { get; } = new();
+
+    public List<string> PickedAugments { get; } = new();
+
+    public int RerollsLeft { get; set; } = 1;
+
     public float EffectiveWalletCap => WalletCap + Buffs.WalletCapBonus;
 }

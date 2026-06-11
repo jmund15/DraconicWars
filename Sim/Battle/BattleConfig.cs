@@ -50,6 +50,11 @@ public sealed record BattleConfig(
 
     public IReadOnlyList<float> AscensionThresholds { get; init; } = DefaultAscensionThresholds;
 
+    /// <summary>Draft window timestamps in sim ticks; per-level authorable (design.md §9).</summary>
+    public static readonly int[] DefaultAugmentWindowTicks = { 2 * 60 * 30, 5 * 60 * 30, 8 * 60 * 30 };
+
+    public IReadOnlyList<int> AugmentWindowTicks { get; init; } = DefaultAugmentWindowTicks;
+
     public static readonly BattleConfig Default = new(
         TickRate: 30,
         LaneLength: 38f,

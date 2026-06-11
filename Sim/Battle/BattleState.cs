@@ -20,6 +20,15 @@ public sealed class BattleState
 
     public List<SimUnit> Units { get; } = new();
 
+    public required SimRng AugmentRng { get; init; }
+
+    public required IReadOnlyList<DraconicWars.Sim.Augments.AugmentTier> AugmentTierPath { get; init; }
+
+    public int NextWindowIndex { get; set; }
+
+    /// <summary>Index of the currently open draft window; -1 when none.</summary>
+    public int CurrentWindowIndex { get; set; } = -1;
+
     public float LeftSpireHp { get; set; }
 
     public float RightSpireHp { get; set; }

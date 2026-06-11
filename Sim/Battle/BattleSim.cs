@@ -3,6 +3,7 @@ namespace DraconicWars.Sim.Battle;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using DraconicWars.Sim.Augments;
 using DraconicWars.Sim.Conduits;
 using DraconicWars.Sim.Core;
 using DraconicWars.Sim.Units;
@@ -19,23 +20,30 @@ public sealed class BattleSim
     private readonly BattleConfig _config;
     private readonly Dictionary<string, UnitDef> _defs;
     private readonly Dictionary<string, ConduitDef> _conduits;
+    private readonly Dictionary<string, AugmentDef> _augments;
 
     public BattleSim(
         BattleConfig config,
         IEnumerable<UnitDef> defs,
-        IEnumerable<ConduitDef>? conduits = null)
+        IEnumerable<ConduitDef>? conduits = null,
+        IEnumerable<AugmentDef>? augments = null)
     {
         _config = config;
         _defs = defs.ToDictionary(def => def.Id);
         _conduits = (conduits ?? Array.Empty<ConduitDef>()).ToDictionary(def => def.Id);
+        _augments = (augments ?? Array.Empty<AugmentDef>()).ToDictionary(def => def.Id);
     }
 
     public BattleState CreateInitialState(ulong seed)
     {
+        var rng = new SimRng(seed);
+        var augmentRng = rng.DeriveChild("augments");
         return new BattleState
         {
             Config = _config,
-            Rng = new SimRng(seed),
+            Rng = rng,
+            AugmentRng = augmentRng,
+            AugmentTierPath = TierPath.Roll(augmentRng),
             Left = NewPlayer(),
             Right = NewPlayer(),
             LeftSpireHp = _config.SpireMaxHp,
@@ -57,6 +65,19 @@ public sealed class BattleSim
     {
         if (state.Outcome != BattleOutcome.Ongoing)
         {
+            return;
+        }
+
+        if (state.Left.AwaitingDraft || state.Right.AwaitingDraft)
+        {
+            ProcessDraftCommands(state, commands);
+            return;
+        }
+        if (_augments.Count > 0
+            && state.NextWindowIndex < _config.AugmentWindowTicks.Count
+            && state.Tick == _config.AugmentWindowTicks[state.NextWindowIndex])
+        {
+            OpenDraftWindow(state);
             return;
         }
 
@@ -123,13 +144,15 @@ public sealed class BattleSim
         player.BreathPulseCounter = 0;
 
         // Friendly fire is ON by design (§10a): the pulse hits every unit in radius.
+        var pulseDamage = (int)MathF.Round(
+            _config.BreathPulseDamage * (1f + player.Buffs.BreathDamagePct));
         foreach (var unit in state.Units)
         {
             if (!unit.IsAlive || MathF.Abs(unit.X - x) > _config.BreathRadius)
             {
                 continue;
             }
-            ApplyDirectDamage(state, side, unit, _config.BreathPulseDamage);
+            ApplyDirectDamage(state, side, unit, pulseDamage);
         }
     }
 
@@ -140,7 +163,8 @@ public sealed class BattleSim
         {
             return;
         }
-        player.WrathCooldownTicks = _config.WrathCooldownTicks;
+        player.WrathCooldownTicks = (int)(_config.WrathCooldownTicks
+            * (1f - player.Buffs.WrathCooldownPct));
 
         var midfield = _config.LaneLength * 0.5f;
         var pushDirection = side == PlayerSide.Left ? 1f : -1f;
@@ -221,7 +245,8 @@ public sealed class BattleSim
         }
 
         player.Mana -= def.DeployCost;
-        player.DeployCooldowns[unitDefId] = def.DeployCooldownTicks;
+        player.DeployCooldowns[unitDefId] = Math.Max(
+            0, (int)(def.DeployCooldownTicks * (1f - player.Buffs.DeployCooldownPct)));
         SpawnUnit(state, side, def);
     }
 
@@ -251,7 +276,8 @@ public sealed class BattleSim
             return;
         }
 
-        var remaining = _config.SummoningCost - player.SummoningProgress;
+        var effectiveCost = _config.SummoningCost * (1f - player.Buffs.SummonCostPct);
+        var remaining = effectiveCost - player.SummoningProgress;
         var channeled = MathF.Min(MathF.Min(amount, player.Mana), remaining);
         if (channeled <= 0f)
         {
@@ -260,7 +286,7 @@ public sealed class BattleSim
 
         player.Mana -= channeled;
         player.SummoningProgress += channeled;
-        if (player.SummoningProgress >= _config.SummoningCost)
+        if (player.SummoningProgress >= effectiveCost)
         {
             SpawnUnit(state, side, dragonDef);
         }
@@ -345,6 +371,7 @@ public sealed class BattleSim
     private void RecomputeBuffs(PlayerState player)
     {
         float drip = 0f, cap = 0f, bounty = 0f, damage = 0f, speed = 0f, slow = 0f, breath = 0f;
+        float breathDmg = 0f, deployCd = 0f, trickle = 0f, summon = 0f, wrath = 0f;
         foreach (var (conduitId, tier) in player.Conduits)
         {
             var def = _conduits[conduitId];
@@ -356,6 +383,21 @@ public sealed class BattleSim
             slow += def.SlowAuraPctPerTier * tier;
             breath += def.BreathRegenPctPerTier * tier;
         }
+        foreach (var augmentId in player.PickedAugments)
+        {
+            var def = _augments[augmentId];
+            drip += def.DripBonusPerSecond;
+            cap += def.WalletCapBonus;
+            bounty += def.KillBountyPct;
+            damage += def.DamagePct;
+            speed += def.SpeedPct;
+            breath += def.BreathRegenPct;
+            breathDmg += def.BreathDamagePct;
+            deployCd += def.DeployCooldownPct;
+            trickle += def.AscensionTricklePct;
+            summon += def.SummonCostPct;
+            wrath += def.WrathCooldownPct;
+        }
         player.Buffs = new PlayerBuffs
         {
             DripBonusPerSecond = drip,
@@ -365,7 +407,101 @@ public sealed class BattleSim
             SpeedPct = speed,
             SlowAuraPct = slow,
             BreathRegenPct = breath,
+            BreathDamagePct = breathDmg,
+            DeployCooldownPct = deployCd,
+            AscensionTricklePct = trickle,
+            SummonCostPct = summon,
+            WrathCooldownPct = wrath,
         };
+    }
+
+    private void OpenDraftWindow(BattleState state)
+    {
+        state.CurrentWindowIndex = state.NextWindowIndex;
+        state.NextWindowIndex++;
+        foreach (var side in Sides)
+        {
+            var player = state.Player(side);
+            GenerateOffers(state, side);
+            player.AwaitingDraft = true;
+        }
+    }
+
+    private void GenerateOffers(BattleState state, PlayerSide side)
+    {
+        var player = state.Player(side);
+        var windowIndex = Math.Min(state.CurrentWindowIndex, state.AugmentTierPath.Count - 1);
+        var tier = state.AugmentTierPath[windowIndex];
+
+        var pool = _augments.Values
+            .Where(def => def.Tier == tier && !player.PickedAugments.Contains(def.Id))
+            .OrderBy(def => def.Id)
+            .ToList();
+
+        var fielded = new HashSet<Element>();
+        foreach (var unit in state.Units)
+        {
+            if (unit.Side == side && unit.IsAlive)
+            {
+                fielded.Add(unit.Def.Element);
+            }
+        }
+
+        var relevant = pool
+            .Where(def => def.RelevantElement is { } element && fielded.Contains(element))
+            .ToList();
+
+        player.PendingOffers.Clear();
+        foreach (var pick in PickDistinct(relevant, Math.Min(2, relevant.Count), state.AugmentRng))
+        {
+            player.PendingOffers.Add(pick.Id);
+        }
+        var remaining = pool.Where(def => !player.PendingOffers.Contains(def.Id)).ToList();
+        var fill = Math.Min(3 - player.PendingOffers.Count, remaining.Count);
+        foreach (var pick in PickDistinct(remaining, fill, state.AugmentRng))
+        {
+            player.PendingOffers.Add(pick.Id);
+        }
+    }
+
+    private static List<AugmentDef> PickDistinct(List<AugmentDef> source, int count, SimRng rng)
+    {
+        var working = new List<AugmentDef>(source);
+        var picks = new List<AugmentDef>(count);
+        for (var i = 0; i < count && working.Count > 0; i++)
+        {
+            var index = rng.NextInt(working.Count);
+            picks.Add(working[index]);
+            working.RemoveAt(index);
+        }
+        return picks;
+    }
+
+    private void ProcessDraftCommands(BattleState state, IReadOnlyList<SimCommand> commands)
+    {
+        foreach (var command in commands)
+        {
+            var player = state.Player(command.Side);
+            switch (command.Kind)
+            {
+                case SimCommandKind.PickAugment when player.AwaitingDraft
+                    && player.PendingOffers.Contains(command.TargetId):
+                    player.PickedAugments.Add(command.TargetId);
+                    player.PendingOffers.Clear();
+                    player.AwaitingDraft = false;
+                    RecomputeBuffs(player);
+                    break;
+                case SimCommandKind.RerollOffers when player.AwaitingDraft && player.RerollsLeft > 0:
+                    player.RerollsLeft--;
+                    GenerateOffers(state, command.Side);
+                    break;
+            }
+        }
+
+        if (!state.Left.AwaitingDraft && !state.Right.AwaitingDraft)
+        {
+            state.CurrentWindowIndex = -1;
+        }
     }
 
     private void ProcessLastStand(BattleState state)
@@ -628,7 +764,8 @@ public sealed class BattleSim
             }
 
             var enemyTier = state.Player(Opponent(side)).AscensionTier;
-            var perSecond = _config.AscensionTricklePerSecond;
+            var perSecond = _config.AscensionTricklePerSecond
+                * (1f + player.Buffs.AscensionTricklePct);
             if (enemyTier - player.AscensionTier >= 1)
             {
                 perSecond *= _config.TierBehindTrickleMultiplier;

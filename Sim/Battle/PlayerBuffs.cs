@@ -17,5 +17,15 @@ public sealed class PlayerBuffs
 
     public float BreathRegenPct { get; init; }
 
+    public float BreathDamagePct { get; init; }
+
+    public float DeployCooldownPct { get; init; }
+
+    public float AscensionTricklePct { get; init; }
+
+    public float SummonCostPct { get; init; }
+
+    public float WrathCooldownPct { get; init; }
+
     public static readonly PlayerBuffs None = new();
 }

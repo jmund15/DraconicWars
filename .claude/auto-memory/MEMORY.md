@@ -96,3 +96,7 @@
 - [Explicit DIM orphans on interface removal](gotcha_explicit_dim_orphans_on_base_interface_removal.md) — `IFoo.Member=>…` → CS0540 when IFoo leaves the base list; grep explicit-DIMs first.
 - [Godot typed Dictionary export gotchas](gotcha_godot_typed_dictionary.md) — `Dictionary<Resource,V>` [Export]: `.tres` literal form + null-key from empty slot; scene-load test.
 - [uid-only refs break orphan detection](gotcha_godot4_uid_only_refs_break_orphan_detection.md) — Godot-4 uid-only ext_resource → text orphan sweeps over-count; verify in editor.
+
+## DraconicWars (project-local)
+- [tscn C# node exports need node_paths](gotcha_tscn_csharp_node_exports_need_node_paths.md) — hand-authored scenes: node_paths=PackedStringArray(...) or exports stay null.
+- [SimulateFrames is process frames](gotcha_gdunit4_simulateframes_is_process_frames.md) — accumulators in _Process; pin deltas via SimulateFrames(n, 16).

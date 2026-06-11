@@ -12,6 +12,8 @@ public enum SimCommandKind
     ChannelMana,
     FireBreath,
     CastWrath,
+    PickAugment,
+    RerollOffers,
 }
 
 public readonly record struct SimCommand(
@@ -31,6 +33,16 @@ public readonly record struct SimCommand(
     public static SimCommand CastWrath(PlayerSide side)
     {
         return new SimCommand(SimCommandKind.CastWrath, side, string.Empty);
+    }
+
+    public static SimCommand PickAugment(PlayerSide side, string augmentId)
+    {
+        return new SimCommand(SimCommandKind.PickAugment, side, augmentId);
+    }
+
+    public static SimCommand RerollOffers(PlayerSide side)
+    {
+        return new SimCommand(SimCommandKind.RerollOffers, side, string.Empty);
     }
 
     public static readonly IReadOnlyList<SimCommand> None = Array.Empty<SimCommand>();

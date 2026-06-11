@@ -12,7 +12,8 @@ using DraconicWars.Sim.Units;
 /// </summary>
 public static class CampaignCatalog
 {
-    private static BattleConfig Compressed(int crescendoSec, int suddenDeathSec, int hardEndSec)
+    private static BattleConfig Compressed(
+        int crescendoSec, int suddenDeathSec, int hardEndSec, params int[] augmentWindowTicks)
     {
         return BattleConfig.Default with
         {
@@ -22,6 +23,7 @@ public static class CampaignCatalog
             HardEndTick = hardEndSec * 30,
             LastStandEnabled = true,
             AscensionThresholds = new[] { 42f, 110f, 240f },
+            AugmentWindowTicks = augmentWindowTicks,
         };
     }
 
@@ -29,7 +31,7 @@ public static class CampaignCatalog
     {
         new CampaignLevelDef(
             Id: "cm_01", DisplayName: "First Sparks",
-            Config: Compressed(150, 180, 240),
+            Config: Compressed(150, 180, 240 /* no augment windows: teaching level */),
             EnemyUnitIds: new[] { "kobold_spearman", "frost_whelp" },
             MagnificationPct: 100,
             Waves: new[]
@@ -46,7 +48,7 @@ public static class CampaignCatalog
 
         new CampaignLevelDef(
             Id: "cm_02", DisplayName: "The Tide Teaches",
-            Config: Compressed(150, 180, 240),
+            Config: Compressed(150, 180, 240, 1500),
             EnemyUnitIds: new[] { "kobold_spearman", "forest_archer" },
             MagnificationPct: 100,
             Waves: Enumerable.Range(0, 6)
@@ -62,7 +64,7 @@ public static class CampaignCatalog
 
         new CampaignLevelDef(
             Id: "cm_03", DisplayName: "Augury",
-            Config: Compressed(160, 200, 260),
+            Config: Compressed(160, 200, 260, 1200, 3600),
             EnemyUnitIds: new[] { "kobold_spearman", "forest_archer", "dune_marksman" },
             MagnificationPct: 100,
             Waves: new[] { new WaveEntry(3000, "enemy:forest_archer") },
@@ -76,7 +78,7 @@ public static class CampaignCatalog
 
         new CampaignLevelDef(
             Id: "cm_04", DisplayName: "Hot Swap",
-            Config: Compressed(170, 210, 280),
+            Config: Compressed(170, 210, 280, 1200, 3900),
             EnemyUnitIds: new[] { "kobold_spearman", "forest_archer", "frost_whelp", "storm_monk" },
             MagnificationPct: 120,
             Waves: new[] { new WaveEntry(2400, "enemy:frost_whelp"), new WaveEntry(2460, "enemy:frost_whelp") },
