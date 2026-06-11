@@ -65,6 +65,10 @@ public partial class BattleHud : CanvasLayer
 
         foreach (var def in loadout)
         {
+            if (def.Tier >= 4)
+            {
+                continue;
+            }
             _loadoutDefs[def.Id] = def;
             var card = UnitCardScene.Instantiate<UnitCard>();
             DeployBar.AddChild(card);

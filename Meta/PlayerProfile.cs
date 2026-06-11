@@ -23,6 +23,8 @@ public sealed class PlayerProfile
 
     public int LevelsPurchased { get; set; }
 
+    public List<string> ClearedLevelIds { get; set; } = new();
+
     public int CampaignFirstClears { get; set; }
 
     public int HeatRungClears { get; set; }

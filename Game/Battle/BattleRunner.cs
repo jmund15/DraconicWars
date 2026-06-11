@@ -29,6 +29,9 @@ public partial class BattleRunner : Node
 
     public float SpeedMultiplier { get; set; } = 1f;
 
+    /// <summary>Optional authored enemy script (campaign); feeds Right-side commands.</summary>
+    public Campaign.WaveDirector? Director { get; set; }
+
     private readonly List<SimCommand> _pendingCommands = new();
     private readonly Dictionary<int, SimUnit> _knownUnits = new();
     private float _accumulator;
@@ -72,6 +75,10 @@ public partial class BattleRunner : Node
     private void StepOneTick()
     {
         var outcomeBefore = State.Outcome;
+        if (Director is { } director)
+        {
+            _pendingCommands.AddRange(director.CommandsForTick(State.Tick));
+        }
         Sim.Advance(State, _pendingCommands);
         _pendingCommands.Clear();
         DiffUnits();

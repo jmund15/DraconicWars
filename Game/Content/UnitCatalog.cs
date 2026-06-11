@@ -33,5 +33,15 @@ public static class UnitCatalog
             Range: 1.3f, RangeMin: 0f, IsArea: false, MoveSpeed: 2.6f,
             KnockbackCount: 2, DeployCost: 75, DeployCooldownTicks: 120,
             Stratum: Stratum.Air, CanTargetGround: true, CanTargetAir: true),
+        new UnitDef(
+            Id: "elder_drake", DisplayName: "Elder Drake", Tier: 4,
+            TypeClass: TypeClass.Aerial, Element: Element.Stone,
+            MaxHp: 1500, Damage: 60, ForeswingTicks: 12, BackswingTicks: 18,
+            Range: 2.5f, RangeMin: 0f, IsArea: true, MoveSpeed: 1.6f,
+            KnockbackCount: 5, DeployCost: 0, DeployCooldownTicks: 0,
+            Stratum: Stratum.Air, CanTargetGround: true, CanTargetAir: true),
     };
+
+    /// <summary>The rental dragon every loadout fields until a real dragon is bonded.</summary>
+    public const string RentalDragonId = "elder_drake";
 }

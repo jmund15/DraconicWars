@@ -22,7 +22,7 @@ public sealed class UnitSpriteLibrary
         _rootDir = rootDir;
     }
 
-    public SpriteFrames? Load(UnitDef def, string sheetName)
+    public SpriteFrames? Load(UnitDef def, string sheetName, bool validateTiming = true)
     {
         if (_cache.TryGetValue(sheetName, out var cached))
         {
@@ -45,8 +45,9 @@ public sealed class UnitSpriteLibrary
             JmoLogger.Error(this, $"[UnitSprites] Manifest for '{sheetName}' is empty");
             return null;
         }
-        if (manifest.ForeswingTicks != def.ForeswingTicks
-            || manifest.BackswingTicks != def.BackswingTicks)
+        if (validateTiming
+            && (manifest.ForeswingTicks != def.ForeswingTicks
+                || manifest.BackswingTicks != def.BackswingTicks))
         {
             JmoLogger.Error(this,
                 $"[UnitSprites] Timing drift for '{sheetName}': manifest "

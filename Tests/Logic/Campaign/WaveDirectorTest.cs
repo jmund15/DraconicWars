@@ -126,6 +126,62 @@ public class WaveDirectorTest
     }
 }
 
+[TestSuite]
+public class CampaignProgressTest
+{
+    [TestCase]
+    public void FirstClearAwardsGoldRankAndUnlocksNext()
+    {
+        var profile = new DraconicWars.Meta.PlayerProfile();
+
+        var firstClear = CampaignProgress.ApplyBattleResult(
+            profile, CampaignCatalog.Levels[0], won: true, battleTicks: 4000, enemySpireDamagePct: 1f);
+
+        AssertThat(firstClear).IsTrue();
+        AssertThat(profile.ClearedLevelIds.Contains("cm_01")).IsTrue();
+        AssertThat(profile.CampaignFirstClears).IsEqual(1);
+        AssertThat(profile.Gold).IsEqual(CampaignCatalog.Levels[0].BaseGoldReward);
+        AssertThat(CampaignProgress.IsUnlocked(profile, 1)).IsTrue();
+        AssertThat(CampaignProgress.IsUnlocked(profile, 2)).IsFalse();
+    }
+
+    [TestCase]
+    public void RepeatWinPaysGoldButNoSecondFirstClear()
+    {
+        var profile = new DraconicWars.Meta.PlayerProfile();
+        CampaignProgress.ApplyBattleResult(
+            profile, CampaignCatalog.Levels[0], won: true, battleTicks: 4000, enemySpireDamagePct: 1f);
+        var goldAfterFirst = profile.Gold;
+
+        var secondClear = CampaignProgress.ApplyBattleResult(
+            profile, CampaignCatalog.Levels[0], won: true, battleTicks: 4000, enemySpireDamagePct: 1f);
+
+        AssertThat(secondClear).IsFalse();
+        AssertThat(profile.CampaignFirstClears).IsEqual(1);
+        AssertThat(profile.Gold > goldAfterFirst).IsTrue();
+    }
+
+    [TestCase]
+    public void LossPaysPartialGoldAndDoesNotClear()
+    {
+        var profile = new DraconicWars.Meta.PlayerProfile();
+
+        CampaignProgress.ApplyBattleResult(
+            profile, CampaignCatalog.Levels[0], won: false, battleTicks: 0, enemySpireDamagePct: 0f);
+
+        AssertThat(profile.ClearedLevelIds.Count).IsEqual(0);
+        AssertThat(profile.Gold).IsEqual((int)(CampaignCatalog.Levels[0].BaseGoldReward * 0.4f));
+    }
+
+    [TestCase]
+    public void OnlyLevelOneUnlockedOnFreshProfile()
+    {
+        var profile = new DraconicWars.Meta.PlayerProfile();
+        AssertThat(CampaignProgress.IsUnlocked(profile, 0)).IsTrue();
+        AssertThat(CampaignProgress.IsUnlocked(profile, 1)).IsFalse();
+    }
+}
+
 internal static class TestUnitFactory
 {
     internal static DraconicWars.Sim.Units.UnitDef Grunt()

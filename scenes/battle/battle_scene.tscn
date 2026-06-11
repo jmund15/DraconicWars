@@ -5,12 +5,15 @@
 [ext_resource type="Script" path="res://Game/Battle/Hud/BattleHud.cs" id="3"]
 [ext_resource type="PackedScene" path="res://scenes/battle/unit_card.tscn" id="4"]
 
-[node name="BattleScene" type="Node2D" node_paths=PackedStringArray("Runner", "UnitLayer", "Background", "Hud")]
+[node name="BattleScene" type="Node2D" node_paths=PackedStringArray("Runner", "UnitLayer", "Background", "Hud", "OutcomePanel", "OutcomeLabel", "ContinueButton")]
 script = ExtResource("1")
 Runner = NodePath("Runner")
 UnitLayer = NodePath("UnitLayer")
 Background = NodePath("Background")
 Hud = NodePath("Hud")
+OutcomePanel = NodePath("Hud/OutcomeCenter/OutcomePanel")
+OutcomeLabel = NodePath("Hud/OutcomeCenter/OutcomePanel/VBox/OutcomeLabel")
+ContinueButton = NodePath("Hud/OutcomeCenter/OutcomePanel/VBox/Continue")
 
 [node name="Background" type="Sprite2D" parent="."]
 centered = false
@@ -105,3 +108,23 @@ offset_right = -4.0
 offset_bottom = -2.0
 alignment = 1
 theme_override_constants/separation = 4
+
+[node name="OutcomeCenter" type="CenterContainer" parent="Hud"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 2
+
+[node name="OutcomePanel" type="PanelContainer" parent="Hud/OutcomeCenter"]
+visible = false
+custom_minimum_size = Vector2(220, 90)
+
+[node name="VBox" type="VBoxContainer" parent="Hud/OutcomeCenter/OutcomePanel"]
+theme_override_constants/separation = 8
+
+[node name="OutcomeLabel" type="Label" parent="Hud/OutcomeCenter/OutcomePanel/VBox"]
+text = "VICTORY"
+horizontal_alignment = 1
+
+[node name="Continue" type="Button" parent="Hud/OutcomeCenter/OutcomePanel/VBox"]
+text = "Continue"

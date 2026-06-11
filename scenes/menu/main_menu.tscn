@@ -1,0 +1,40 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://Game/Menu/MainMenu.cs" id="1"]
+
+[node name="MainMenu" type="Control" node_paths=PackedStringArray("PlayButton", "QuitButton")]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+script = ExtResource("1")
+PlayButton = NodePath("Center/VBox/Play")
+QuitButton = NodePath("Center/VBox/Quit")
+
+[node name="Center" type="CenterContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+
+[node name="VBox" type="VBoxContainer" parent="Center"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="Title" type="Label" parent="Center/VBox"]
+layout_mode = 2
+text = "DRACONIC WARS"
+horizontal_alignment = 1
+
+[node name="Subtitle" type="Label" parent="Center/VBox"]
+layout_mode = 2
+text = "every battle builds to a dragon"
+horizontal_alignment = 1
+
+[node name="Play" type="Button" parent="Center/VBox"]
+layout_mode = 2
+text = "Campaign"
+
+[node name="Quit" type="Button" parent="Center/VBox"]
+layout_mode = 2
+text = "Quit"
