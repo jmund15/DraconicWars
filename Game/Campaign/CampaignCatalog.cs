@@ -63,33 +63,39 @@ public static class CampaignCatalog
         new CampaignLevelDef(
             Id: "cm_03", DisplayName: "Augury",
             Config: Compressed(160, 200, 260),
-            EnemyUnitIds: new[] { "kobold_spearman", "forest_archer" },
+            EnemyUnitIds: new[] { "kobold_spearman", "forest_archer", "dune_marksman" },
             MagnificationPct: 100,
             Waves: new[] { new WaveEntry(3000, "enemy:forest_archer") },
             RepeatingWaves: new[]
             {
                 new RepeatingWave(90, 220, "enemy:kobold_spearman", 6600),
                 new RepeatingWave(600, 480, "enemy:forest_archer", 6600),
+                new RepeatingWave(2400, 600, "enemy:dune_marksman", 6600),
             },
             BaseGoldReward: 100),
 
         new CampaignLevelDef(
             Id: "cm_04", DisplayName: "Hot Swap",
             Config: Compressed(170, 210, 280),
-            EnemyUnitIds: new[] { "kobold_spearman", "forest_archer", "frost_whelp" },
+            EnemyUnitIds: new[] { "kobold_spearman", "forest_archer", "frost_whelp", "storm_monk" },
             MagnificationPct: 120,
             Waves: new[] { new WaveEntry(2400, "enemy:frost_whelp"), new WaveEntry(2460, "enemy:frost_whelp") },
             RepeatingWaves: new[]
             {
                 new RepeatingWave(90, 260, "enemy:forest_archer", 7200),
                 new RepeatingWave(400, 300, "enemy:kobold_spearman", 7200),
+                new RepeatingWave(2000, 480, "enemy:storm_monk", 7200),
             },
             BaseGoldReward: 110),
 
         new CampaignLevelDef(
             Id: "cm_05", DisplayName: "The Marcher Lord",
             Config: BattleConfig.Default with { LastStandEnabled = true },
-            EnemyUnitIds: new[] { "kobold_spearman", "forest_archer", "frost_whelp" },
+            EnemyUnitIds: new[]
+            {
+                "kobold_spearman", "forest_archer", "frost_whelp",
+                "storm_monk", "stone_ram", "storm_gryphon",
+            },
             MagnificationPct: 150,
             Waves: new[]
             {
@@ -100,12 +106,16 @@ public static class CampaignCatalog
                 new WaveEntry(9080, "enemy:forest_archer"),
                 new WaveEntry(9100, "enemy:frost_whelp"),
                 new WaveEntry(9120, "enemy:frost_whelp"),
+                new WaveEntry(11000, "enemy:stone_ram"),
+                new WaveEntry(11500, "enemy:storm_gryphon"),
+                new WaveEntry(12200, "enemy:stone_ram"),
             },
             RepeatingWaves: new[]
             {
                 new RepeatingWave(120, 240, "enemy:kobold_spearman", 18000),
                 new RepeatingWave(700, 420, "enemy:forest_archer", 18000),
                 new RepeatingWave(1500, 600, "enemy:frost_whelp", 18000),
+                new RepeatingWave(4500, 540, "enemy:storm_monk", 18000),
             },
             BaseGoldReward: 150),
     };

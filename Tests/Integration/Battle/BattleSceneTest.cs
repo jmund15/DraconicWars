@@ -34,7 +34,9 @@ public class BattleSceneTest
         var controller = (BattleSceneController)runner.Scene();
 
         await runner.SimulateFrames(10, 16);
-        AssertThat(controller.Hud._TestCards.Count).IsEqual(3);
+        var deployableCount = System.Linq.Enumerable.Count(
+            DraconicWars.Game.Content.UnitCatalog.FirstPlayable, d => d.Tier < 4);
+        AssertThat(controller.Hud._TestCards.Count).IsEqual(deployableCount);
         var manaBefore = controller.Hud.ManaLabel.Text;
 
         await runner.SimulateFrames(90, 16);
