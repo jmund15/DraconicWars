@@ -119,7 +119,8 @@ public static class CampaignCatalog
                 new RepeatingWave(1500, 600, "enemy:frost_whelp", 18000),
                 new RepeatingWave(4500, 540, "enemy:storm_monk", 18000),
             },
-            BaseGoldReward: 150),
+            BaseGoldReward: 150,
+            BondedDragonId: "pyraxis"),
     };
 
     /// <summary>

@@ -26,6 +26,11 @@ public static class CampaignProgress
 
         profile.ClearedLevelIds.Add(level.Id);
         profile.CampaignFirstClears++;
+        if (level.BondedDragonId is { } dragonId && !profile.UnitLevels.ContainsKey(dragonId))
+        {
+            // Beat the dragon, bond the dragon (design-meta.md §9).
+            profile.UnitLevels[dragonId] = MetaProgression.EntryLevel(4);
+        }
         return true;
     }
 

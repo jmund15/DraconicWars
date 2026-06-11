@@ -190,6 +190,20 @@ public class CampaignProgressTest
     }
 
     [TestCase]
+    public void ClearingTheBossLevelBondsItsDragon()
+    {
+        var profile = new DraconicWars.Meta.PlayerProfile();
+        var boss = CampaignCatalog.Levels[4];
+        AssertThat(boss.BondedDragonId).IsEqual("pyraxis");
+
+        CampaignProgress.ApplyBattleResult(
+            profile, boss, won: true, battleTicks: 12000, enemySpireDamagePct: 1f);
+
+        AssertThat(profile.UnitLevels.ContainsKey("pyraxis")).IsTrue();
+        AssertThat(profile.UnitLevels["pyraxis"]).IsEqual(9);
+    }
+
+    [TestCase]
     public void OnlyLevelOneUnlockedOnFreshProfile()
     {
         var profile = new DraconicWars.Meta.PlayerProfile();

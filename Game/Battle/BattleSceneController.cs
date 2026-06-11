@@ -73,7 +73,10 @@ public partial class BattleSceneController : Node2D
             seed: LevelSeed(_level.Id),
             DraconicWars.Sim.Augments.AugmentCatalog.All);
         Runner.Director = new WaveDirector(_level.Waves, _level.RepeatingWaves);
-        Runner.State.Left.EquippedDragonId = UnitCatalog.RentalDragonId;
+        Runner.State.Left.EquippedDragonId =
+            GameSession.Profile.UnitLevels.ContainsKey("pyraxis")
+                ? "pyraxis"
+                : UnitCatalog.RentalDragonId;
         Runner.State.Right.EquippedDragonId = UnitCatalog.RentalDragonId;
 
         Hud.Initialize(Runner, _localSide, UnitCatalog.FirstPlayable, ConduitDefs.All);
