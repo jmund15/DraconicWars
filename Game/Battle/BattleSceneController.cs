@@ -55,8 +55,7 @@ public partial class BattleSceneController : Node2D
 
         if (FileAccess.FileExists(BackgroundPath))
         {
-            var image = Image.LoadFromFile(BackgroundPath);
-            Background.Texture = ImageTexture.CreateFromImage(image);
+            Background.Texture = UnitSpriteLibrary.LoadTexture(BackgroundPath);
         }
 
         Runner.UnitSpawned += OnUnitSpawned;

@@ -56,8 +56,7 @@ public sealed class UnitSpriteLibrary
             return null;
         }
 
-        var image = Image.LoadFromFile(sheetPath);
-        var texture = ImageTexture.CreateFromImage(image);
+        var texture = LoadTexture(sheetPath);
         var frames = new SpriteFrames();
         foreach (var animation in manifest.Animations)
         {
@@ -81,6 +80,20 @@ public sealed class UnitSpriteLibrary
 
         _cache[sheetName] = frames;
         return frames;
+    }
+
+    /// <summary>
+    /// Prefers the imported resource (export-safe); falls back to a raw file read so
+    /// freshly generated sheets work before any editor import scan.
+    /// </summary>
+    public static Texture2D LoadTexture(string path)
+    {
+        if (ResourceLoader.Exists(path))
+        {
+            return ResourceLoader.Load<Texture2D>(path);
+        }
+        var image = Image.LoadFromFile(path);
+        return ImageTexture.CreateFromImage(image);
     }
 
     public sealed class SheetManifest
