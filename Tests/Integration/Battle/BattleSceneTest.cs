@@ -1,0 +1,42 @@
+namespace DraconicWars.Tests.Integration.Battle;
+
+using System.Threading.Tasks;
+using DraconicWars.Game.Battle;
+using DraconicWars.Sim.Battle;
+using GdUnit4;
+using static GdUnit4.Assertions;
+
+[TestSuite]
+[RequireGodotRuntime]
+public class BattleSceneTest
+{
+    [TestCase]
+    public async Task DeployedUnitGetsAViewThatAdvances()
+    {
+        var runner = ISceneRunner.Load("res://scenes/battle/battle_scene.tscn");
+        var controller = (BattleSceneController)runner.Scene();
+
+        controller.Runner.EnqueueCommand(SimCommand.Deploy(PlayerSide.Left, "kobold_spearman"));
+        await runner.SimulateFrames(30, 16);
+
+        AssertThat(controller._TestViews.Count).IsEqual(1);
+        var view = System.Linq.Enumerable.First(controller._TestViews.Values);
+        var xAfterHalfSecond = view.Position.X;
+
+        await runner.SimulateFrames(60, 16);
+        AssertThat(view.Position.X > xAfterHalfSecond).IsTrue();
+    }
+
+    [TestCase]
+    public async Task SimAdvancesAtThirtyTicksPerSecond()
+    {
+        var runner = ISceneRunner.Load("res://scenes/battle/battle_scene.tscn");
+        var controller = (BattleSceneController)runner.Scene();
+        var tickBefore = controller.Runner.State.Tick;
+
+        await runner.SimulateFrames(60, 16);
+
+        var elapsed = controller.Runner.State.Tick - tickBefore;
+        AssertThat(elapsed >= 25 && elapsed <= 35).IsTrue();
+    }
+}
