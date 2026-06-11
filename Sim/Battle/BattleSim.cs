@@ -63,6 +63,7 @@ public sealed class BattleSim
         ProcessLastStand(state);
         TickEconomy(state);
         ProcessCombat(state);
+        ProcessAscension(state);
         MoveUnits(state);
         ProcessTimeline(state);
         EvaluateOutcome(state);
@@ -90,6 +91,9 @@ public sealed class BattleSim
                 case SimCommandKind.SellConduit:
                     TrySellConduit(state, command.Side, command.TargetId);
                     break;
+                case SimCommandKind.ChannelMana:
+                    TryChannelMana(state, command.Side, command.Amount);
+                    break;
             }
         }
     }
@@ -101,6 +105,10 @@ public sealed class BattleSim
             return;
         }
         var player = state.Player(side);
+        if (def.Tier > player.AscensionTier)
+        {
+            return;
+        }
         if (player.Mana < def.DeployCost)
         {
             return;
@@ -112,6 +120,11 @@ public sealed class BattleSim
 
         player.Mana -= def.DeployCost;
         player.DeployCooldowns[unitDefId] = def.DeployCooldownTicks;
+        SpawnUnit(state, side, def);
+    }
+
+    private void SpawnUnit(BattleState state, PlayerSide side, UnitDef def)
+    {
         var spawnX = side == PlayerSide.Left
             ? _config.DeploySpawnOffset
             : _config.LaneLength - _config.DeploySpawnOffset;
@@ -123,6 +136,44 @@ public sealed class BattleSim
             X = spawnX,
             Hp = def.MaxHp,
         });
+    }
+
+    private void TryChannelMana(BattleState state, PlayerSide side, int amount)
+    {
+        var player = state.Player(side);
+        if (player.AscensionTier < 4
+            || player.EquippedDragonId is null
+            || !_defs.TryGetValue(player.EquippedDragonId, out var dragonDef)
+            || DragonOnField(state, side))
+        {
+            return;
+        }
+
+        var remaining = _config.SummoningCost - player.SummoningProgress;
+        var channeled = MathF.Min(MathF.Min(amount, player.Mana), remaining);
+        if (channeled <= 0f)
+        {
+            return;
+        }
+
+        player.Mana -= channeled;
+        player.SummoningProgress += channeled;
+        if (player.SummoningProgress >= _config.SummoningCost)
+        {
+            SpawnUnit(state, side, dragonDef);
+        }
+    }
+
+    private static bool DragonOnField(BattleState state, PlayerSide side)
+    {
+        foreach (var unit in state.Units)
+        {
+            if (unit.Side == side && unit.IsAlive && unit.Def.Tier >= 4)
+            {
+                return true;
+            }
+        }
+        return false;
     }
 
     private void TryBuildConduit(BattleState state, PlayerSide side, string conduitId)
@@ -234,7 +285,9 @@ public sealed class BattleSim
 
     private void TickEconomy(BattleState state)
     {
-        var multiplier = DripMultiplier(state.Tick);
+        var maxTier = Math.Max(state.Left.AscensionTier, state.Right.AscensionTier);
+        var ascensionMultiplier = MathF.Pow(_config.AscensionDripEscalation, maxTier - 1);
+        var multiplier = DripMultiplier(state.Tick) * ascensionMultiplier;
         foreach (var side in Sides)
         {
             var player = state.Player(side);
@@ -383,6 +436,11 @@ public sealed class BattleSim
             var killer = state.Player(attacker.Side);
             var bounty = defender.Def.DeployCost / 5f * (1f + killer.Buffs.KillBountyPct);
             AddMana(killer, bounty);
+            CreditKillAscension(state, attacker.Side, defender.Def);
+            if (defender.Def.Tier >= 4)
+            {
+                state.Player(defender.Side).SummoningProgress = 0f;
+            }
             return;
         }
 
@@ -403,7 +461,7 @@ public sealed class BattleSim
         defender.PhaseTicksLeft = 0;
     }
 
-    private static void DamageSpire(BattleState state, PlayerSide attackerSide, float damage)
+    private void DamageSpire(BattleState state, PlayerSide attackerSide, float damage)
     {
         var defender = state.Player(attackerSide == PlayerSide.Left ? PlayerSide.Right : PlayerSide.Left);
         var absorbed = MathF.Min(defender.SpireShield, damage);
@@ -422,6 +480,92 @@ public sealed class BattleSim
         {
             state.LeftSpireHp -= remainder;
         }
+
+        // Contact is always +EV for someone: chip damage pays the attacker tier-time.
+        state.Player(attackerSide).AscensionMeter += remainder * _config.ChipDamageAscensionRate;
+    }
+
+    private void CreditKillAscension(BattleState state, PlayerSide killerSide, UnitDef victim)
+    {
+        var player = state.Player(killerSide);
+        if (player.AscensionTier >= 4)
+        {
+            return;
+        }
+
+        var segmentSize = SegmentSize(player.AscensionTier);
+        var segmentCap = segmentSize * _config.KillAscensionCapPct;
+        var allowed = MathF.Min(
+            _config.KillAscensionPerTier * victim.Tier,
+            segmentCap - player.KillMeterThisSegment);
+        if (allowed <= 0f)
+        {
+            return;
+        }
+        player.AscensionMeter += allowed;
+        player.KillMeterThisSegment += allowed;
+    }
+
+    private float SegmentSize(int tier)
+    {
+        var thresholds = _config.AscensionThresholds;
+        var target = thresholds[tier - 1];
+        var previous = tier >= 2 ? thresholds[tier - 2] : 0f;
+        return target - previous;
+    }
+
+    private void ProcessAscension(BattleState state)
+    {
+        foreach (var side in Sides)
+        {
+            var player = state.Player(side);
+            if (player.AscensionTier >= 4)
+            {
+                continue;
+            }
+
+            var enemyTier = state.Player(Opponent(side)).AscensionTier;
+            var perSecond = _config.AscensionTricklePerSecond;
+            if (enemyTier - player.AscensionTier >= 1)
+            {
+                perSecond *= _config.TierBehindTrickleMultiplier;
+            }
+            if (HasFrontlinePastMidfield(state, side))
+            {
+                perSecond += _config.LaneControlBonusPerSecond;
+            }
+            player.AscensionMeter += perSecond / _config.TickRate;
+
+            while (player.AscensionTier < 4
+                && player.AscensionMeter >= _config.AscensionThresholds[player.AscensionTier - 1])
+            {
+                player.AscensionTier++;
+                player.KillMeterThisSegment = 0f;
+            }
+        }
+    }
+
+    private bool HasFrontlinePastMidfield(BattleState state, PlayerSide side)
+    {
+        var midfield = _config.LaneLength * 0.5f;
+        foreach (var unit in state.Units)
+        {
+            if (unit.Side != side || !unit.IsAlive)
+            {
+                continue;
+            }
+            var past = side == PlayerSide.Left ? unit.X > midfield : unit.X < midfield;
+            if (past)
+            {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private static PlayerSide Opponent(PlayerSide side)
+    {
+        return side == PlayerSide.Left ? PlayerSide.Right : PlayerSide.Left;
     }
 
     private bool HasAnyTargetInBand(BattleState state, SimUnit unit)
@@ -572,6 +716,9 @@ public sealed class BattleSim
 #if TOOLS
     internal void _TestDealDamage(BattleState state, SimUnit attacker, SimUnit defender)
         => DealDamage(state, attacker, defender);
+
+    internal void _TestCreditKillAscension(BattleState state, PlayerSide killerSide, UnitDef victim)
+        => CreditKillAscension(state, killerSide, victim);
 #endif
     #endregion
 }

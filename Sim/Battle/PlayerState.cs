@@ -22,5 +22,16 @@ public sealed class PlayerState
 
     public bool LastStandUsed { get; set; }
 
+    public float AscensionMeter { get; set; }
+
+    public int AscensionTier { get; set; } = 1;
+
+    /// <summary>Kill-sourced meter within the current threshold segment (capped at 30%).</summary>
+    public float KillMeterThisSegment { get; set; }
+
+    public string? EquippedDragonId { get; set; }
+
+    public float SummoningProgress { get; set; }
+
     public float EffectiveWalletCap => WalletCap + Buffs.WalletCapBonus;
 }

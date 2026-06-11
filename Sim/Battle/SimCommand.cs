@@ -9,10 +9,17 @@ public enum SimCommandKind
     BuildConduit,
     UpgradeConduit,
     SellConduit,
+    ChannelMana,
 }
 
-public readonly record struct SimCommand(SimCommandKind Kind, PlayerSide Side, string TargetId)
+public readonly record struct SimCommand(
+    SimCommandKind Kind, PlayerSide Side, string TargetId, int Amount = 0)
 {
+    public static SimCommand ChannelMana(PlayerSide side, int amount)
+    {
+        return new SimCommand(SimCommandKind.ChannelMana, side, string.Empty, amount);
+    }
+
     public static readonly IReadOnlyList<SimCommand> None = Array.Empty<SimCommand>();
 
     public static SimCommand Deploy(PlayerSide side, string unitDefId)

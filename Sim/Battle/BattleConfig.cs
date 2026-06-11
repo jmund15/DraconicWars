@@ -1,5 +1,7 @@
 namespace DraconicWars.Sim.Battle;
 
+using System.Collections.Generic;
+
 /// <summary>
 /// Battle-wide tuning values. Numbers are v1 provisional pending the economy-coherence
 /// spreadsheet pass (design.md §13a). Timeline ticks are config-driven so compressed
@@ -25,8 +27,21 @@ public sealed record BattleConfig(
     int ConduitSockets,
     float SlowAuraRange,
     bool LastStandEnabled,
-    float LastStandDripBonus)
+    float LastStandDripBonus,
+    float AscensionTricklePerSecond,
+    float LaneControlBonusPerSecond,
+    float TierBehindTrickleMultiplier,
+    float KillAscensionCapPct,
+    float KillAscensionPerTier,
+    float ChipDamageAscensionRate,
+    float AscensionDripEscalation,
+    float SummoningCost)
 {
+    /// <summary>Cumulative meter required to REACH tiers 2, 3, and Dragon (4).</summary>
+    public static readonly float[] DefaultAscensionThresholds = { 100f, 250f, 450f };
+
+    public IReadOnlyList<float> AscensionThresholds { get; init; } = DefaultAscensionThresholds;
+
     public static readonly BattleConfig Default = new(
         TickRate: 30,
         LaneLength: 38f,
@@ -47,7 +62,15 @@ public sealed record BattleConfig(
         ConduitSockets: 3,
         SlowAuraRange: 6f,
         LastStandEnabled: false,
-        LastStandDripBonus: 12f);
+        LastStandDripBonus: 12f,
+        AscensionTricklePerSecond: 0.7f,
+        LaneControlBonusPerSecond: 0.3f,
+        TierBehindTrickleMultiplier: 1.5f,
+        KillAscensionCapPct: 0.3f,
+        KillAscensionPerTier: 2f,
+        ChipDamageAscensionRate: 0.01f,
+        AscensionDripEscalation: 1.25f,
+        SummoningCost: 1800f);
 
     public float DripPerTick => BaseDripPerSecond / TickRate;
 }

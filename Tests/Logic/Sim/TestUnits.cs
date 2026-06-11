@@ -73,4 +73,24 @@ internal static class TestUnits
         BackswingTicks = 4,
         Damage = 40,
     };
+
+    internal static UnitDef Elite(string id = "elite") => Grunt(id) with
+    {
+        DisplayName = "Test Elite",
+        Tier = 2,
+        DeployCost = 150,
+    };
+
+    internal static UnitDef Dragon(string id = "dragon") => Grunt(id) with
+    {
+        DisplayName = "Test Dragon",
+        Tier = 4,
+        MaxHp = 1200,
+        Damage = 80,
+        Range = 2.5f,
+        IsArea = true,
+        Stratum = Stratum.Air,
+        CanTargetAir = true,
+        DeployCost = 0,
+    };
 }
