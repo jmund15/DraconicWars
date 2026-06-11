@@ -1,0 +1,38 @@
+[
+  {
+    "name": "kobold_spearman",
+    "lint_pass": true,
+    "sheet": "C:\\Users\\jmund\\Game_Dev\\Godot_Projects\\DraconicWars\\art_pipeline\\output\\units\\kobold_spearman_sheet.png",
+    "manifest": "C:\\Users\\jmund\\Game_Dev\\Godot_Projects\\DraconicWars\\art_pipeline\\output\\units\\kobold_spearman.manifest.json",
+    "lint_report": "C:\\Users\\jmund\\Game_Dev\\Godot_Projects\\DraconicWars\\art_pipeline\\output\\reports\\kobold_spearman.lint.json",
+    "contact_sheets": [
+      "C:\\Users\\jmund\\Game_Dev\\Godot_Projects\\DraconicWars\\art_pipeline\\output\\contact_sheets\\kobold_spearman_contact_1x.png",
+      "C:\\Users\\jmund\\Game_Dev\\Godot_Projects\\DraconicWars\\art_pipeline\\output\\contact_sheets\\kobold_spearman_contact_3x.png"
+    ],
+    "failed_checks": []
+  },
+  {
+    "name": "goblin_slinger",
+    "lint_pass": true,
+    "sheet": "C:\\Users\\jmund\\Game_Dev\\Godot_Projects\\DraconicWars\\art_pipeline\\output\\units\\goblin_slinger_sheet.png",
+    "manifest": "C:\\Users\\jmund\\Game_Dev\\Godot_Projects\\DraconicWars\\art_pipeline\\output\\units\\goblin_slinger.manifest.json",
+    "lint_report": "C:\\Users\\jmund\\Game_Dev\\Godot_Projects\\DraconicWars\\art_pipeline\\output\\reports\\goblin_slinger.lint.json",
+    "contact_sheets": [
+      "C:\\Users\\jmund\\Game_Dev\\Godot_Projects\\DraconicWars\\art_pipeline\\output\\contact_sheets\\goblin_slinger_contact_1x.png",
+      "C:\\Users\\jmund\\Game_Dev\\Godot_Projects\\DraconicWars\\art_pipeline\\output\\contact_sheets\\goblin_slinger_contact_3x.png"
+    ],
+    "failed_checks": []
+  },
+  {
+    "name": "frost_whelp",
+    "lint_pass": true,
+    "sheet": "C:\\Users\\jmund\\Game_Dev\\Godot_Projects\\DraconicWars\\art_pipeline\\output\\units\\frost_whelp_sheet.png",
+    "manifest": "C:\\Users\\jmund\\Game_Dev\\Godot_Projects\\DraconicWars\\art_pipeline\\output\\units\\frost_whelp.manifest.json",
+    "lint_report": "C:\\Users\\jmund\\Game_Dev\\Godot_Projects\\DraconicWars\\art_pipeline\\output\\reports\\frost_whelp.lint.json",
+    "contact_sheets": [
+      "C:\\Users\\jmund\\Game_Dev\\Godot_Projects\\DraconicWars\\art_pipeline\\output\\contact_sheets\\frost_whelp_contact_1x.png",
+      "C:\\Users\\jmund\\Game_Dev\\Godot_Projects\\DraconicWars\\art_pipeline\\output\\contact_sheets\\frost_whelp_contact_3x.png"
+    ],
+    "failed_checks": []
+  }
+]

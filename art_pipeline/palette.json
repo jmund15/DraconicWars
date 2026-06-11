@@ -31,7 +31,7 @@
     "radiant": ["9e4539", "e6904e", "fbb954", "fdcbb0", "ffffff"]
   },
   "elements": {
-    "fire":   { "primary": "fire",       "secondary": "fire_dark",  "accent_index": 4 },
+    "fire":   { "primary": "fire",       "secondary": "fire_dark",  "accent_index": 3 },
     "frost":  { "primary": "frost",      "secondary": "frost_teal", "accent_index": 4 },
     "storm":  { "primary": "storm",      "secondary": "leather",    "accent_index": 3 },
     "venom":  { "primary": "venom",      "secondary": "storm",      "accent_index": 2 },
