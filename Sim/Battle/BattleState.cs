@@ -16,6 +16,8 @@ public sealed class BattleState
 
     public int Tick { get; set; }
 
+    public BattleOutcome Outcome { get; set; } = BattleOutcome.Ongoing;
+
     public List<SimUnit> Units { get; } = new();
 
     public float LeftSpireHp { get; set; }

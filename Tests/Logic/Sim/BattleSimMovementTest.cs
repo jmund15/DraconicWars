@@ -74,10 +74,13 @@ public class BattleSimMovementTest
             SimCommand.Deploy(PlayerSide.Right, "grunt"),
         });
 
-        AdvanceTicks(sim, state, 2000);
+        // 270 ticks: engagement happens at ~tick 257 (35-unit gap closing at 2x speed);
+        // sample shortly after, before combat kills either side.
+        AdvanceTicks(sim, state, 270);
 
         var left = state.Units[0];
         var right = state.Units[1];
+        AssertThat(left.IsAlive && right.IsAlive).IsTrue();
         var gap = right.X - left.X;
         AssertThat(gap >= 0f).IsTrue();
         AssertThat(gap <= TestUnits.Grunt().Range + 0.2f).IsTrue();

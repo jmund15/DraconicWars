@@ -2,7 +2,8 @@ namespace DraconicWars.Sim.Battle;
 
 /// <summary>
 /// Battle-wide tuning values. Numbers are v1 provisional pending the economy-coherence
-/// spreadsheet pass (design.md §13a).
+/// spreadsheet pass (design.md §13a). Timeline ticks are config-driven so compressed
+/// teaching levels and Heat modifiers can reshape the arc per battle.
 /// </summary>
 public sealed record BattleConfig(
     int TickRate,
@@ -11,7 +12,16 @@ public sealed record BattleConfig(
     float StartingMana,
     float StartingWalletCap,
     float SpireMaxHp,
-    float DeploySpawnOffset)
+    float DeploySpawnOffset,
+    int CrescendoStartTick,
+    int SuddenDeathStartTick,
+    int HardEndTick,
+    int SuddenDeathEscalationTicks,
+    float CrescendoDripMultiplier,
+    float SuddenDeathEscalationFactor,
+    float SuddenDeathDecayPerSecond,
+    float KnockbackDistance,
+    int KnockbackIFrameTicks)
 {
     public static readonly BattleConfig Default = new(
         TickRate: 30,
@@ -20,7 +30,16 @@ public sealed record BattleConfig(
         StartingMana: 60f,
         StartingWalletCap: 300f,
         SpireMaxHp: 4000f,
-        DeploySpawnOffset: 1.5f);
+        DeploySpawnOffset: 1.5f,
+        CrescendoStartTick: 8 * 60 * 30,
+        SuddenDeathStartTick: 10 * 60 * 30,
+        HardEndTick: 12 * 60 * 30,
+        SuddenDeathEscalationTicks: 30 * 30,
+        CrescendoDripMultiplier: 2f,
+        SuddenDeathEscalationFactor: 1.25f,
+        SuddenDeathDecayPerSecond: 10f,
+        KnockbackDistance: 1.5f,
+        KnockbackIFrameTicks: 8);
 
     public float DripPerTick => BaseDripPerSecond / TickRate;
 }

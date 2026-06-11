@@ -47,4 +47,30 @@ internal static class TestUnits
         CanTargetGround = true,
         CanTargetAir = true,
     };
+
+    internal static UnitDef Mage(string id = "mage") => Grunt(id) with
+    {
+        DisplayName = "Test Mage",
+        TypeClass = TypeClass.Ranged,
+        Range = 5.0f,
+        IsArea = true,
+        Damage = 25,
+    };
+
+    internal static UnitDef Sniper(string id = "sniper") => Grunt(id) with
+    {
+        DisplayName = "Test Sniper",
+        TypeClass = TypeClass.Sniper,
+        Range = 8.0f,
+        RangeMin = 3.0f,
+        Damage = 30,
+    };
+
+    internal static UnitDef FastBiter(string id = "biter") => Grunt(id) with
+    {
+        DisplayName = "Test Fast Biter",
+        ForeswingTicks = 2,
+        BackswingTicks = 4,
+        Damage = 40,
+    };
 }

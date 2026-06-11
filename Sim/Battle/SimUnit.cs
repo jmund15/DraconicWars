@@ -14,7 +14,22 @@ public sealed class SimUnit
 
     public int Hp { get; set; }
 
+    public AttackPhase AttackPhase { get; set; }
+
+    public int PhaseTicksLeft { get; set; }
+
+    public int KbIndex { get; set; }
+
+    public int IFrameTicks { get; set; }
+
     public bool IsAlive => Hp > 0;
 
     public Stratum Stratum => Def.Stratum;
+}
+
+public enum AttackPhase
+{
+    None,
+    Foreswing,
+    Backswing,
 }
