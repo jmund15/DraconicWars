@@ -1,0 +1,67 @@
+namespace DraconicWars.Sim.Battle;
+
+using System;
+using System.Collections.Generic;
+using DraconicWars.Sim.Core;
+
+public sealed class BattleState
+{
+    public required BattleConfig Config { get; init; }
+
+    public required SimRng Rng { get; init; }
+
+    public required PlayerState Left { get; init; }
+
+    public required PlayerState Right { get; init; }
+
+    public int Tick { get; set; }
+
+    public List<SimUnit> Units { get; } = new();
+
+    public float LeftSpireHp { get; set; }
+
+    public float RightSpireHp { get; set; }
+
+    public int NextInstanceId { get; set; } = 1;
+
+    public PlayerState Player(PlayerSide side)
+    {
+        return side == PlayerSide.Left ? Left : Right;
+    }
+
+    /// <summary>
+    /// FNV-1a fold over the deterministic gameplay state. Cooldown dictionaries are
+    /// excluded: their iteration order is unspecified, and identical runs produce
+    /// identical cooldowns anyway via the hashed fields' evolution.
+    /// </summary>
+    public ulong StateHash()
+    {
+        var hash = 14695981039346656037UL;
+
+        Mix(ref hash, (ulong)Tick);
+        Mix(ref hash, BitsOf(Left.Mana));
+        Mix(ref hash, BitsOf(Right.Mana));
+        Mix(ref hash, BitsOf(LeftSpireHp));
+        Mix(ref hash, BitsOf(RightSpireHp));
+        foreach (var unit in Units)
+        {
+            Mix(ref hash, (ulong)unit.InstanceId);
+            Mix(ref hash, BitsOf(unit.X));
+            Mix(ref hash, (ulong)(long)unit.Hp);
+            Mix(ref hash, (ulong)unit.Side);
+        }
+
+        return hash;
+
+        static void Mix(ref ulong hash, ulong value)
+        {
+            hash ^= value;
+            hash *= 1099511628211UL;
+        }
+
+        static ulong BitsOf(float value)
+        {
+            return (uint)BitConverter.SingleToInt32Bits(value);
+        }
+    }
+}
