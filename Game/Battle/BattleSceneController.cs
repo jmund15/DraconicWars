@@ -217,6 +217,12 @@ public partial class BattleSceneController : Node2D
             {
                 Text = $"[{def.Tier}] {def.DisplayName}  ({def.Category})",
                 CustomMinimumSize = new Vector2(240, 26),
+                Modulate = def.Tier switch
+                {
+                    DraconicWars.Sim.Augments.AugmentTier.Gold => Color.FromHtml("f9c22b"),
+                    DraconicWars.Sim.Augments.AugmentTier.Prismatic => Color.FromHtml("a884f3"),
+                    _ => Color.FromHtml("c7dcd0"),
+                },
             };
             var pickedId = offerId;
             button.Pressed += () =>
