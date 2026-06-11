@@ -21,14 +21,18 @@ public sealed record BattleConfig(
     float SuddenDeathEscalationFactor,
     float SuddenDeathDecayPerSecond,
     float KnockbackDistance,
-    int KnockbackIFrameTicks)
+    int KnockbackIFrameTicks,
+    int ConduitSockets,
+    float SlowAuraRange,
+    bool LastStandEnabled,
+    float LastStandDripBonus)
 {
     public static readonly BattleConfig Default = new(
         TickRate: 30,
         LaneLength: 38f,
         BaseDripPerSecond: 12f,
         StartingMana: 60f,
-        StartingWalletCap: 300f,
+        StartingWalletCap: 600f,
         SpireMaxHp: 4000f,
         DeploySpawnOffset: 1.5f,
         CrescendoStartTick: 8 * 60 * 30,
@@ -39,7 +43,11 @@ public sealed record BattleConfig(
         SuddenDeathEscalationFactor: 1.25f,
         SuddenDeathDecayPerSecond: 10f,
         KnockbackDistance: 1.5f,
-        KnockbackIFrameTicks: 8);
+        KnockbackIFrameTicks: 8,
+        ConduitSockets: 3,
+        SlowAuraRange: 6f,
+        LastStandEnabled: false,
+        LastStandDripBonus: 12f);
 
     public float DripPerTick => BaseDripPerSecond / TickRate;
 }

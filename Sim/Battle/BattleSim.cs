@@ -3,6 +3,7 @@ namespace DraconicWars.Sim.Battle;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using DraconicWars.Sim.Conduits;
 using DraconicWars.Sim.Core;
 using DraconicWars.Sim.Units;
 
@@ -17,11 +18,16 @@ public sealed class BattleSim
 
     private readonly BattleConfig _config;
     private readonly Dictionary<string, UnitDef> _defs;
+    private readonly Dictionary<string, ConduitDef> _conduits;
 
-    public BattleSim(BattleConfig config, IEnumerable<UnitDef> defs)
+    public BattleSim(
+        BattleConfig config,
+        IEnumerable<UnitDef> defs,
+        IEnumerable<ConduitDef>? conduits = null)
     {
         _config = config;
         _defs = defs.ToDictionary(def => def.Id);
+        _conduits = (conduits ?? Array.Empty<ConduitDef>()).ToDictionary(def => def.Id);
     }
 
     public BattleState CreateInitialState(ulong seed)
@@ -54,6 +60,7 @@ public sealed class BattleSim
         }
 
         ProcessCommands(state, commands);
+        ProcessLastStand(state);
         TickEconomy(state);
         ProcessCombat(state);
         MoveUnits(state);
@@ -69,9 +76,20 @@ public sealed class BattleSim
     {
         foreach (var command in commands)
         {
-            if (command.Kind == SimCommandKind.Deploy)
+            switch (command.Kind)
             {
-                TryDeploy(state, command.Side, command.UnitDefId);
+                case SimCommandKind.Deploy:
+                    TryDeploy(state, command.Side, command.TargetId);
+                    break;
+                case SimCommandKind.BuildConduit:
+                    TryBuildConduit(state, command.Side, command.TargetId);
+                    break;
+                case SimCommandKind.UpgradeConduit:
+                    TryUpgradeConduit(state, command.Side, command.TargetId);
+                    break;
+                case SimCommandKind.SellConduit:
+                    TrySellConduit(state, command.Side, command.TargetId);
+                    break;
             }
         }
     }
@@ -107,13 +125,123 @@ public sealed class BattleSim
         });
     }
 
+    private void TryBuildConduit(BattleState state, PlayerSide side, string conduitId)
+    {
+        if (!_conduits.TryGetValue(conduitId, out var def))
+        {
+            return;
+        }
+        var player = state.Player(side);
+        if (player.Conduits.ContainsKey(conduitId)
+            || player.Conduits.Count >= _config.ConduitSockets)
+        {
+            return;
+        }
+        var cost = def.CostForTier(1);
+        if (player.Mana < cost)
+        {
+            return;
+        }
+
+        player.Mana -= cost;
+        player.Conduits[conduitId] = 1;
+        player.ConduitSpent[conduitId] = cost;
+        player.SpireShield += def.SpireShieldPerTier;
+        RecomputeBuffs(player);
+    }
+
+    private void TryUpgradeConduit(BattleState state, PlayerSide side, string conduitId)
+    {
+        if (!_conduits.TryGetValue(conduitId, out var def))
+        {
+            return;
+        }
+        var player = state.Player(side);
+        if (!player.Conduits.TryGetValue(conduitId, out var tier) || tier >= ConduitDef.MaxTier)
+        {
+            return;
+        }
+        var cost = def.CostForTier(tier + 1);
+        if (player.Mana < cost)
+        {
+            return;
+        }
+
+        player.Mana -= cost;
+        player.Conduits[conduitId] = tier + 1;
+        player.ConduitSpent[conduitId] += cost;
+        player.SpireShield += def.SpireShieldPerTier;
+        RecomputeBuffs(player);
+    }
+
+    private void TrySellConduit(BattleState state, PlayerSide side, string conduitId)
+    {
+        var player = state.Player(side);
+        if (!player.Conduits.ContainsKey(conduitId))
+        {
+            return;
+        }
+
+        var refund = player.ConduitSpent.GetValueOrDefault(conduitId) * 0.5f;
+        player.Conduits.Remove(conduitId);
+        player.ConduitSpent.Remove(conduitId);
+        RecomputeBuffs(player);
+        AddMana(player, refund);
+    }
+
+    private void RecomputeBuffs(PlayerState player)
+    {
+        float drip = 0f, cap = 0f, bounty = 0f, damage = 0f, speed = 0f, slow = 0f, breath = 0f;
+        foreach (var (conduitId, tier) in player.Conduits)
+        {
+            var def = _conduits[conduitId];
+            drip += def.DripBonusPerTier * tier;
+            cap += def.WalletCapPerTier * tier;
+            bounty += def.KillBountyPctPerTier * tier;
+            damage += def.DamagePctPerTier * tier;
+            speed += def.SpeedPctPerTier * tier;
+            slow += def.SlowAuraPctPerTier * tier;
+            breath += def.BreathRegenPctPerTier * tier;
+        }
+        player.Buffs = new PlayerBuffs
+        {
+            DripBonusPerSecond = drip,
+            WalletCapBonus = cap,
+            KillBountyPct = bounty,
+            DamagePct = damage,
+            SpeedPct = speed,
+            SlowAuraPct = slow,
+            BreathRegenPct = breath,
+        };
+    }
+
+    private void ProcessLastStand(BattleState state)
+    {
+        if (!_config.LastStandEnabled)
+        {
+            return;
+        }
+        var threshold = _config.SpireMaxHp * 0.1f;
+        if (!state.Left.LastStandUsed && state.LeftSpireHp < threshold)
+        {
+            state.Left.LastStandUsed = true;
+        }
+        if (!state.Right.LastStandUsed && state.RightSpireHp < threshold)
+        {
+            state.Right.LastStandUsed = true;
+        }
+    }
+
     private void TickEconomy(BattleState state)
     {
-        var drip = _config.DripPerTick * DripMultiplier(state.Tick);
+        var multiplier = DripMultiplier(state.Tick);
         foreach (var side in Sides)
         {
             var player = state.Player(side);
-            player.Mana = MathF.Min(player.Mana + drip, player.WalletCap);
+            var dripPerSecond = _config.BaseDripPerSecond
+                + player.Buffs.DripBonusPerSecond
+                + (player.LastStandUsed ? _config.LastStandDripBonus : 0f);
+            AddMana(player, dripPerSecond / _config.TickRate * multiplier);
 
             if (player.DeployCooldowns.Count == 0)
             {
@@ -128,6 +256,13 @@ public sealed class BattleSim
                 }
             }
         }
+    }
+
+    /// <summary>Clamps gains at the effective cap without cutting pre-existing overfill.</summary>
+    private static void AddMana(PlayerState player, float amount)
+    {
+        var cap = MathF.Max(player.Mana, player.EffectiveWalletCap);
+        player.Mana = MathF.Min(player.Mana + amount, cap);
     }
 
     private float DripMultiplier(int tick)
@@ -161,7 +296,7 @@ public sealed class BattleSim
             if (unit.AttackPhase == AttackPhase.None && HasAnyTargetInBand(state, unit))
             {
                 unit.AttackPhase = AttackPhase.Foreswing;
-                unit.PhaseTicksLeft = unit.Def.ForeswingTicks;
+                unit.PhaseTicksLeft = ScaledTicks(state, unit, unit.Def.ForeswingTicks);
             }
 
             switch (unit.AttackPhase)
@@ -172,7 +307,7 @@ public sealed class BattleSim
                     {
                         ResolveContact(state, unit);
                         unit.AttackPhase = AttackPhase.Backswing;
-                        unit.PhaseTicksLeft = unit.Def.BackswingTicks;
+                        unit.PhaseTicksLeft = ScaledTicks(state, unit, unit.Def.BackswingTicks);
                         if (unit.PhaseTicksLeft <= 0)
                         {
                             unit.AttackPhase = AttackPhase.None;
@@ -190,6 +325,16 @@ public sealed class BattleSim
         }
 
         state.Units.RemoveAll(unit => !unit.IsAlive);
+    }
+
+    private static int ScaledTicks(BattleState state, SimUnit unit, int baseTicks)
+    {
+        var speedPct = state.Player(unit.Side).Buffs.SpeedPct;
+        if (speedPct <= 0f || baseTicks <= 0)
+        {
+            return baseTicks;
+        }
+        return Math.Max(1, (int)MathF.Round(baseTicks / (1f + speedPct)));
     }
 
     private void ResolveContact(BattleState state, SimUnit attacker)
@@ -215,8 +360,14 @@ public sealed class BattleSim
             && spireDistance >= attacker.Def.RangeMin
             && spireDistance <= attacker.Def.Range)
         {
-            DamageSpire(state, attacker.Side, attacker.Def.Damage);
+            DamageSpire(state, attacker.Side, ScaledDamage(state, attacker));
         }
+    }
+
+    private static int ScaledDamage(BattleState state, SimUnit attacker)
+    {
+        var damagePct = state.Player(attacker.Side).Buffs.DamagePct;
+        return (int)MathF.Round(attacker.Def.Damage * (1f + damagePct));
     }
 
     private void DealDamage(BattleState state, SimUnit attacker, SimUnit defender)
@@ -226,9 +377,12 @@ public sealed class BattleSim
             return;
         }
 
-        defender.Hp -= attacker.Def.Damage;
+        defender.Hp -= ScaledDamage(state, attacker);
         if (!defender.IsAlive)
         {
+            var killer = state.Player(attacker.Side);
+            var bounty = defender.Def.DeployCost / 5f * (1f + killer.Buffs.KillBountyPct);
+            AddMana(killer, bounty);
             return;
         }
 
@@ -251,13 +405,22 @@ public sealed class BattleSim
 
     private static void DamageSpire(BattleState state, PlayerSide attackerSide, float damage)
     {
+        var defender = state.Player(attackerSide == PlayerSide.Left ? PlayerSide.Right : PlayerSide.Left);
+        var absorbed = MathF.Min(defender.SpireShield, damage);
+        defender.SpireShield -= absorbed;
+        var remainder = damage - absorbed;
+        if (remainder <= 0f)
+        {
+            return;
+        }
+
         if (attackerSide == PlayerSide.Left)
         {
-            state.RightSpireHp -= damage;
+            state.RightSpireHp -= remainder;
         }
         else
         {
-            state.LeftSpireHp -= damage;
+            state.LeftSpireHp -= remainder;
         }
     }
 
@@ -328,7 +491,15 @@ public sealed class BattleSim
                 continue;
             }
 
-            var step = unit.Def.MoveSpeed / state.Config.TickRate;
+            var step = unit.Def.MoveSpeed / state.Config.TickRate
+                * (1f + state.Player(unit.Side).Buffs.SpeedPct);
+            var enemyPlayer = state.Player(
+                unit.Side == PlayerSide.Left ? PlayerSide.Right : PlayerSide.Left);
+            if (enemyPlayer.Buffs.SlowAuraPct > 0f && spireDistance <= _config.SlowAuraRange)
+            {
+                step *= 1f - enemyPlayer.Buffs.SlowAuraPct;
+            }
+
             var maxAdvance = MathF.Max(0f, spireDistance - unit.Def.Range);
             unit.X += MathF.Min(step, maxAdvance) * dir;
         }
