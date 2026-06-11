@@ -1,0 +1,27 @@
+<Project Sdk="Godot.NET.Sdk/4.6.3">
+  <PropertyGroup>
+      <TargetFramework>net9.0</TargetFramework>
+      <LangVersion>13.0</LangVersion>
+
+      <EnableDynamicLoading>true</EnableDynamicLoading>
+      <!-- Jmodot ships as source (submodule); its standalone obj/ holds generated .cs that would double-compile.
+           template/ is harness-baseline scaffolding, not game code. -->
+      <DefaultItemExcludes>$(DefaultItemExcludes);.claude\worktrees\**;Jmodot\obj\**;Jmodot\bin\**;template\**</DefaultItemExcludes>
+
+      <Nullable>enable</Nullable>
+
+      <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
+
+      <NoWarn>NU1605</NoWarn>
+  </PropertyGroup>
+    <!-- gdUnit4 package dependencies -->
+    <ItemGroup>
+        <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.0.0" />
+        <PackageReference Include="gdUnit4.api" Version="5.1.0-rc4" />
+        <PackageReference Include="gdUnit4.test.adapter" Version="3.0.0" />
+        <PackageReference Include="gdUnit4.analyzers" Version="1.0.0">
+            <PrivateAssets>none</PrivateAssets>
+            <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+        </PackageReference>
+    </ItemGroup>
+</Project>
