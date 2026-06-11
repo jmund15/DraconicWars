@@ -48,6 +48,7 @@ public sealed class BattleSim
             {
                 Mana = _config.StartingMana,
                 WalletCap = _config.StartingWalletCap,
+                WrathCooldownTicks = _config.WrathCooldownTicks,
             };
         }
     }
@@ -94,8 +95,109 @@ public sealed class BattleSim
                 case SimCommandKind.ChannelMana:
                     TryChannelMana(state, command.Side, command.Amount);
                     break;
+                case SimCommandKind.FireBreath:
+                    TryFireBreath(state, command.Side, command.X);
+                    break;
+                case SimCommandKind.CastWrath:
+                    TryCastWrath(state, command.Side);
+                    break;
             }
         }
+    }
+
+    private void TryFireBreath(BattleState state, PlayerSide side, float x)
+    {
+        var player = state.Player(side);
+        var drainPerTick = 1f / _config.TickRate;
+        if (player.BreathEnergySeconds < drainPerTick)
+        {
+            return;
+        }
+
+        player.BreathEnergySeconds -= drainPerTick;
+        player.BreathPulseCounter++;
+        if (player.BreathPulseCounter < _config.BreathPulseTicks)
+        {
+            return;
+        }
+        player.BreathPulseCounter = 0;
+
+        // Friendly fire is ON by design (§10a): the pulse hits every unit in radius.
+        foreach (var unit in state.Units)
+        {
+            if (!unit.IsAlive || MathF.Abs(unit.X - x) > _config.BreathRadius)
+            {
+                continue;
+            }
+            ApplyDirectDamage(state, side, unit, _config.BreathPulseDamage);
+        }
+    }
+
+    private void TryCastWrath(BattleState state, PlayerSide side)
+    {
+        var player = state.Player(side);
+        if (player.WrathCooldownTicks > 0)
+        {
+            return;
+        }
+        player.WrathCooldownTicks = _config.WrathCooldownTicks;
+
+        var midfield = _config.LaneLength * 0.5f;
+        var pushDirection = side == PlayerSide.Left ? 1f : -1f;
+        foreach (var unit in state.Units)
+        {
+            if (unit.Side == side || !unit.IsAlive)
+            {
+                continue;
+            }
+            var onCasterHalf = side == PlayerSide.Left ? unit.X <= midfield : unit.X >= midfield;
+            if (!onCasterHalf)
+            {
+                continue;
+            }
+
+            if (ApplyDirectDamage(state, side, unit, _config.WrathDamage))
+            {
+                // Forced knockback: pushes without i-frames and without consuming
+                // HP-threshold knockbacks (design.md §4); still interrupts the attack.
+                unit.X = Math.Clamp(
+                    unit.X + pushDirection * _config.WrathKnockbackDistance,
+                    0f, _config.LaneLength);
+                unit.AttackPhase = AttackPhase.None;
+                unit.PhaseTicksLeft = 0;
+            }
+        }
+    }
+
+    /// <summary>
+    /// Damage without knockback-threshold mechanics (breath, Wrath). Returns true if
+    /// the defender survived. Kill rewards credit only cross-side kills.
+    /// </summary>
+    private bool ApplyDirectDamage(BattleState state, PlayerSide attackerSide, SimUnit defender, int damage)
+    {
+        if (defender.IFrameTicks > 0)
+        {
+            return defender.IsAlive;
+        }
+
+        defender.Hp -= damage;
+        if (defender.IsAlive)
+        {
+            return true;
+        }
+
+        if (defender.Side != attackerSide)
+        {
+            var killer = state.Player(attackerSide);
+            var bounty = defender.Def.DeployCost / 5f * (1f + killer.Buffs.KillBountyPct);
+            AddMana(killer, bounty);
+            CreditKillAscension(state, attackerSide, defender.Def);
+        }
+        if (defender.Def.Tier >= 4)
+        {
+            state.Player(defender.Side).SummoningProgress = 0f;
+        }
+        return false;
     }
 
     private void TryDeploy(BattleState state, PlayerSide side, string unitDefId)
@@ -296,6 +398,16 @@ public sealed class BattleSim
                 + (player.LastStandUsed ? _config.LastStandDripBonus : 0f);
             AddMana(player, dripPerSecond / _config.TickRate * multiplier);
 
+            var breathRegenPerTick = _config.BreathMaxSeconds
+                / _config.BreathRechargeSeconds / _config.TickRate
+                * (1f + player.Buffs.BreathRegenPct);
+            player.BreathEnergySeconds = MathF.Min(
+                player.BreathEnergySeconds + breathRegenPerTick, _config.BreathMaxSeconds);
+            if (player.WrathCooldownTicks > 0)
+            {
+                player.WrathCooldownTicks--;
+            }
+
             if (player.DeployCooldowns.Count == 0)
             {
                 continue;
@@ -430,17 +542,8 @@ public sealed class BattleSim
             return;
         }
 
-        defender.Hp -= ScaledDamage(state, attacker);
-        if (!defender.IsAlive)
+        if (!ApplyDirectDamage(state, attacker.Side, defender, ScaledDamage(state, attacker)))
         {
-            var killer = state.Player(attacker.Side);
-            var bounty = defender.Def.DeployCost / 5f * (1f + killer.Buffs.KillBountyPct);
-            AddMana(killer, bounty);
-            CreditKillAscension(state, attacker.Side, defender.Def);
-            if (defender.Def.Tier >= 4)
-            {
-                state.Player(defender.Side).SummoningProgress = 0f;
-            }
             return;
         }
 

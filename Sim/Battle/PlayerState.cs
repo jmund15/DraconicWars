@@ -33,5 +33,11 @@ public sealed class PlayerState
 
     public float SummoningProgress { get; set; }
 
+    public float BreathEnergySeconds { get; set; }
+
+    public int BreathPulseCounter { get; set; }
+
+    public int WrathCooldownTicks { get; set; }
+
     public float EffectiveWalletCap => WalletCap + Buffs.WalletCapBonus;
 }

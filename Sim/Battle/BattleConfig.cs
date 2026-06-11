@@ -35,7 +35,15 @@ public sealed record BattleConfig(
     float KillAscensionPerTier,
     float ChipDamageAscensionRate,
     float AscensionDripEscalation,
-    float SummoningCost)
+    float SummoningCost,
+    float BreathMaxSeconds,
+    int BreathRechargeSeconds,
+    int BreathPulseTicks,
+    int BreathPulseDamage,
+    float BreathRadius,
+    int WrathCooldownTicks,
+    int WrathDamage,
+    float WrathKnockbackDistance)
 {
     /// <summary>Cumulative meter required to REACH tiers 2, 3, and Dragon (4).</summary>
     public static readonly float[] DefaultAscensionThresholds = { 100f, 250f, 450f };
@@ -70,7 +78,15 @@ public sealed record BattleConfig(
         KillAscensionPerTier: 2f,
         ChipDamageAscensionRate: 0.01f,
         AscensionDripEscalation: 1.25f,
-        SummoningCost: 1800f);
+        SummoningCost: 1800f,
+        BreathMaxSeconds: 4f,
+        BreathRechargeSeconds: 12,
+        BreathPulseTicks: 6,
+        BreathPulseDamage: 5,
+        BreathRadius: 1.5f,
+        WrathCooldownTicks: 60 * 30,
+        WrathDamage: 30,
+        WrathKnockbackDistance: 3f);
 
     public float DripPerTick => BaseDripPerSecond / TickRate;
 }

@@ -10,14 +10,27 @@ public enum SimCommandKind
     UpgradeConduit,
     SellConduit,
     ChannelMana,
+    FireBreath,
+    CastWrath,
 }
 
 public readonly record struct SimCommand(
-    SimCommandKind Kind, PlayerSide Side, string TargetId, int Amount = 0)
+    SimCommandKind Kind, PlayerSide Side, string TargetId, int Amount = 0, float X = 0f)
 {
     public static SimCommand ChannelMana(PlayerSide side, int amount)
     {
         return new SimCommand(SimCommandKind.ChannelMana, side, string.Empty, amount);
+    }
+
+    /// <summary>Held-fire command: issue one per tick while the breath verb is held.</summary>
+    public static SimCommand FireBreath(PlayerSide side, float x)
+    {
+        return new SimCommand(SimCommandKind.FireBreath, side, string.Empty, 0, x);
+    }
+
+    public static SimCommand CastWrath(PlayerSide side)
+    {
+        return new SimCommand(SimCommandKind.CastWrath, side, string.Empty);
     }
 
     public static readonly IReadOnlyList<SimCommand> None = Array.Empty<SimCommand>();
