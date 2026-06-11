@@ -1,0 +1,3 @@
+[submodule "Jmodot"]
+	path = Jmodot
+	url = https://github.com/jmund15/Jmodot.git

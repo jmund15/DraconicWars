@@ -1,12 +1,89 @@
-# Build / runtime artifacts that the filesystem accumulates but the baseline never ships.
-__pycache__/
-*.pyc
+# -------------------------------------------------------------------
+# Godot Engine - C#/.NET
+# -------------------------------------------------------------------
 
-# Session-state and runtime logs that live inside a .claude/ tree (the template mirrors
-# a real .claude/, so a maintainer running tools here can generate these).
+# Godot-specific ignores
+.godot/
+/android/
+Temp/
+project_metadata.cfg
+
+# Export templates / builds
+export_templates/
+*.zip
+*.tpz
+builds/
+exports/
+*.pck
+*.exe
+*.x86_64
+*.app
+*.apk
+*.aab
+
+# Mono/C# log files
+mono_logs/
+
+# .NET / C# build artifacts
+[Bb]in/
+[Oo]bj/
+
+# Visual Studio / Rider / IDE-specific
+.vs/
+.idea/
+*.suo
+*.user
+*.userprefs
+*.sln.docstates
+.vscode/
+
+# Test run settings (machine-specific Godot paths)
+.runsettings
+
+# Test result artifacts (regenerated on every test run)
+TestResults/
+
+# NuGet
+packages/
+*.nupkg
+*.nuget.props
+*.nuget.targets
+
+# General
+*.TMP
+~*
+
+# Claude Code temp files
+tmpclaude-*
 logs/
-.cache/
-sessions/
-worktrees/
-plans/
-scratch/
+.claude/settings.local.json
+.claude/hooks/__pycache__/
+.claude/tools/__pycache__/
+.claude/hooks/hook_debug.log
+.claude/scheduled_tasks.lock
+.claude/worktrees/
+.claude/.cache/
+.claude/tmp/
+.claude/scratch/test_runs/
+# NOTE: .claude/auto-memory/ is intentionally TRACKED — do not ignore.
+
+# Windows reserved device names
+NUL
+CON
+PRN
+AUX
+nul
+
+# Godot replay logs
+replay_*.log
+
+# Transient test runner output
+Tests/_*.log
+Tests/_log_analysis.json
+
+# Semantic-search plugin index (rebuilt via /reindex_search)
+.search-index/
+
+# Godot editor csproj backups
+*.csproj.old
+*.csproj.old.*
