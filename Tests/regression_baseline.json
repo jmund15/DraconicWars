@@ -1,12 +1,18 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-06-12T03:08:34Z",
-  "updated_on_commit": "3798fef",
+  "updated_at": "2026-06-12T10:39:01Z",
+  "updated_on_commit": "510a2ac",
   "updated_on_branch": "main",
   "suites": {
-    "Logic": { "passed": 160 },
-    "Integration": { "passed": 3 },
-    "Sanity": { "passed": 1 }
+    "Logic": {
+      "passed": 167
+    },
+    "Integration": {
+      "passed": 3
+    },
+    "Sanity": {
+      "passed": 1
+    }
   },
   "silent_skip_sentinels": {
     "Logic_min": 50,
@@ -14,19 +20,7 @@
     "Sanity_min": 1
   },
   "drift_thresholds": {
-    "warn_ratio": 0.90,
-    "hard_fail_ratio": 0.70
+    "warn_ratio": 0.9,
+    "hard_fail_ratio": 0.7
   }
 }
-
-
-
-
-
-
-
-
-
-
-
-

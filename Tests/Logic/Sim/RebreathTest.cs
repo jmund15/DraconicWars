@@ -43,7 +43,8 @@ public class RebreathTest
             SimCommand.AttuneUnit(PlayerSide.Left, "grunt", Element.Fire),
         });
         AssertThat(state.Left.Mana).IsEqualApprox(
-            manaBefore - TestUnits.Grunt().DeployCost + 0.4f, 0.5f);
+            manaBefore - TestUnits.Grunt().DeployCost * state.Config.RebreathCostFactor + 0.4f,
+            0.5f);
 
         sim.Advance(state, new List<SimCommand> { SimCommand.Deploy(PlayerSide.Left, "g2") });
         sim.Advance(state, SimCommand.None);
@@ -129,6 +130,45 @@ public class RebreathTest
 
         // Still 2 attuned counted; natives would lift it, attuned cannot.
         AssertThat(ElementSynergies.TierFor(state, PlayerSide.Left, Element.Fire)).IsEqual(1);
+    }
+
+    [TestCase]
+    public void EachPaidReswearRaisesTheNextPrice()
+    {
+        var (sim, state) = CreateBattle();
+        var baseCost = TestUnits.Grunt().DeployCost * state.Config.RebreathCostFactor;
+        var step = state.Config.RebreathCostStepPct;
+
+        foreach (var (id, priorPaid) in new[] { ("grunt", 0), ("g2", 1), ("g3", 2) })
+        {
+            var manaBefore = state.Left.Mana;
+            sim.Advance(state, new List<SimCommand>
+            {
+                SimCommand.AttuneUnit(PlayerSide.Left, id, Element.Fire),
+            });
+            var expected = baseCost * (1f + priorPaid * step);
+            AssertThat(state.Left.Mana).IsEqualApprox(manaBefore - expected + 0.4f, 0.5f);
+        }
+    }
+
+    [TestCase]
+    public void FreeReswearsDoNotEscalateThePaidPrice()
+    {
+        var (sim, state) = CreateBattle();
+        state.Left.FreeAttunements = 1;
+        sim.Advance(state, new List<SimCommand>
+        {
+            SimCommand.AttuneUnit(PlayerSide.Left, "grunt", Element.Fire),
+        });
+
+        var manaBefore = state.Left.Mana;
+        sim.Advance(state, new List<SimCommand>
+        {
+            SimCommand.AttuneUnit(PlayerSide.Left, "g2", Element.Frost),
+        });
+
+        var baseCost = TestUnits.Grunt(id: "g2").DeployCost * state.Config.RebreathCostFactor;
+        AssertThat(state.Left.Mana).IsEqualApprox(manaBefore - baseCost + 0.4f, 0.5f);
     }
 
     [TestCase]

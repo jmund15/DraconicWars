@@ -48,8 +48,9 @@ public sealed record BattleConfig(
     float DripFloorPerSecond,
     int MaxFieldedPerSide)
 {
-    /// <summary>Cumulative meter required to REACH tiers 2, 3, and Dragon (4).</summary>
-    public static readonly float[] DefaultAscensionThresholds = { 100f, 250f, 450f };
+    /// <summary>Cumulative meter required to REACH tiers 2, 3, and Dragon (4).
+    /// Playtest: human battles ended before anyone summoned — tier 4 pulled in.</summary>
+    public static readonly float[] DefaultAscensionThresholds = { 100f, 240f, 400f };
 
     public IReadOnlyList<float> AscensionThresholds { get; init; } = DefaultAscensionThresholds;
 
@@ -67,14 +68,20 @@ public sealed record BattleConfig(
     /// <summary>Edicts of Ascent rolled per tier segment (0 disables the trials).</summary>
     public int EdictsPerTier { get; init; } = 2;
 
-    /// <summary>First claimant's surge as a fraction of the segment's threshold gap.</summary>
-    public float EdictSurgePct { get; init; } = 0.3f;
+    /// <summary>First claimant's surge as a fraction of the segment's threshold gap.
+    /// Playtest: 0.3 let edicts dominate tier pacing — halved.</summary>
+    public float EdictSurgePct { get; init; } = 0.15f;
 
     /// <summary>Runner-up's share of the surge (anti-snowball: the race stays live).</summary>
     public float EdictRunnerUpPct { get; init; } = 0.5f;
 
     /// <summary>Rebreathing cost as a multiple of the unit's deploy cost.</summary>
-    public float RebreathCostFactor { get; init; } = 1.0f;
+    public float RebreathCostFactor { get; init; } = 1.5f;
+
+    /// <summary>Each PAID re-swear raises the next one's price by this fraction of the
+    /// base — element pivots stay possible but can't be habitual. Free (Prism) re-swears
+    /// don't escalate.</summary>
+    public float RebreathCostStepPct { get; init; } = 0.5f;
 
     /// <summary>Machine kills' bounty share (tier credit is ALWAYS denied to
     /// armaments; this knob exists for harness A/Bs at 0.5/0 if tier-denial alone
@@ -114,7 +121,7 @@ public sealed record BattleConfig(
         KillAscensionPerTier: 2f,
         ChipDamageAscensionRate: 0.01f,
         AscensionDripEscalation: 1.25f,
-        SummoningCost: 1800f,
+        SummoningCost: 1100f,
         BreathMaxSeconds: 4f,
         BreathRechargeSeconds: 12,
         BreathPulseTicks: 6,

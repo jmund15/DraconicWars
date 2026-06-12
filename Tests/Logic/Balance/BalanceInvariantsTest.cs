@@ -63,9 +63,14 @@ public class BalanceInvariantsTest
             + $" usage=[{string.Join(", ", usage.OrderByDescending(p => p.Value).Select(p => $"{p.Key}:{p.Value}"))}]";
         Console.WriteLine($"[BalanceProbe] {report}");
 
-        // Dragon crescendo must stay central (pillar 1) without being a guarantee.
-        AssertThat(tier4Rate >= 0.55f && tier4Rate <= 0.95f)
+        // Dragon crescendo must stay central (pillar 1). In even max-length AI battles
+        // tier 4 SHOULD nearly always arrive (playtest: humans never saw a dragon —
+        // pacing pulled in); the floor catches regressions that strand the meter.
+        AssertThat(tier4Rate >= 0.6f)
             .OverrideFailureMessage($"tier4 reach rate outside band: {report}").IsTrue();
+        // The fix the band pins: someone actually SUMMONS in most even battles.
+        AssertThat(summonRate >= 0.5f)
+            .OverrideFailureMessage($"dragon summon rate below floor: {report}").IsTrue();
         // Battles end by spire kill or clock inside the designed arc.
         AssertThat(medianTicks >= 6000 && medianTicks <= 21600)
             .OverrideFailureMessage($"median duration outside band: {report}").IsTrue();

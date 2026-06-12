@@ -117,6 +117,57 @@ public class BreathWrathTest
     }
 
     [TestCase]
+    public void BreathCannotReachUnitsBeyondMidfield()
+    {
+        var (sim, state) = CreateBattle();
+        sim.Advance(state, new List<SimCommand> { SimCommand.Deploy(PlayerSide.Right, "pillar") });
+        var deepTarget = state.Units[0];
+
+        AdvanceTicks(sim, state, BattleConfig.Default.BreathRechargeSeconds
+            * BattleConfig.Default.TickRate);
+        deepTarget.X = 25f;
+        deepTarget.Hp = deepTarget.Def.MaxHp;
+        var energyBefore = state.Left.BreathEnergySeconds;
+        for (var i = 0; i < BattleConfig.Default.BreathPulseTicks; i++)
+        {
+            sim.Advance(state, new List<SimCommand> { SimCommand.FireBreath(PlayerSide.Left, 25f) });
+        }
+
+        // The pulse lands clamped at midfield; a unit deeper than mid + radius is safe.
+        AssertThat(deepTarget.Hp).IsEqual(deepTarget.Def.MaxHp);
+        AssertThat(state.Left.BreathEnergySeconds < energyBefore).IsTrue();
+    }
+
+    [TestCase]
+    public void BreathAimClampsToTheCasterHalf_BothSides()
+    {
+        var (sim, state) = CreateBattle();
+        sim.Advance(state, new List<SimCommand> { SimCommand.Deploy(PlayerSide.Right, "pillar") });
+        var nearMid = state.Units[0];
+        var midfield = BattleConfig.Default.LaneLength * 0.5f;
+
+        AdvanceTicks(sim, state, BattleConfig.Default.BreathRechargeSeconds
+            * BattleConfig.Default.TickRate);
+        nearMid.X = midfield + 1f;
+        nearMid.Hp = nearMid.Def.MaxHp;
+        for (var i = 0; i < BattleConfig.Default.BreathPulseTicks; i++)
+        {
+            sim.Advance(state, new List<SimCommand> { SimCommand.FireBreath(PlayerSide.Left, 30f) });
+        }
+        AssertThat(nearMid.Hp < nearMid.Def.MaxHp).IsTrue();
+
+        nearMid.X = midfield - 1f;
+        nearMid.Hp = nearMid.Def.MaxHp;
+        state.Right.BreathEnergySeconds = BattleConfig.Default.BreathMaxSeconds;
+        state.Right.BreathPulseCounter = 0;
+        for (var i = 0; i < BattleConfig.Default.BreathPulseTicks; i++)
+        {
+            sim.Advance(state, new List<SimCommand> { SimCommand.FireBreath(PlayerSide.Right, 5f) });
+        }
+        AssertThat(nearMid.Hp < nearMid.Def.MaxHp).IsTrue();
+    }
+
+    [TestCase]
     public void WrathStartsOnCooldownAndRejectsEarlyCast()
     {
         var (sim, state) = CreateBattle();

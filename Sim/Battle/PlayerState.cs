@@ -71,6 +71,9 @@ public sealed class PlayerState
     /// <summary>Prism Parley grants: re-swears that cost no mana.</summary>
     public int FreeAttunements { get; set; }
 
+    /// <summary>Paid re-swears this battle — each raises the next one's price.</summary>
+    public int PaidRebreaths { get; set; }
+
     /// <summary>Utility sockets bought mid-battle (Tier-3-gated, once per battle).</summary>
     public int BonusSockets { get; set; }
 

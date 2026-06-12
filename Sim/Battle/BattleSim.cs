@@ -164,6 +164,11 @@ public sealed class BattleSim
             return;
         }
 
+        // A spire's Breath reaches only to the span's midpoint (playtest: infinite
+        // reach made breath a free cross-map execute).
+        var midfield = _config.LaneLength * 0.5f;
+        x = side == PlayerSide.Left ? MathF.Min(x, midfield) : MathF.Max(x, midfield);
+
         player.BreathEnergySeconds -= drainPerTick;
         player.BreathPulseCounter++;
         if (player.BreathPulseCounter < _config.BreathPulseTicks)
@@ -283,7 +288,8 @@ public sealed class BattleSim
         var player = state.Player(side);
         var cost = player.FreeAttunements > 0
             ? 0f
-            : def.DeployCost * _config.RebreathCostFactor;
+            : def.DeployCost * _config.RebreathCostFactor
+                * (1f + player.PaidRebreaths * _config.RebreathCostStepPct);
         if (player.AttunedThisBattle.ContainsKey(unitDefId)
             || element == def.Element
             || def.Tier >= 4
@@ -295,6 +301,10 @@ public sealed class BattleSim
         if (player.FreeAttunements > 0)
         {
             player.FreeAttunements--;
+        }
+        else
+        {
+            player.PaidRebreaths++;
         }
         player.AttunedThisBattle[unitDefId] = element;
     }
