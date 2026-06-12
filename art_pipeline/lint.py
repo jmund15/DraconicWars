@@ -285,6 +285,12 @@ def lint_sheet(sheet_path: str | Path, manifest_path: str | Path | None = None) 
     size_warnings = []
     body = (manifest or {}).get("body_size")
     rules = CLASS_BODY_RULES.get((manifest or {}).get("typeclass", ""))
+    # aerial floors scale with the canvas (FP batch: 48/64/96 flyers scale
+    # body-part proportions, never pixel-double) -- base rules are per-32px.
+    if rules and manifest and manifest.get("typeclass") == "aerial_flyer":
+        k = max(1.0, manifest.get("frame_h", 32) / 32)
+        if k > 1.0:
+            rules = {key: round(v * k) for key, v in rules.items()}
     if not manifest:
         size_errors.append("manifest missing")
     elif body is None:

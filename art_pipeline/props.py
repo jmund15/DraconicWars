@@ -85,15 +85,16 @@ def draw_sword(buf, pose, hand, colors, ground_y, canvas):
         buf.fill_rect(cx - 2, ground_y - 1, cx + 6, ground_y, m[0], m[1], part="prop_blade")
         return
     hx, hy = hand
+    # guard stays at 3 accent px: 3 + 2 eye px keeps the whitelist cap (6).
     if pose == "contact":  # horizontal slash, edge forward
         buf.fill_rect(hx + 2, hy - 1, hx + 9, hy + 1, m[0], m[1], part="prop_blade")
         buf.set_px(hx + 10, hy, m[0], m[1], part="prop_blade")
-        buf.fill_rect(hx + 1, hy - 2, hx + 1, hy + 2, a[0], a[1], part="prop_guard", no_outline=True)
+        buf.fill_rect(hx + 1, hy - 1, hx + 1, hy + 1, a[0], a[1], part="prop_guard", no_outline=True)
         return
     rise = {"windup": (-3, -7), "windup2": (-4, -8)}.get(pose, (0, -8))
     bx, by = hx + rise[0], hy + rise[1]
     buf.fill_rect(min(hx - 1, bx - 1), by, max(hx + 1, bx + 1), hy - 2, m[0], m[1], part="prop_blade")
-    buf.fill_rect(hx - 2, hy - 1, hx + 2, hy - 1, a[0], a[1], part="prop_guard", no_outline=True)
+    buf.fill_rect(hx - 1, hy - 1, hx + 1, hy - 1, a[0], a[1], part="prop_guard", no_outline=True)
 
 
 def draw_sling(buf, pose, hand, colors, ground_y, canvas):
@@ -204,6 +205,30 @@ def draw_staff(buf, pose, hand, colors, ground_y, canvas):
     _accent_diamond(buf, tx, ty - 2, colors, part="prop_gem")
 
 
+def draw_quarterstaff(buf, pose, hand, colors, ground_y, canvas):
+    """Horizontal 2 px staff spanning both sides of the grip -- the monk read.
+    2 px electric accent tips at each end (4 px + 2 eye px = whitelist cap 6).
+    The contact thrust clamps against the canvas edge so the tip survives."""
+    a = colors["accent"]
+    if pose == "dropped":
+        cx = canvas[0] // 2
+        _shaft(buf, cx - 7, ground_y - 1, cx + 6, ground_y - 1, colors)
+        for x in (cx - 8, cx + 7):
+            buf.set_px(x, ground_y - 1, a[0], a[1], part="prop_tip", no_outline=True)
+            buf.set_px(x, ground_y, a[0], a[1], part="prop_tip", no_outline=True)
+        return
+    hx, hy = hand
+    dx = {"windup": -3, "windup2": -4, "contact": 4, "recover": 2, "settle": 1,
+          "drop": -1, "drop2": -1}.get(pose, 0)
+    x0, x1 = hx - 9 + dx, hx + 6 + dx
+    shift = max(0, x1 - (canvas[0] - 2))
+    x0, x1 = x0 - shift, x1 - shift
+    _shaft(buf, x0, hy, x1, hy, colors)
+    for x in (x0 - 1, x1 + 1):
+        buf.set_px(x, hy, a[0], a[1], part="prop_tip", no_outline=True)
+        buf.set_px(x, hy + 1, a[0], a[1], part="prop_tip", no_outline=True)
+
+
 _WEAPONS = {
     "spear": draw_spear,
     "sword": draw_sword,
@@ -211,6 +236,7 @@ _WEAPONS = {
     "bow": draw_bow,
     "crossbow": draw_crossbow,
     "staff": draw_staff,
+    "quarterstaff": draw_quarterstaff,
 }
 
 
@@ -225,17 +251,23 @@ def draw_weapon(buf, pal, name, pose, hand, colors, ground_y, canvas):
 # ---------------------------------------------------------------- off-hand
 
 def draw_offhand(buf, pal, name, anchor, colors):
-    """Small round shield carried proud of the torso front-low edge so it
-    breaks the silhouette (the far hand brought across the body)."""
+    """Round shield carried proud of the torso front-low edge so it breaks
+    the silhouette (the far hand brought across the body). ``small_shield``
+    is the skirmisher buckler; ``shield`` is the LARGE walking-wall plate
+    (chest-to-knee, the tank class identity)."""
     if name not in ("shield", "small_shield"):
         raise KeyError(f"unknown off-hand prop '{name}'")
     ax, ay = anchor
     w = colors["wood"]
     m = colors["metal"]
     face = min(w[1] + 1, pal.ramp_len(w[0]) - 1)
+    metal_lit = min(m[1] + 1, pal.ramp_len(m[0]) - 1)
+    if name == "shield":
+        buf.fill_round_rect(ax - 3, ay - 6, ax + 4, ay + 4, w[0], face, part="prop_shield")
+        buf.fill_rect(ax, ay - 2, ax + 1, ay - 1, m[0], metal_lit, part="prop_boss")
+        return
     buf.fill_round_rect(ax - 2, ay - 3, ax + 3, ay + 3, w[0], face, part="prop_shield")
-    buf.fill_rect(ax, ay - 1, ax + 1, ay, m[0], min(m[1] + 1, pal.ramp_len(m[0]) - 1),
-                  part="prop_boss")
+    buf.fill_rect(ax, ay - 1, ax + 1, ay, m[0], metal_lit, part="prop_boss")
 
 
 # ---------------------------------------------------------------- headgear

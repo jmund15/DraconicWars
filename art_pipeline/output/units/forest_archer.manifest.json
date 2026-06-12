@@ -26,7 +26,7 @@
       "frames": 4,
       "fps": 12,
       "loop": false,
-      "contact_frame": 2
+      "contact_frame": 1
     },
     {
       "name": "death",
@@ -36,8 +36,8 @@
       "loop": false
     }
   ],
-  "foreswing_ticks": 8,
-  "backswing_ticks": 4,
+  "foreswing_ticks": 6,
+  "backswing_ticks": 12,
   "ramps_used": [
     "ink",
     "leather",

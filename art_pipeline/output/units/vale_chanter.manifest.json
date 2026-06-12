@@ -36,8 +36,8 @@
       "loop": false
     }
   ],
-  "foreswing_ticks": 5,
-  "backswing_ticks": 7,
+  "foreswing_ticks": 10,
+  "backswing_ticks": 20,
   "ramps_used": [
     "ink",
     "leather",

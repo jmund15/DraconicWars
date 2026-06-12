@@ -26,7 +26,7 @@
       "frames": 4,
       "fps": 12,
       "loop": false,
-      "contact_frame": 2
+      "contact_frame": 1
     },
     {
       "name": "death",
@@ -36,8 +36,8 @@
       "loop": false
     }
   ],
-  "foreswing_ticks": 6,
-  "backswing_ticks": 6,
+  "foreswing_ticks": 12,
+  "backswing_ticks": 24,
   "ramps_used": [
     "ink",
     "leather",
@@ -53,12 +53,12 @@
   },
   "lint": {
     "whitelist_colors": [
-      "92a984",
+      "e6904e",
       "ffffff"
     ],
     "prop_colors": [
-      "7f708a",
-      "cd683d"
+      "547e64",
+      "7f708a"
     ],
     "airborne_animations": []
   }

@@ -108,11 +108,15 @@ def generate_unit(spec: dict, outdir: str | Path | None = None,
     outdir.mkdir(parents=True, exist_ok=True)
 
     name = spec["name"]
-    template = skeletons.make_template(spec["typeclass"])
+    template = skeletons.make_template(spec["typeclass"], spec)
+    if spec.get("canvas") and skeletons.parse_canvas(spec["canvas"]) != tuple(template.canvas):
+        raise ValueError(
+            f"{name}: spec canvas {spec['canvas']} != template canvas {template.canvas}")
     colors = resolve_colors(template, spec["element"], spec.get("palette_overrides"), pal)
     fore = int(spec.get("foreswing_ticks", 4))
     back = int(spec.get("backswing_ticks", 8))
-    contact = contact_frame_index(fore, back)
+    attack_frames = next(a.frames for a in template.animations() if a.name == "attack")
+    contact = contact_frame_index(fore, back, attack_frames)
 
     # whitelist = small deliberate details (eyes, element accents), capped by
     # lint at 6 px/frame. prop_colors = mid-tone 2 px prop bodies (shafts,

@@ -1,21 +1,53 @@
-[gd_scene load_steps=5 format=3]
+[gd_scene load_steps=9 format=3]
 
 [ext_resource type="Script" path="res://Game/Battle/BattleSceneController.cs" id="1"]
 [ext_resource type="Script" path="res://Game/Battle/BattleRunner.cs" id="2"]
 [ext_resource type="Script" path="res://Game/Battle/Hud/BattleHud.cs" id="3"]
 [ext_resource type="PackedScene" path="res://scenes/battle/unit_card.tscn" id="4"]
+[ext_resource type="Texture2D" path="res://art_pipeline/output/backgrounds/cinderfell_sky.png" id="5"]
+[ext_resource type="Texture2D" path="res://art_pipeline/output/backgrounds/cinderfell_far.png" id="6"]
+[ext_resource type="Texture2D" path="res://art_pipeline/output/backgrounds/cinderfell_mid.png" id="7"]
+[ext_resource type="Texture2D" path="res://art_pipeline/output/backgrounds/cinderfell_ground.png" id="8"]
 
-[node name="BattleScene" type="Node2D" node_paths=PackedStringArray("Runner", "UnitLayer", "Background", "Hud", "OutcomePanel", "OutcomeLabel", "ContinueButton")]
+[node name="BattleScene" type="Node2D" node_paths=PackedStringArray("Runner", "UnitLayer", "Hud", "OutcomePanel", "OutcomeLabel", "ContinueButton")]
 script = ExtResource("1")
 Runner = NodePath("Runner")
 UnitLayer = NodePath("UnitLayer")
-Background = NodePath("Background")
 Hud = NodePath("Hud")
 OutcomePanel = NodePath("Hud/OutcomeCenter/OutcomePanel")
 OutcomeLabel = NodePath("Hud/OutcomeCenter/OutcomePanel/VBox/OutcomeLabel")
 ContinueButton = NodePath("Hud/OutcomeCenter/OutcomePanel/VBox/Continue")
 
-[node name="Background" type="Sprite2D" parent="."]
+[node name="Background" type="Node2D" parent="."]
+
+[node name="SkyLayer" type="Parallax2D" parent="Background"]
+scroll_scale = Vector2(0.05, 1)
+
+[node name="Sky" type="Sprite2D" parent="Background/SkyLayer"]
+texture = ExtResource("5")
+centered = false
+
+[node name="FarLayer" type="Parallax2D" parent="Background"]
+scroll_scale = Vector2(0.25, 1)
+
+[node name="Far" type="Sprite2D" parent="Background/FarLayer"]
+position = Vector2(0, 120)
+texture = ExtResource("6")
+centered = false
+
+[node name="MidLayer" type="Parallax2D" parent="Background"]
+scroll_scale = Vector2(0.55, 1)
+
+[node name="Mid" type="Sprite2D" parent="Background/MidLayer"]
+position = Vector2(0, 180)
+texture = ExtResource("7")
+centered = false
+
+[node name="GroundLayer" type="Parallax2D" parent="Background"]
+
+[node name="Ground" type="Sprite2D" parent="Background/GroundLayer"]
+position = Vector2(0, 280)
+texture = ExtResource("8")
 centered = false
 
 [node name="UnitLayer" type="Node2D" parent="."]

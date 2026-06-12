@@ -1,6 +1,6 @@
 {
-  "sheet": "C:\\Users\\jmund\\Game_Dev\\Godot_Projects\\DraconicWars\\art_pipeline\\output\\units\\stone_ram_sheet.png",
-  "manifest": "C:\\Users\\jmund\\Game_Dev\\Godot_Projects\\DraconicWars\\art_pipeline\\output\\units\\stone_ram.manifest.json",
+  "sheet": "C:\\Users\\jmund\\Game_Dev\\Godot_Projects\\DraconicWars\\art_pipeline\\output\\units\\pyraxis_sheet.png",
+  "manifest": "C:\\Users\\jmund\\Game_Dev\\Godot_Projects\\DraconicWars\\art_pipeline\\output\\units\\pyraxis.manifest.json",
   "passed": true,
   "checks": {
     "on_palette": {
@@ -17,7 +17,7 @@
       "count": 0,
       "offenders": [],
       "whitelist": [
-        "92a984",
+        "f79617",
         "ffffff"
       ]
     },
@@ -43,14 +43,18 @@
     "body_size": {
       "passed": true,
       "errors": [],
-      "warnings": [],
+      "warnings": [
+        "body height 61 over target 60"
+      ],
       "measured": {
-        "width": 26,
-        "height": 21
+        "width": 74,
+        "height": 61,
+        "wingspan": 74
       },
       "rules": {
-        "min_h": 20,
-        "min_w": 26
+        "min_h": 42,
+        "max_h": 60,
+        "min_wingspan": 72
       }
     },
     "whitelist_cap": {

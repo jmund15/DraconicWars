@@ -1,0 +1,68 @@
+{
+  "name": "pyraxis",
+  "typeclass": "aerial_flyer",
+  "element": "fire",
+  "size_class": "boss",
+  "frame_w": 96,
+  "frame_h": 96,
+  "animations": [
+    {
+      "name": "idle",
+      "row": 0,
+      "frames": 4,
+      "fps": 7,
+      "loop": true
+    },
+    {
+      "name": "fly",
+      "row": 1,
+      "frames": 6,
+      "fps": 10,
+      "loop": true
+    },
+    {
+      "name": "attack",
+      "row": 2,
+      "frames": 6,
+      "fps": 12,
+      "loop": false,
+      "contact_frame": 2
+    },
+    {
+      "name": "death",
+      "row": 3,
+      "frames": 6,
+      "fps": 10,
+      "loop": false
+    }
+  ],
+  "foreswing_ticks": 10,
+  "backswing_ticks": 14,
+  "ramps_used": [
+    "fire",
+    "fire_dark",
+    "ink",
+    "mauve_grey"
+  ],
+  "pivot": "bottom_center",
+  "ground_y": 93,
+  "facing": "right",
+  "body_size": {
+    "width": 74,
+    "height": 61,
+    "wingspan": 74
+  },
+  "lint": {
+    "whitelist_colors": [
+      "f79617",
+      "ffffff"
+    ],
+    "prop_colors": [],
+    "airborne_animations": [
+      "idle",
+      "fly",
+      "attack",
+      "death"
+    ]
+  }
+}

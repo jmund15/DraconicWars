@@ -1,0 +1,176 @@
+{
+  "units": [
+    {
+      "name": "stone_warden",
+      "regenerated": true,
+      "reason": "forced",
+      "lint_pass": true,
+      "failed_checks": [],
+      "warnings": [],
+      "body_size": {
+        "width": 16,
+        "height": 26
+      },
+      "contact_sheets": [
+        "C:\\Users\\jmund\\Game_Dev\\Godot_Projects\\DraconicWars\\art_pipeline\\output\\contact_sheets\\stone_warden_contact_1x.png",
+        "C:\\Users\\jmund\\Game_Dev\\Godot_Projects\\DraconicWars\\art_pipeline\\output\\contact_sheets\\stone_warden_contact_3x.png"
+      ]
+    },
+    {
+      "name": "storm_monk",
+      "regenerated": true,
+      "reason": "forced",
+      "lint_pass": true,
+      "failed_checks": [],
+      "warnings": [],
+      "body_size": {
+        "width": 17,
+        "height": 26
+      },
+      "contact_sheets": [
+        "C:\\Users\\jmund\\Game_Dev\\Godot_Projects\\DraconicWars\\art_pipeline\\output\\contact_sheets\\storm_monk_contact_1x.png",
+        "C:\\Users\\jmund\\Game_Dev\\Godot_Projects\\DraconicWars\\art_pipeline\\output\\contact_sheets\\storm_monk_contact_3x.png"
+      ]
+    },
+    {
+      "name": "vale_chanter",
+      "regenerated": false,
+      "reason": "ticks match; accepted art kept",
+      "lint_pass": true,
+      "failed_checks": [],
+      "warnings": [],
+      "body_size": {
+        "width": 16,
+        "height": 24
+      },
+      "contact_sheets": []
+    },
+    {
+      "name": "dune_marksman",
+      "regenerated": false,
+      "reason": "ticks match; accepted art kept",
+      "lint_pass": true,
+      "failed_checks": [],
+      "warnings": [],
+      "body_size": {
+        "width": 19,
+        "height": 43
+      },
+      "contact_sheets": []
+    },
+    {
+      "name": "forest_archer",
+      "regenerated": false,
+      "reason": "ticks match; accepted art kept",
+      "lint_pass": true,
+      "failed_checks": [],
+      "warnings": [],
+      "body_size": {
+        "width": 16,
+        "height": 27
+      },
+      "contact_sheets": []
+    },
+    {
+      "name": "kobold_spearman",
+      "regenerated": false,
+      "reason": "ticks match; accepted art kept",
+      "lint_pass": true,
+      "failed_checks": [],
+      "warnings": [],
+      "body_size": {
+        "width": 16,
+        "height": 26
+      },
+      "contact_sheets": []
+    },
+    {
+      "name": "frost_whelp",
+      "regenerated": false,
+      "reason": "ticks match; accepted art kept",
+      "lint_pass": true,
+      "failed_checks": [],
+      "warnings": [],
+      "body_size": {
+        "width": 25,
+        "height": 18,
+        "wingspan": 25
+      },
+      "contact_sheets": []
+    },
+    {
+      "name": "stone_ram",
+      "regenerated": true,
+      "reason": "forced",
+      "lint_pass": true,
+      "failed_checks": [],
+      "warnings": [],
+      "body_size": {
+        "width": 26,
+        "height": 21
+      },
+      "contact_sheets": [
+        "C:\\Users\\jmund\\Game_Dev\\Godot_Projects\\DraconicWars\\art_pipeline\\output\\contact_sheets\\stone_ram_contact_1x.png",
+        "C:\\Users\\jmund\\Game_Dev\\Godot_Projects\\DraconicWars\\art_pipeline\\output\\contact_sheets\\stone_ram_contact_3x.png"
+      ]
+    },
+    {
+      "name": "storm_gryphon",
+      "regenerated": true,
+      "reason": "forced",
+      "lint_pass": true,
+      "failed_checks": [],
+      "warnings": [],
+      "body_size": {
+        "width": 37,
+        "height": 26,
+        "wingspan": 37
+      },
+      "contact_sheets": [
+        "C:\\Users\\jmund\\Game_Dev\\Godot_Projects\\DraconicWars\\art_pipeline\\output\\contact_sheets\\storm_gryphon_contact_1x.png",
+        "C:\\Users\\jmund\\Game_Dev\\Godot_Projects\\DraconicWars\\art_pipeline\\output\\contact_sheets\\storm_gryphon_contact_3x.png"
+      ]
+    },
+    {
+      "name": "elder_drake",
+      "regenerated": true,
+      "reason": "forced",
+      "lint_pass": true,
+      "failed_checks": [],
+      "warnings": [],
+      "body_size": {
+        "width": 49,
+        "height": 38,
+        "wingspan": 49
+      },
+      "contact_sheets": [
+        "C:\\Users\\jmund\\Game_Dev\\Godot_Projects\\DraconicWars\\art_pipeline\\output\\contact_sheets\\elder_drake_contact_1x.png",
+        "C:\\Users\\jmund\\Game_Dev\\Godot_Projects\\DraconicWars\\art_pipeline\\output\\contact_sheets\\elder_drake_contact_3x.png"
+      ]
+    },
+    {
+      "name": "pyraxis",
+      "regenerated": true,
+      "reason": "forced",
+      "lint_pass": true,
+      "failed_checks": [],
+      "warnings": [
+        "body height 61 over target 60"
+      ],
+      "body_size": {
+        "width": 74,
+        "height": 61,
+        "wingspan": 74
+      },
+      "contact_sheets": [
+        "C:\\Users\\jmund\\Game_Dev\\Godot_Projects\\DraconicWars\\art_pipeline\\output\\contact_sheets\\pyraxis_contact_1x.png",
+        "C:\\Users\\jmund\\Game_Dev\\Godot_Projects\\DraconicWars\\art_pipeline\\output\\contact_sheets\\pyraxis_contact_3x.png"
+      ]
+    }
+  ],
+  "silhouette_strip": [
+    "C:\\Users\\jmund\\Game_Dev\\Godot_Projects\\DraconicWars\\art_pipeline\\output\\contact_sheets\\silhouette_strip_1x.png",
+    "C:\\Users\\jmund\\Game_Dev\\Godot_Projects\\DraconicWars\\art_pipeline\\output\\contact_sheets\\silhouette_strip_4x.png"
+  ],
+  "cinderfell": []
+}

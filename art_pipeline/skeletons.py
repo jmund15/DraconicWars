@@ -375,6 +375,9 @@ FP_BIPED_ANIMS = [AnimDef("idle", 2, 7, True), AnimDef("walk", 4, 10, True),
                   AnimDef("attack", 4, 12, False), AnimDef("death", 3, 10, False)]
 FP_AERIAL_ANIMS = [AnimDef("idle", 2, 7, True), AnimDef("fly", 6, 10, True),
                    AnimDef("attack", 4, 12, False), AnimDef("death", 3, 10, False)]
+# Boss budget (pyraxis): idle 4 / fly 6 / attack 6 / death 6.
+BOSS_AERIAL_ANIMS = [AnimDef("idle", 4, 7, True), AnimDef("fly", 6, 10, True),
+                     AnimDef("attack", 6, 12, False), AnimDef("death", 6, 10, False)]
 
 
 def attack_pose_keys(contact_idx: int, frames: int = 4) -> list[str]:
@@ -385,9 +388,12 @@ def attack_pose_keys(contact_idx: int, frames: int = 4) -> list[str]:
     visually align with it.
     """
     contact_idx = max(1, min(contact_idx, frames - 2))
-    keys = ["windup", "windup2", "windup3"][:contact_idx]
+    wind = ["windup", "windup2", "windup3"]
+    keys = [wind[min(i, len(wind) - 1)] for i in range(contact_idx)]
     keys.append("contact")
-    keys.extend(["recover", "settle", "settle"][: frames - 1 - contact_idx])
+    rec = ["recover", "settle", "settle2"]
+    while len(keys) < frames:
+        keys.append(rec[min(len(keys) - contact_idx - 1, len(rec) - 1)])
     return keys
 
 
@@ -699,29 +705,61 @@ FLY_WING_DY = [-8, -4, 1, 5, 2, -4]
 FLY_BODY_DY = [1, 0, 0, -1, -1, 0]
 
 
-class AerialFlyerTemplate:
-    """Wyvern/whelp-shaped flyer. Hovers above the ground line (engine adds the
-    drop-shadow ellipse, art-direction.md section 6)."""
+@dataclass
+class FlyerConfig:
+    """Parametric flyer sizing/features. Pose tables stay in base-32 units;
+    the scaled path multiplies every coordinate by ``s`` (proportion scaling,
+    NOT pixel-doubling -- FP batch rule for the 48/64/96 canvases)."""
 
+    canvas: tuple[int, int] = (32, 32)
+    s: float = 1.0            # body-part proportion scale
+    wing_mult: float = 1.0    # wing length multiplier on top of s
+    tail_mult: float = 1.0    # whip-tail length multiplier
+    head_style: str = "wyvern"  # wyvern | beaked | horned | crowned
+    crest: str = "none"         # none | head (swept crest) | ridge (back spikes)
+    fire_tail: bool = False     # ember flame cluster at the tail tip
+    eye_px: int = 1             # 1 | 2 | 4 (4 = 2x2 block)
+    boss: bool = False          # boss budget: idle 4 / fly 6 / attack 6 / death 6
+    body_dx: int = 0            # absolute canvas shift (right-edge headroom)
+    body_dy: int = 0
+    dragon: bool = False        # dedicated dragon anatomy (S-neck, fan wings)
+
+
+class AerialFlyerTemplate:
+    """Wyvern/whelp-shaped flyer family. Hovers above the ground line (engine
+    adds the drop-shadow ellipse, art-direction.md section 6). Larger canvases
+    scale body-part proportions through FlyerConfig; the default config keeps
+    the accepted 32x32 whelp byte-identical via the verbatim small path."""
+
+    # hot = crest spikes / maw glow / tail flame: bright primary step drawn as
+    # OUTLINED >=3 px geometry (not whitelisted -- the 6 px cap stays for
+    # accent+eye). horn = bone-grey head spikes on horned/crowned styles.
     ROLE_DEFAULTS = {
         "skin": ("@primary", 2),
         "belly": ("@secondary", 3),
         "membrane": ("@secondary", 1),
         "accent": ("@primary", "@accent"),
+        "hot": ("@primary", 4),
+        "horn": ("mauve_grey", 2),
         "eye": ("mauve_grey", 4),
     }
     WHITELIST_ROLES = ("accent", "eye")
 
-    canvas = (32, 32)
+    def __init__(self, cfg: FlyerConfig | None = None):
+        self.cfg = cfg or FlyerConfig()
 
-    def __init__(self, cfg=None):
-        pass
+    @property
+    def canvas(self):
+        return self.cfg.canvas
 
     def animations(self):
-        return FP_AERIAL_ANIMS
+        return BOSS_AERIAL_ANIMS if self.cfg.boss else FP_AERIAL_ANIMS
 
     def poses(self, anim: str, contact_idx: int) -> list[dict]:
         if anim == "idle":
+            if self.cfg.boss:
+                return [{"wing": -5, "body": (0, 0)}, {"wing": -3, "body": (0, 0)},
+                        {"wing": -2, "body": (0, 1)}, {"wing": -4, "body": (0, 1)}]
             return [{"wing": -5, "body": (0, 0)}, {"wing": -2, "body": (0, 1)}]
         if anim == "fly":
             return [{"wing": FLY_WING_DY[i], "body": (0, FLY_BODY_DY[i])} for i in range(6)]
@@ -729,12 +767,24 @@ class AerialFlyerTemplate:
             table = {
                 "windup": {"wing": -6, "body": (-1, -1), "head": (-1, -1)},
                 "windup2": {"wing": -8, "body": (-2, -1), "head": (-1, -2)},
+                "windup3": {"wing": -9, "body": (-2, -2), "head": (-2, -3)},
                 "contact": {"wing": 2, "body": (3, 1), "head": (3, 2), "mouth_open": True},
                 "recover": {"wing": -2, "body": (1, 0), "head": (1, 1)},
                 "settle": {"wing": -4, "body": (0, 0), "head": (0, 0)},
+                "settle2": {"wing": -5, "body": (0, 1), "head": (0, 1)},
             }
-            return [dict(table[k]) for k in attack_pose_keys(contact_idx)]
+            frames = 6 if self.cfg.boss else 4
+            return [dict(table[k]) for k in attack_pose_keys(contact_idx, frames)]
         if anim == "death":
+            if self.cfg.boss:
+                return [
+                    {"wing": 3, "body": (0, 1), "head": (0, 1)},
+                    {"wing": 5, "body": (0, 2), "head": (0, 3)},
+                    {"wing": 7, "body": (0, 3), "head": (1, 4), "fold": True},
+                    {"wing": 8, "body": (0, 4), "head": (1, 5), "fold": True},
+                    {"wing": 8, "body": (0, 5), "head": (0, 6), "fold": True, "crumple": True},
+                    {"wing": 8, "body": (0, 5), "head": (0, 7), "fold": True, "crumple": True},
+                ]
             return [
                 {"wing": 4, "body": (0, 1), "head": (0, 2)},
                 {"wing": 7, "body": (0, 3), "head": (1, 5), "fold": True},
@@ -743,12 +793,26 @@ class AerialFlyerTemplate:
         raise KeyError(anim)
 
     def draw_pose(self, buf: PixelBuffer, pose: dict, unit: dict, pal: Palette) -> None:
+        if self.cfg.dragon:
+            self._draw_dragon(buf, pose, unit, pal)
+        elif self.cfg.s < 1.5:
+            self._draw_small(buf, pose, unit, pal)
+        else:
+            self._draw_scaled(buf, pose, unit, pal)
+
+    # -------------------------------------------------- 32px path (whelp)
+    # Verbatim round-2 calibration drawing: the accepted frost_whelp must
+    # stay byte-identical, so this path takes no scaling parameters.
+
+    def _draw_small(self, buf: PixelBuffer, pose: dict, unit: dict, pal: Palette) -> None:
         colors = unit["colors"]
         skin, belly = colors["skin"], colors["belly"]
         membrane = colors["membrane"]
         bdx, bdy = pose.get("body", (0, 0))
         hdx, hdy = pose.get("head", (0, 0))
-        bx, by = 15 + bdx, 17 + bdy
+        W, H = self.cfg.canvas
+        bx = W // 2 - 1 + self.cfg.body_dx + bdx
+        by = H // 2 + 1 + self.cfg.body_dy + bdy
         wing_dy = pose.get("wing", -4)
         fold = pose.get("fold", False)
 
@@ -808,6 +872,352 @@ class AerialFlyerTemplate:
             # wing-finger ridge: darkest step so the boundary stays sel-out dark
             buf.line(root[0], root[1], tip[0], tip[1], skin[0], 0,
                      part="wing_finger", no_outline=True)
+
+    # ------------------------------------------- scaled path (48/64/96 px)
+    # Dragon/gryphon detailing: broad scalloped wing membranes with finger
+    # ridges, thick tapered whip tail, wedge muzzle with a dark jaw line and
+    # brow ridge, chunky outlined horn/crest geometry, glowing maw at the
+    # breath-lunge contact. Proportions scale with cfg.s -- no pixel-doubling.
+
+    def _draw_scaled(self, buf: PixelBuffer, pose: dict, unit: dict, pal: Palette) -> None:
+        cfg = self.cfg
+        s = cfg.s
+
+        def R(v):
+            return int(round(v * s))
+
+        colors = unit["colors"]
+        skin, belly = colors["skin"], colors["belly"]
+        membrane = colors["membrane"]
+        dark_skin = max(skin[1] - 1, 0)
+        W, H = cfg.canvas
+        wm = cfg.wing_mult
+        bdx, bdy = pose.get("body", (0, 0))
+        hdx, hdy = pose.get("head", (0, 0))
+        bx = W // 2 - 1 + cfg.body_dx + R(bdx)
+        by = H // 2 + R(1) + cfg.body_dy + R(bdy)
+        wing_dy = R(pose.get("wing", -4))
+        fold = pose.get("fold", False)
+        mouth_open = pose.get("mouth_open")
+
+        # --- far wing: broad scalloped membrane, pre-darkened -------------
+        rf = (bx - R(1.5), by - R(3.6))
+        far_dark = max(membrane[1] - 1, 0)
+        if fold:
+            buf.fill_triangle(rf, (rf[0] - R(5), rf[1] + R(2)),
+                              (rf[0] - R(1), rf[1] + R(3.5)),
+                              membrane[0], far_dark, part="back_wing")
+        else:
+            tip_f = (rf[0] - R(12 * wm), rf[1] + wing_dy + R(1))
+            sc1_f = (rf[0] - R(7.5 * wm), rf[1] + wing_dy + R(4.6))
+            sc2_f = (rf[0] - R(2.5), rf[1] + R(3.2))
+            buf.fill_triangle(rf, tip_f, sc1_f, membrane[0], far_dark, part="back_wing")
+            buf.fill_triangle(rf, sc1_f, sc2_f, membrane[0], far_dark, part="back_wing")
+
+        # --- tail: tapered triangle wedge (buf.line width caps at 2 px and
+        # reads as wire at scale), tip segment whips back up ----------------
+        tm = cfg.tail_mult
+        t1 = (bx - R(8.5 * tm), by + R(4.6 * tm))
+        buf.fill_triangle((bx - R(2.5), by - R(0.8)), (bx - R(2.5), by + R(2.2)),
+                          t1, skin[0], dark_skin, part="tail")
+        t2 = (t1[0] + R(1.2), t1[1] - R(3))
+        buf.fill_triangle((t1[0] - R(0.8), t1[1] + R(0.6)),
+                          (t1[0] + R(0.9), t1[1] - R(0.6)), t2,
+                          skin[0], dark_skin, part="tail2")
+        if cfg.fire_tail:
+            hot = colors["hot"]
+            buf.fill_triangle((t2[0] - R(1.6), t2[1] + R(0.8)),
+                              (t2[0] - R(0.4), t2[1] - R(2.6)),
+                              (t2[0] + R(1.6), t2[1] + R(0.4)),
+                              hot[0], hot[1], part="tail_flame")
+
+        # --- body + belly + tucked haunch ----------------------------------
+        ry = R(2) if pose.get("crumple") else R(3)
+        buf.fill_ellipse(bx, by, R(4.6), ry, skin[0], skin[1], part="body")
+        buf.fill_rect(bx - R(2.4), by + ry - R(1.8), bx + R(3), by + ry - 1,
+                      belly[0], belly[1], part="belly")
+        if not pose.get("crumple"):
+            buf.fill_ellipse(bx + R(1.2), by + ry - R(0.8), R(1.8), R(1.2),
+                             skin[0], dark_skin, part="legs")
+
+        # --- dorsal ember crest --------------------------------------------
+        if cfg.crest == "ridge":
+            hot = colors["hot"]
+            top = by - ry
+            for i, ox in enumerate((2.6, 0.2, -2.4)):
+                cx0 = bx + R(ox)
+                hgt = R(3.0 - 0.5 * i)
+                buf.fill_triangle((cx0 - R(1.3), top + 2), (cx0 + R(0.2), top - hgt),
+                                  (cx0 + R(1.3), top + 2), hot[0], hot[1],
+                                  part=f"crest{i}")
+
+        # --- neck + head (brow ridge for the angular dragon read) ----------
+        hx = bx + R(6) + R(hdx)
+        hy = by - R(5) + R(hdy)
+        buf.fill_rect(bx + R(2.5), hy + R(1.2), hx, by - 1, skin[0], skin[1], part="neck")
+        buf.fill_ellipse(hx, hy, 2.8 * s, 2.3 * s, skin[0], skin[1], part="head")
+        buf.fill_rect(hx - R(0.6), hy - R(2.6), hx + R(1.8), hy - R(1.8),
+                      skin[0], skin[1], part="head")
+
+        # --- muzzle: wedge snout + jaw (or beak) ----------------------------
+        snout = R(5.2) if cfg.head_style in ("horned", "crowned") else R(4.4)
+        if cfg.head_style == "beaked":
+            bk = belly
+            if mouth_open:
+                buf.fill_triangle((hx + R(1.6), hy - R(2)), (hx + R(5.5), hy - R(1.5)),
+                                  (hx + R(1.6), hy - R(0.4)), bk[0], bk[1], part="beak")
+                buf.fill_triangle((hx + R(1.6), hy + R(0.4)), (hx + R(4.5), hy + R(1.9)),
+                                  (hx + R(1.6), hy + R(2)), bk[0], bk[1], part="beak")
+            else:
+                buf.fill_triangle((hx + R(1.6), hy - R(1.6)), (hx + R(5.5), hy + R(0.2)),
+                                  (hx + R(1.6), hy + R(1.6)), bk[0], bk[1], part="beak")
+        elif mouth_open:
+            # breath-lunge read: upper wedge tilts up, lower jaw drops, the
+            # maw glows hot (projectiles stay sim-spawned; this is held)
+            buf.fill_triangle((hx + R(1), hy - R(2.2)), (hx + snout, hy - R(1.2)),
+                              (hx + R(1), hy + R(0.2)), skin[0], skin[1], part="snout")
+            buf.fill_triangle((hx + R(0.8), hy + R(0.8)), (hx + R(3.8), hy + R(2.8)),
+                              (hx + R(0.8), hy + R(2)), skin[0], dark_skin, part="jaw")
+            hot = colors["hot"]
+            buf.fill_rect(hx + R(1.4), hy - R(0.8), hx + R(3.6), hy + R(0.4),
+                          hot[0], hot[1], part="maw")
+        else:
+            buf.fill_triangle((hx + R(1), hy - R(1.8)), (hx + snout, hy + R(0.4)),
+                              (hx + R(1), hy + R(1.4)), skin[0], skin[1], part="snout")
+            buf.fill_rect(hx + R(1), hy + R(1), hx + R(3.2), hy + R(1.5),
+                          skin[0], dark_skin, part="jaw")
+
+        # --- horn / crest geometry (outlined >=3 px clusters, never accent px)
+        if cfg.head_style == "horned":
+            horn = colors["horn"]
+            buf.fill_triangle((hx - R(0.4), hy - R(1.8)), (hx - R(3.8), hy - R(4.6)),
+                              (hx + R(1.2), hy - R(2)), horn[0], horn[1], part="horn")
+            buf.fill_triangle((hx + R(1.2), hy - R(2)), (hx - R(1), hy - R(5.2)),
+                              (hx + R(2.4), hy - R(1.8)), horn[0], horn[1], part="horn2")
+        elif cfg.head_style == "crowned":
+            horn = colors["horn"]
+            buf.fill_triangle((hx - R(1.2), hy - R(1.6)), (hx - R(4.8), hy - R(4.4)),
+                              (hx + R(0.2), hy - R(2)), horn[0], horn[1], part="horn")
+            buf.fill_triangle((hx + R(0.2), hy - R(2)), (hx - R(1.4), hy - R(6)),
+                              (hx + R(1.6), hy - R(2.2)), horn[0], horn[1], part="horn2")
+            buf.fill_triangle((hx + R(1.6), hy - R(2.2)), (hx + R(1.4), hy - R(5.4)),
+                              (hx + R(2.8), hy - R(1.8)), horn[0], horn[1], part="horn3")
+        if cfg.crest == "head":
+            hot = colors["hot"]
+            buf.fill_triangle((hx - R(0.4), hy - R(2)), (hx - R(3.6), hy - R(4.2)),
+                              (hx + R(1.6), hy - R(2.2)), hot[0], hot[1], part="crest")
+
+        eo = unit.get("eye_offset", (0, 0))
+        ex, ey = hx + R(0.6) + eo[0], hy - R(0.9) + eo[1]
+        for dx_, dy_ in [(0, 0), (-1, 0), (0, 1), (-1, 1)][: max(1, min(cfg.eye_px, 4))]:
+            buf.set_px(ex + dx_, ey + dy_, *colors["eye"], part="eye", no_outline=True)
+
+        # --- near wing: scalloped membrane + finger ridges ------------------
+        rn = (bx + R(1.5), by - R(3))
+        if fold:
+            buf.fill_triangle(rn, (rn[0] - R(6), rn[1] + R(1.5)),
+                              (rn[0] - R(1), rn[1] + R(3.5)),
+                              membrane[0], membrane[1], part="wing")
+        else:
+            tip = (rn[0] - R(11 * wm), rn[1] + wing_dy)
+            sc1 = (rn[0] - R(6.5 * wm), rn[1] + wing_dy + R(3.8))
+            sc2 = (rn[0] - R(2), rn[1] + R(3))
+            buf.fill_triangle(rn, tip, sc1, membrane[0], membrane[1], part="wing")
+            buf.fill_triangle(rn, sc1, sc2, membrane[0], membrane[1], part="wing")
+            buf.line(rn[0], rn[1], tip[0], tip[1], skin[0], 0,
+                     part="wing_finger", no_outline=True)
+            buf.line(rn[0], rn[1], sc1[0], sc1[1], skin[0], 0,
+                     part="wing_finger2", no_outline=True)
+
+    # ------------------------------------------------- dragon path (64/96 px)
+    # Showpiece anatomy the generic scaled path can't reach: two-mass tapered
+    # torso, 3-segment S-curve neck carrying a SMALL head high, fan wings with
+    # wrist-radiating finger spars on BOTH wings, haunch + tucked foreleg,
+    # long whip tail ending in a membrane spade (or ember flame).
+
+    def _draw_dragon(self, buf: PixelBuffer, pose: dict, unit: dict, pal: Palette) -> None:
+        cfg = self.cfg
+        s = cfg.s
+
+        def R(v):
+            return int(round(v * s))
+
+        colors = unit["colors"]
+        skin, belly = colors["skin"], colors["belly"]
+        membrane = colors["membrane"]
+        dark_skin = max(skin[1] - 1, 0)
+        W, H = cfg.canvas
+        wm = cfg.wing_mult
+        tm = cfg.tail_mult
+        bdx, bdy = pose.get("body", (0, 0))
+        hdx, hdy = pose.get("head", (0, 0))
+        bx = W // 2 - 1 + cfg.body_dx + R(bdx)
+        by = H // 2 + R(1) + cfg.body_dy + R(bdy)
+        wing_dy = R(pose.get("wing", -4))
+        fold = pose.get("fold", False)
+        crumple = pose.get("crumple", False)
+        mouth_open = pose.get("mouth_open")
+
+        # --- far wing: fan panels, pre-darkened, beats slightly behind ------
+        rf = (bx - R(0.5), by - R(2.6))
+        far_dark = max(membrane[1] - 1, 0)
+        if fold:
+            buf.fill_triangle(rf, (rf[0] - R(5.5), rf[1] + R(1.5)),
+                              (rf[0] - R(1), rf[1] + R(3.2)),
+                              membrane[0], far_dark, part="back_wing")
+        else:
+            fw = int(round(wing_dy * 0.9)) - R(1)
+            tip_f = (rf[0] - R(9.5 * wm), rf[1] + fw)
+            f1_f = (rf[0] - R(6.5 * wm), rf[1] + fw + R(2.6))
+            f2_f = (rf[0] - R(3.0 * wm), rf[1] + R(1.8))
+            buf.fill_triangle(rf, tip_f, f1_f, membrane[0], far_dark, part="back_wing")
+            buf.fill_triangle(rf, f1_f, f2_f, membrane[0], far_dark, part="back_wing")
+
+        # --- whip tail: wedge, curl-up tip, spade or ember flame ------------
+        t1 = (bx - R(9.0 * tm), by + R(3.6 * tm))
+        buf.fill_triangle((bx - R(2.0), by - R(1.0)), (bx - R(2.0), by + R(1.8)),
+                          t1, skin[0], dark_skin, part="tail")
+        t2 = (t1[0] - R(2.0 * tm), t1[1] - R(2.2 * tm))
+        buf.fill_triangle((t1[0] - R(0.9), t1[1] + R(0.6)),
+                          (t1[0] + R(0.9), t1[1] - R(0.6)), t2,
+                          skin[0], dark_skin, part="tail2")
+        if cfg.fire_tail:
+            hot = colors["hot"]
+            buf.fill_triangle((t2[0] - R(1.6), t2[1] + R(0.8)),
+                              (t2[0] - R(0.2), t2[1] - R(2.6)),
+                              (t2[0] + R(1.6), t2[1] + R(0.4)),
+                              hot[0], hot[1], part="tail_flame")
+        else:
+            buf.fill_triangle((t2[0] - R(1.5), t2[1] + R(0.7)),
+                              (t2[0] + R(0.1), t2[1] - R(1.9)),
+                              (t2[0] + R(1.3), t2[1] + R(0.7)),
+                              membrane[0], membrane[1], part="tail_spade")
+
+        # --- torso: hind mass + deeper chest, bridged (no egg) --------------
+        if crumple:
+            buf.fill_ellipse(bx, by + R(1.0), R(5.0), R(1.6), skin[0], skin[1],
+                             part="body")
+        else:
+            buf.fill_ellipse(bx - R(2.2), by + R(0.5), R(2.9), R(2.2),
+                             skin[0], skin[1], part="body")
+            buf.fill_ellipse(bx + R(1.8), by - R(0.7), R(3.4), R(2.5),
+                             skin[0], skin[1], part="body")
+            buf.fill_rect(bx - R(2.0), by - R(1.4), bx + R(2.5), by + R(1.6),
+                          skin[0], skin[1], part="body")
+            buf.fill_rect(bx - R(1.6), by + R(0.8), bx + R(3.8), by + R(1.8),
+                          belly[0], belly[1], part="belly")
+
+        # --- haunch + trailing hind leg, tucked foreleg ----------------------
+        if not crumple:
+            buf.fill_ellipse(bx - R(2.6), by + R(1.6), R(1.9), R(1.5),
+                             skin[0], dark_skin, part="haunch")
+            buf.line(bx - R(2.4), by + R(2.6), bx - R(2.9), by + R(4.4),
+                     skin[0], dark_skin, part="hind_leg", width=2)
+            buf.fill_rect(bx - R(3.3), by + R(4.4), bx - R(2.4), by + R(4.7),
+                          skin[0], 0, part="hind_foot")
+            buf.line(bx + R(2.4), by + R(1.6), bx + R(3.0), by + R(3.0),
+                     skin[0], dark_skin, part="foreleg", width=2)
+
+        # --- dorsal ridge spikes along the spine -----------------------------
+        if cfg.crest == "ridge" and not crumple:
+            hot = colors["hot"]
+            for ox, base_dy, hgt in ((3.2, -2.9, 2.3), (1.2, -3.1, 2.8),
+                                     (-0.9, -2.6, 2.3), (-3.0, -2.0, 1.7)):
+                cx0 = bx + R(ox)
+                top = by + R(base_dy)
+                buf.fill_triangle((cx0 - R(1.0), top + R(0.8)),
+                                  (cx0 + R(0.1), top - R(hgt)),
+                                  (cx0 + R(1.0), top + R(0.8)),
+                                  hot[0], hot[1], part=f"crest{ox}")
+
+        # --- S-curve neck: three tapering segments climbing forward-up ------
+        hx = bx + R(6.4) + R(hdx)
+        hy = by - R(7.2) + R(hdy)
+        if crumple:
+            # damped head drop: the pose-table dy is tuned for the 32px whelp;
+            # at dragon scale the full offset sinks the head through the
+            # ground-line lint floor
+            hx = bx + R(6.0) + R(hdx)
+            hy = by + R(0.4) + R(hdy * 0.35)
+            buf.fill_ellipse(bx + R(3.6), by + R(0.8), R(1.7), R(1.2),
+                             skin[0], skin[1], part="neck")
+        else:
+            neck_pts = (((hx - bx) * 0.36, (hy - by) * 0.30, 1.9, 1.7),
+                        ((hx - bx) * 0.62, (hy - by) * 0.60, 1.6, 1.5),
+                        ((hx - bx) * 0.84, (hy - by) * 0.85, 1.4, 1.3))
+            for ndx, ndy, rx_, ry_ in neck_pts:
+                buf.fill_ellipse(bx + int(round(ndx)) , by + int(round(ndy)),
+                                 R(rx_), R(ry_), skin[0], skin[1], part="neck")
+
+        # --- head: small, high, browed ---------------------------------------
+        buf.fill_ellipse(hx, hy, R(2.0), R(1.6), skin[0], skin[1], part="head")
+        buf.fill_rect(hx - R(0.6), hy - R(2.0), hx + R(1.6), hy - R(1.4),
+                      skin[0], skin[1], part="brow")
+
+        # --- muzzle: wedge snout + jaw; glowing maw on the breath contact ----
+        snout = R(5.0) if cfg.head_style in ("horned", "crowned") else R(4.2)
+        if mouth_open:
+            buf.fill_triangle((hx + R(1), hy - R(2.0)), (hx + snout, hy - R(1.2)),
+                              (hx + R(1), hy + R(0.2)), skin[0], skin[1], part="snout")
+            buf.fill_triangle((hx + R(0.8), hy + R(0.8)), (hx + R(3.6), hy + R(2.6)),
+                              (hx + R(0.8), hy + R(1.9)), skin[0], dark_skin, part="jaw")
+            hot = colors["hot"]
+            buf.fill_rect(hx + R(1.3), hy - R(0.8), hx + R(3.8), hy + R(0.5),
+                          hot[0], hot[1], part="maw")
+        else:
+            buf.fill_triangle((hx + R(1), hy - R(1.7)), (hx + snout, hy + R(0.3)),
+                              (hx + R(1), hy + R(1.3)), skin[0], skin[1], part="snout")
+            buf.fill_rect(hx + R(1), hy + R(0.9), hx + R(3.0), hy + R(1.4),
+                          skin[0], dark_skin, part="jaw")
+
+        # --- swept-back horns / crown ----------------------------------------
+        if cfg.head_style == "horned":
+            horn = colors["horn"]
+            buf.fill_triangle((hx - R(0.4), hy - R(1.6)), (hx - R(3.6), hy - R(4.2)),
+                              (hx + R(1.0), hy - R(1.8)), horn[0], horn[1], part="horn")
+            buf.fill_triangle((hx + R(1.0), hy - R(1.8)), (hx - R(0.8), hy - R(4.8)),
+                              (hx + R(2.2), hy - R(1.6)), horn[0], horn[1], part="horn2")
+        elif cfg.head_style == "crowned":
+            horn = colors["horn"]
+            buf.fill_triangle((hx - R(1.2), hy - R(1.4)), (hx - R(4.6), hy - R(4.0)),
+                              (hx + R(0.2), hy - R(1.8)), horn[0], horn[1], part="horn")
+            buf.fill_triangle((hx + R(0.2), hy - R(1.8)), (hx - R(1.2), hy - R(5.6)),
+                              (hx + R(1.4), hy - R(2.0)), horn[0], horn[1], part="horn2")
+            buf.fill_triangle((hx + R(1.4), hy - R(2.0)), (hx + R(1.4), hy - R(5.0)),
+                              (hx + R(2.6), hy - R(1.6)), horn[0], horn[1], part="horn3")
+        if cfg.crest == "head":
+            hot = colors["hot"]
+            buf.fill_triangle((hx - R(0.4), hy - R(1.8)), (hx - R(3.4), hy - R(3.8)),
+                              (hx + R(1.4), hy - R(2.0)), hot[0], hot[1], part="crest")
+
+        eo = unit.get("eye_offset", (0, 0))
+        ex, ey = hx + R(0.6) + eo[0], hy - R(0.7) + eo[1]
+        for dx_, dy_ in [(0, 0), (-1, 0), (0, 1), (-1, 1)][: max(1, min(cfg.eye_px, 4))]:
+            buf.set_px(ex + dx_, ey + dy_, *colors["eye"], part="eye", no_outline=True)
+
+        # --- near wing: 3-panel fan + wrist-radiating finger spars -----------
+        rn = (bx + R(1.2), by - R(2.4))
+        if fold:
+            buf.fill_triangle(rn, (rn[0] - R(6), rn[1] + R(1.2)),
+                              (rn[0] - R(1), rn[1] + R(3.2)),
+                              membrane[0], membrane[1], part="wing")
+        else:
+            tip = (rn[0] - R(10.5 * wm), rn[1] + wing_dy)
+            f1 = (rn[0] - R(7.0 * wm), rn[1] + wing_dy + R(3.4))
+            f2 = (rn[0] - R(3.2 * wm), rn[1] + int(round(wing_dy * 0.35)) + R(4.2))
+            trail = (rn[0] - R(0.8), rn[1] + R(2.6))
+            buf.fill_triangle(rn, tip, f1, membrane[0], membrane[1], part="wing")
+            buf.fill_triangle(rn, f1, f2, membrane[0], membrane[1], part="wing")
+            buf.fill_triangle(rn, f2, trail, membrane[0], membrane[1], part="wing")
+            wrist = (rn[0] - R(3.8 * wm), rn[1] + int(round(wing_dy * 0.7)))
+            buf.line(rn[0], rn[1], wrist[0], wrist[1], skin[0], skin[1],
+                     part="wing_arm", width=2)
+            buf.line(wrist[0], wrist[1], tip[0], tip[1], skin[0], 0,
+                     part="wing_finger", no_outline=True)
+            buf.line(wrist[0], wrist[1], f1[0], f1[1], skin[0], 0,
+                     part="wing_finger2", no_outline=True)
+            buf.line(wrist[0], wrist[1], f2[0], f2[1], skin[0], 0,
+                     part="wing_finger3", no_outline=True)
 
 
 # ===========================================================================
@@ -920,11 +1330,42 @@ class SiegeMachineTemplate:
 # Registry
 # ===========================================================================
 
-def make_template(typeclass: str):
+def parse_canvas(value) -> tuple[int, int]:
+    """'48x48' / [48, 48] -> (48, 48)."""
+    if isinstance(value, str):
+        w, h = (int(v) for v in value.lower().split("x"))
+        return (w, h)
+    return (int(value[0]), int(value[1]))
+
+
+def flyer_config_from_spec(spec: dict | None) -> FlyerConfig:
+    """Spec keys: ``canvas`` ('WxH') + optional ``flyer`` dict of knobs.
+    Absent spec -> the byte-stable 32x32 whelp default."""
+    if not spec:
+        return FlyerConfig()
+    canvas = parse_canvas(spec.get("canvas", (32, 32)))
+    fl = dict(spec.get("flyer") or {})
+    return FlyerConfig(
+        canvas=canvas,
+        s=float(fl.get("scale", canvas[1] / 32)),
+        wing_mult=float(fl.get("wing_mult", 1.0)),
+        tail_mult=float(fl.get("tail_mult", 1.0)),
+        head_style=fl.get("head", "wyvern"),
+        crest=fl.get("crest", "none"),
+        fire_tail=bool(fl.get("fire_tail", False)),
+        eye_px=int(fl.get("eye_px", 1 if canvas[1] <= 32 else 2)),
+        boss=bool(fl.get("boss", False)),
+        body_dx=int(fl.get("body_dx", 0)),
+        body_dy=int(fl.get("body_dy", 0)),
+        dragon=bool(fl.get("dragon", False)),
+    )
+
+
+def make_template(typeclass: str, spec: dict | None = None):
     if typeclass in BIPED_CONFIGS:
         return BipedTemplate(BIPED_CONFIGS[typeclass])
     if typeclass == "aerial_flyer":
-        return AerialFlyerTemplate()
+        return AerialFlyerTemplate(flyer_config_from_spec(spec))
     if typeclass == "siege_machine":
         return SiegeMachineTemplate()
     raise KeyError(

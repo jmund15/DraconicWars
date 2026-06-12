@@ -19,15 +19,12 @@ using Jmodot.Implementation.Shared;
 public partial class BattleSceneController : Node2D
 {
     private const string SheetRoot = "res://art_pipeline/output/units";
-    private const string BackgroundPath = "res://art_pipeline/output/backgrounds/battle_bg.png";
     private const int ChannelPerTick = 15;
     private const int RetreatUnlockTicks = 60 * 30;
 
     [Export, RequiredExport] public BattleRunner Runner { get; set; } = null!;
 
     [Export, RequiredExport] public Node2D UnitLayer { get; set; } = null!;
-
-    [Export, RequiredExport] public Sprite2D Background { get; set; } = null!;
 
     [Export, RequiredExport] public BattleHud Hud { get; set; } = null!;
 
@@ -57,11 +54,6 @@ public partial class BattleSceneController : Node2D
         var levelIndex = Mathf.Clamp(
             GameSession.SelectedLevelIndex, 0, CampaignCatalog.Levels.Count - 1);
         _level = CampaignCatalog.Levels[levelIndex];
-
-        if (FileAccess.FileExists(BackgroundPath))
-        {
-            Background.Texture = UnitSpriteLibrary.LoadTexture(BackgroundPath);
-        }
 
         Runner.UnitSpawned += OnUnitSpawned;
         Runner.UnitDied += OnUnitDied;
@@ -315,9 +307,7 @@ public partial class BattleSceneController : Node2D
 
     private void OnUnitSpawned(SimUnit unit)
     {
-        var sheetName = SheetNameFor(unit.Def.Id);
-        var isStandIn = sheetName != StripEnemyPrefix(unit.Def.Id);
-        var frames = _sprites.Load(unit.Def, sheetName, validateTiming: !isStandIn);
+        var frames = _sprites.Load(unit.Def, StripEnemyPrefix(unit.Def.Id), validateTiming: true);
         if (frames is null)
         {
             return;
@@ -326,13 +316,6 @@ public partial class BattleSceneController : Node2D
         UnitLayer.AddChild(view);
         view.Bind(unit, frames);
         _views[unit.InstanceId] = view;
-    }
-
-    /// <summary>Enemy defs are id-prefixed; the drake uses the whelp sheet until its art lands.</summary>
-    private static string SheetNameFor(string defId)
-    {
-        var baseName = StripEnemyPrefix(defId);
-        return baseName == UnitCatalog.RentalDragonId ? "frost_whelp" : baseName;
     }
 
     private static string StripEnemyPrefix(string defId)

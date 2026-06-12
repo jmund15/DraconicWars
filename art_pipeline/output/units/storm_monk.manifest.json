@@ -1,0 +1,65 @@
+{
+  "name": "storm_monk",
+  "typeclass": "melee_biped",
+  "element": "storm",
+  "size_class": "small",
+  "frame_w": 32,
+  "frame_h": 32,
+  "animations": [
+    {
+      "name": "idle",
+      "row": 0,
+      "frames": 2,
+      "fps": 7,
+      "loop": true
+    },
+    {
+      "name": "walk",
+      "row": 1,
+      "frames": 4,
+      "fps": 10,
+      "loop": true
+    },
+    {
+      "name": "attack",
+      "row": 2,
+      "frames": 4,
+      "fps": 12,
+      "loop": false,
+      "contact_frame": 1
+    },
+    {
+      "name": "death",
+      "row": 3,
+      "frames": 3,
+      "fps": 10,
+      "loop": false
+    }
+  ],
+  "foreswing_ticks": 4,
+  "backswing_ticks": 6,
+  "ramps_used": [
+    "ink",
+    "leather",
+    "mauve_grey",
+    "storm"
+  ],
+  "pivot": "bottom_center",
+  "ground_y": 29,
+  "facing": "right",
+  "body_size": {
+    "width": 17,
+    "height": 26
+  },
+  "lint": {
+    "whitelist_colors": [
+      "d5e04b",
+      "ffffff"
+    ],
+    "prop_colors": [
+      "7f708a",
+      "cd683d"
+    ],
+    "airborne_animations": []
+  }
+}
