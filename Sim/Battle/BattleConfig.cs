@@ -43,7 +43,9 @@ public sealed record BattleConfig(
     float BreathRadius,
     int WrathCooldownTicks,
     int WrathDamage,
-    float WrathKnockbackDistance)
+    float WrathKnockbackDistance,
+    float TitheCostMana,
+    float DripFloorPerSecond)
 {
     /// <summary>Cumulative meter required to REACH tiers 2, 3, and Dragon (4).</summary>
     public static readonly float[] DefaultAscensionThresholds = { 100f, 250f, 450f };
@@ -51,9 +53,9 @@ public sealed record BattleConfig(
     public IReadOnlyList<float> AscensionThresholds { get; init; } = DefaultAscensionThresholds;
 
     /// <summary>Draft window timestamps in sim ticks; per-level authorable (design.md §9).</summary>
-    public static readonly int[] DefaultAugmentWindowTicks = { 2 * 60 * 30, 5 * 60 * 30, 8 * 60 * 30 };
+    public static readonly int[] DefaultParleyTicks = { 2 * 60 * 30, 5 * 60 * 30, 8 * 60 * 30 };
 
-    public IReadOnlyList<int> AugmentWindowTicks { get; init; } = DefaultAugmentWindowTicks;
+    public IReadOnlyList<int> ParleyTicks { get; init; } = DefaultParleyTicks;
 
     public static readonly BattleConfig Default = new(
         TickRate: 30,
@@ -91,7 +93,9 @@ public sealed record BattleConfig(
         BreathRadius: 1.5f,
         WrathCooldownTicks: 60 * 30,
         WrathDamage: 30,
-        WrathKnockbackDistance: 3f);
+        WrathKnockbackDistance: 3f,
+        TitheCostMana: 60f,
+        DripFloorPerSecond: 2f);
 
     public float DripPerTick => BaseDripPerSecond / TickRate;
 }

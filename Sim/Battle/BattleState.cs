@@ -20,9 +20,9 @@ public sealed class BattleState
 
     public List<SimUnit> Units { get; } = new();
 
-    public required SimRng AugmentRng { get; init; }
+    public required SimRng PactRng { get; init; }
 
-    public required IReadOnlyList<DraconicWars.Sim.Augments.AugmentTier> AugmentTierPath { get; init; }
+    public required IReadOnlyList<DraconicWars.Sim.Pacts.PactTier> ParleyTierPath { get; init; }
 
     public int NextWindowIndex { get; set; }
 

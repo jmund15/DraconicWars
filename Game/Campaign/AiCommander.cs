@@ -39,11 +39,19 @@ public sealed class AiCommander
     {
         var player = state.Player(_side);
 
-        if (player.AwaitingDraft)
+        if (player.AwaitingParley)
         {
             if (player.PendingOffers.Count > 0)
             {
-                yield return SimCommand.PickAugment(_side, ChooseAugment(player.PendingOffers));
+                var preferredOffer = FindPreferredOffer(player.PendingOffers);
+                if (preferredOffer is null
+                    && player.TithesPaidThisParley == 0
+                    && player.Mana >= state.Config.TitheCostMana * 3f)
+                {
+                    yield return SimCommand.PayTithe(_side);
+                    yield break;
+                }
+                yield return SimCommand.SealPact(_side, preferredOffer ?? player.PendingOffers[0]);
             }
             yield break;
         }
@@ -74,22 +82,24 @@ public sealed class AiCommander
         }
     }
 
-    private string ChooseAugment(IReadOnlyList<string> offers)
+    /// <summary>First offer matching the persona's doctrine category, or null —
+    /// a null answer with a deep wallet is what makes the AI tithe the Broker once.</summary>
+    private string? FindPreferredOffer(IReadOnlyList<string> offers)
     {
         var preferred = _persona switch
         {
-            AiPersona.Rusher => DraconicWars.Sim.Augments.AugmentCategory.Deployment,
-            AiPersona.Powerhouse => DraconicWars.Sim.Augments.AugmentCategory.Economy,
-            _ => DraconicWars.Sim.Augments.AugmentCategory.Combat,
+            AiPersona.Rusher => DraconicWars.Sim.Pacts.PactCategory.Deployment,
+            AiPersona.Powerhouse => DraconicWars.Sim.Pacts.PactCategory.Economy,
+            _ => DraconicWars.Sim.Pacts.PactCategory.Combat,
         };
         foreach (var offer in offers)
         {
-            if (DraconicWars.Sim.Augments.AugmentCatalog.ById(offer).Category == preferred)
+            if (DraconicWars.Sim.Pacts.PactCatalog.ById(offer).Category == preferred)
             {
                 return offer;
             }
         }
-        return offers[0];
+        return null;
     }
 
     private IEnumerable<SimCommand> EconomyCommands(BattleState state, PlayerState player)

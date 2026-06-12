@@ -3,7 +3,7 @@ namespace DraconicWars.Sim.Battle;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using DraconicWars.Sim.Augments;
+using DraconicWars.Sim.Pacts;
 using DraconicWars.Sim.Conduits;
 using DraconicWars.Sim.Core;
 using DraconicWars.Sim.Units;
@@ -20,30 +20,30 @@ public sealed class BattleSim
     private readonly BattleConfig _config;
     private readonly Dictionary<string, UnitDef> _defs;
     private readonly Dictionary<string, ConduitDef> _conduits;
-    private readonly Dictionary<string, AugmentDef> _augments;
+    private readonly Dictionary<string, PactDef> _pacts;
 
     public BattleSim(
         BattleConfig config,
         IEnumerable<UnitDef> defs,
         IEnumerable<ConduitDef>? conduits = null,
-        IEnumerable<AugmentDef>? augments = null)
+        IEnumerable<PactDef>? pacts = null)
     {
         _config = config;
         _defs = defs.ToDictionary(def => def.Id);
         _conduits = (conduits ?? Array.Empty<ConduitDef>()).ToDictionary(def => def.Id);
-        _augments = (augments ?? Array.Empty<AugmentDef>()).ToDictionary(def => def.Id);
+        _pacts = (pacts ?? Array.Empty<PactDef>()).ToDictionary(def => def.Id);
     }
 
     public BattleState CreateInitialState(ulong seed)
     {
         var rng = new SimRng(seed);
-        var augmentRng = rng.DeriveChild("augments");
+        var pactRng = rng.DeriveChild("pacts");
         return new BattleState
         {
             Config = _config,
             Rng = rng,
-            AugmentRng = augmentRng,
-            AugmentTierPath = TierPath.Roll(augmentRng),
+            PactRng = pactRng,
+            ParleyTierPath = TierPath.Roll(pactRng),
             Left = NewPlayer(),
             Right = NewPlayer(),
             LeftSpireHp = _config.SpireMaxHp,
@@ -68,16 +68,16 @@ public sealed class BattleSim
             return;
         }
 
-        if (state.Left.AwaitingDraft || state.Right.AwaitingDraft)
+        if (state.Left.AwaitingParley || state.Right.AwaitingParley)
         {
-            ProcessDraftCommands(state, commands);
+            ProcessParleyCommands(state, commands);
             return;
         }
-        if (_augments.Count > 0
-            && state.NextWindowIndex < _config.AugmentWindowTicks.Count
-            && state.Tick == _config.AugmentWindowTicks[state.NextWindowIndex])
+        if (_pacts.Count > 0
+            && state.NextWindowIndex < _config.ParleyTicks.Count
+            && state.Tick == _config.ParleyTicks[state.NextWindowIndex])
         {
-            OpenDraftWindow(state);
+            OpenParley(state);
             return;
         }
 
@@ -372,6 +372,7 @@ public sealed class BattleSim
     {
         float drip = 0f, cap = 0f, bounty = 0f, damage = 0f, speed = 0f, slow = 0f, breath = 0f;
         float breathDmg = 0f, deployCd = 0f, trickle = 0f, summon = 0f, wrath = 0f;
+        float dripPrice = 0f;
         foreach (var (conduitId, tier) in player.Conduits)
         {
             var def = _conduits[conduitId];
@@ -383,9 +384,9 @@ public sealed class BattleSim
             slow += def.SlowAuraPctPerTier * tier;
             breath += def.BreathRegenPctPerTier * tier;
         }
-        foreach (var augmentId in player.PickedAugments)
+        foreach (var pactId in player.SealedPacts)
         {
-            var def = _augments[augmentId];
+            var def = _pacts[pactId];
             drip += def.DripBonusPerSecond;
             cap += def.WalletCapBonus;
             bounty += def.KillBountyPct;
@@ -397,6 +398,7 @@ public sealed class BattleSim
             trickle += def.AscensionTricklePct;
             summon += def.SummonCostPct;
             wrath += def.WrathCooldownPct;
+            dripPrice += def.PriceDripPerSecond;
         }
         player.Buffs = new PlayerBuffs
         {
@@ -412,10 +414,11 @@ public sealed class BattleSim
             AscensionTricklePct = trickle,
             SummonCostPct = summon,
             WrathCooldownPct = wrath,
+            DripPricePerSecond = dripPrice,
         };
     }
 
-    private void OpenDraftWindow(BattleState state)
+    private void OpenParley(BattleState state)
     {
         state.CurrentWindowIndex = state.NextWindowIndex;
         state.NextWindowIndex++;
@@ -423,18 +426,19 @@ public sealed class BattleSim
         {
             var player = state.Player(side);
             GenerateOffers(state, side);
-            player.AwaitingDraft = true;
+            player.AwaitingParley = true;
+            player.TithesPaidThisParley = 0;
         }
     }
 
     private void GenerateOffers(BattleState state, PlayerSide side)
     {
         var player = state.Player(side);
-        var windowIndex = Math.Min(state.CurrentWindowIndex, state.AugmentTierPath.Count - 1);
-        var tier = state.AugmentTierPath[windowIndex];
+        var windowIndex = Math.Min(state.CurrentWindowIndex, state.ParleyTierPath.Count - 1);
+        var tier = state.ParleyTierPath[windowIndex];
 
-        var pool = _augments.Values
-            .Where(def => def.Tier == tier && !player.PickedAugments.Contains(def.Id))
+        var pool = _pacts.Values
+            .Where(def => def.Tier == tier && !player.SealedPacts.Contains(def.Id))
             .OrderBy(def => def.Id)
             .ToList();
 
@@ -452,22 +456,22 @@ public sealed class BattleSim
             .ToList();
 
         player.PendingOffers.Clear();
-        foreach (var pick in PickDistinct(relevant, Math.Min(2, relevant.Count), state.AugmentRng))
+        foreach (var pick in PickDistinct(relevant, Math.Min(2, relevant.Count), state.PactRng))
         {
             player.PendingOffers.Add(pick.Id);
         }
         var remaining = pool.Where(def => !player.PendingOffers.Contains(def.Id)).ToList();
         var fill = Math.Min(3 - player.PendingOffers.Count, remaining.Count);
-        foreach (var pick in PickDistinct(remaining, fill, state.AugmentRng))
+        foreach (var pick in PickDistinct(remaining, fill, state.PactRng))
         {
             player.PendingOffers.Add(pick.Id);
         }
     }
 
-    private static List<AugmentDef> PickDistinct(List<AugmentDef> source, int count, SimRng rng)
+    private static List<PactDef> PickDistinct(List<PactDef> source, int count, SimRng rng)
     {
-        var working = new List<AugmentDef>(source);
-        var picks = new List<AugmentDef>(count);
+        var working = new List<PactDef>(source);
+        var picks = new List<PactDef>(count);
         for (var i = 0; i < count && working.Count > 0; i++)
         {
             var index = rng.NextInt(working.Count);
@@ -477,30 +481,51 @@ public sealed class BattleSim
         return picks;
     }
 
-    private void ProcessDraftCommands(BattleState state, IReadOnlyList<SimCommand> commands)
+    private void ProcessParleyCommands(BattleState state, IReadOnlyList<SimCommand> commands)
     {
         foreach (var command in commands)
         {
             var player = state.Player(command.Side);
             switch (command.Kind)
             {
-                case SimCommandKind.PickAugment when player.AwaitingDraft
+                case SimCommandKind.SealPact when player.AwaitingParley
                     && player.PendingOffers.Contains(command.TargetId):
-                    player.PickedAugments.Add(command.TargetId);
+                    player.SealedPacts.Add(command.TargetId);
                     player.PendingOffers.Clear();
-                    player.AwaitingDraft = false;
+                    player.AwaitingParley = false;
                     RecomputeBuffs(player);
+                    TakeBloodPrice(state, command.Side, _pacts[command.TargetId]);
                     break;
-                case SimCommandKind.RerollOffers when player.AwaitingDraft && player.RerollsLeft > 0:
-                    player.RerollsLeft--;
+                case SimCommandKind.PayTithe when player.AwaitingParley
+                    && player.Mana >= _config.TitheCostMana:
+                    player.Mana -= _config.TitheCostMana;
+                    player.TithesPaidThisParley++;
                     GenerateOffers(state, command.Side);
                     break;
             }
         }
 
-        if (!state.Left.AwaitingDraft && !state.Right.AwaitingDraft)
+        if (!state.Left.AwaitingParley && !state.Right.AwaitingParley)
         {
             state.CurrentWindowIndex = -1;
+        }
+    }
+
+    /// <summary>One-time Wyrm-pact blood price: the sealing side's spire pays in HP.
+    /// Clamped to 1 — the Broker collects, it does not execute.</summary>
+    private static void TakeBloodPrice(BattleState state, PlayerSide side, PactDef sealedPact)
+    {
+        if (sealedPact.PriceSpireHpPct <= 0f)
+        {
+            return;
+        }
+        if (side == PlayerSide.Left)
+        {
+            state.LeftSpireHp = MathF.Max(1f, state.LeftSpireHp * (1f - sealedPact.PriceSpireHpPct));
+        }
+        else
+        {
+            state.RightSpireHp = MathF.Max(1f, state.RightSpireHp * (1f - sealedPact.PriceSpireHpPct));
         }
     }
 
@@ -529,9 +554,13 @@ public sealed class BattleSim
         foreach (var side in Sides)
         {
             var player = state.Player(side);
-            var dripPerSecond = _config.BaseDripPerSecond
+            // Wyrm-pact tithes can never starve a side completely — floor before escalation.
+            var dripPerSecond = MathF.Max(
+                _config.DripFloorPerSecond,
+                _config.BaseDripPerSecond
                 + player.Buffs.DripBonusPerSecond
-                + (player.LastStandUsed ? _config.LastStandDripBonus : 0f);
+                + (player.LastStandUsed ? _config.LastStandDripBonus : 0f)
+                - player.Buffs.DripPricePerSecond);
             AddMana(player, dripPerSecond / _config.TickRate * multiplier);
 
             var breathRegenPerTick = _config.BreathMaxSeconds

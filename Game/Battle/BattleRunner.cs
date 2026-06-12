@@ -41,9 +41,9 @@ public partial class BattleRunner : Node
         IEnumerable<UnitDef> defs,
         IEnumerable<ConduitDef> conduits,
         ulong seed,
-        IEnumerable<DraconicWars.Sim.Augments.AugmentDef>? augments = null)
+        IEnumerable<DraconicWars.Sim.Pacts.PactDef>? pacts = null)
     {
-        Sim = new BattleSim(config, defs, conduits, augments);
+        Sim = new BattleSim(config, defs, conduits, pacts);
         State = Sim.CreateInitialState(seed);
         _knownUnits.Clear();
         _accumulator = 0f;

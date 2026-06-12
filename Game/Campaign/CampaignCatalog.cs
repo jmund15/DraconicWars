@@ -13,7 +13,7 @@ using DraconicWars.Sim.Units;
 public static class CampaignCatalog
 {
     private static BattleConfig Compressed(
-        int crescendoSec, int suddenDeathSec, int hardEndSec, params int[] augmentWindowTicks)
+        int crescendoSec, int suddenDeathSec, int hardEndSec, params int[] pactWindowTicks)
     {
         return BattleConfig.Default with
         {
@@ -23,7 +23,7 @@ public static class CampaignCatalog
             HardEndTick = hardEndSec * 30,
             LastStandEnabled = true,
             AscensionThresholds = new[] { 42f, 110f, 240f },
-            AugmentWindowTicks = augmentWindowTicks,
+            ParleyTicks = pactWindowTicks,
         };
     }
 
@@ -31,7 +31,7 @@ public static class CampaignCatalog
     {
         new CampaignLevelDef(
             Id: "cm_01", DisplayName: "First Sparks",
-            Config: Compressed(150, 180, 240 /* no augment windows: teaching level */),
+            Config: Compressed(150, 180, 240 /* no pact windows: teaching level */),
             EnemyUnitIds: new[] { "kobold_spearman", "frost_whelp" },
             MagnificationPct: 100,
             Waves: new[]

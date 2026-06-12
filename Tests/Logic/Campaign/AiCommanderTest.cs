@@ -18,7 +18,7 @@ public class AiCommanderTest
             BattleConfig.Default,
             UnitCatalog.FirstPlayable,
             ConduitDefs.All,
-            DraconicWars.Sim.Augments.AugmentCatalog.All);
+            DraconicWars.Sim.Pacts.PactCatalog.All);
         var state = sim.CreateInitialState(11UL);
         return (sim, state);
     }
@@ -53,10 +53,10 @@ public class AiCommanderTest
     [TestCase]
     public void AiResolvesDraftWindowsImmediately()
     {
-        var config = BattleConfig.Default with { AugmentWindowTicks = new[] { 10 } };
+        var config = BattleConfig.Default with { ParleyTicks = new[] { 10 } };
         var sim = new BattleSim(
             config, UnitCatalog.FirstPlayable, ConduitDefs.All,
-            DraconicWars.Sim.Augments.AugmentCatalog.All);
+            DraconicWars.Sim.Pacts.PactCatalog.All);
         var state = sim.CreateInitialState(11UL);
         var ai = new AiCommander(AiPersona.Streamer, PlayerSide.Right, seed: 3UL);
 
@@ -65,8 +65,8 @@ public class AiCommanderTest
             sim.Advance(state, ai.CommandsForTick(state).ToList());
         }
 
-        AssertThat(state.Right.AwaitingDraft).IsFalse();
-        AssertThat(state.Right.PickedAugments.Count).IsEqual(1);
+        AssertThat(state.Right.AwaitingParley).IsFalse();
+        AssertThat(state.Right.SealedPacts.Count).IsEqual(1);
     }
 
     [TestCase]
@@ -125,6 +125,27 @@ public class AiCommanderTest
         AssertThat(breath.Count).IsEqual(1);
         // Published accuracy handicap: aim lands within +-3 lane meters of the cluster.
         AssertThat(System.MathF.Abs(breath[0].X - 20.5f) <= 3f).IsTrue();
+    }
+
+    [TestCase]
+    public void AiPaysOneTitheWhenNoOfferMatchesItsDoctrine()
+    {
+        var (sim, state) = CreateBattle();
+        var ai = new AiCommander(AiPersona.Streamer, PlayerSide.Right, seed: 3UL);
+        state.Right.AwaitingParley = true;
+        state.Right.Mana = 500f;
+        state.Right.PendingOffers.Clear();
+        // Streamer doctrine prefers Combat; offer it a coin-counter's table.
+        state.Right.PendingOffers.AddRange(new[] { "ley_tap", "iron_rations", "venom_coffers" });
+
+        var first = ai.CommandsForTick(state).ToList();
+        AssertThat(first.Count).IsEqual(1);
+        AssertThat(first[0].Kind).IsEqual(SimCommandKind.PayTithe);
+
+        state.Right.TithesPaidThisParley = 1;
+        var second = ai.CommandsForTick(state).ToList();
+        AssertThat(second.Count).IsEqual(1);
+        AssertThat(second[0].Kind).IsEqual(SimCommandKind.SealPact);
     }
 
     [TestCase]

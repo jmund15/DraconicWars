@@ -39,13 +39,14 @@ public sealed class PlayerState
 
     public int WrathCooldownTicks { get; set; }
 
-    public bool AwaitingDraft { get; set; }
+    public bool AwaitingParley { get; set; }
 
     public List<string> PendingOffers { get; } = new();
 
-    public List<string> PickedAugments { get; } = new();
+    public List<string> SealedPacts { get; } = new();
 
-    public int RerollsLeft { get; set; } = 1;
+    /// <summary>Tithes paid to the Broker during the current parley (resets per parley).</summary>
+    public int TithesPaidThisParley { get; set; }
 
     public float EffectiveWalletCap => WalletCap + Buffs.WalletCapBonus;
 }

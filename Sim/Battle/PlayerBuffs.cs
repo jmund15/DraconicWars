@@ -27,5 +27,8 @@ public sealed class PlayerBuffs
 
     public float WrathCooldownPct { get; init; }
 
+    /// <summary>Ongoing Wyrm-pact mana tithe; income floors at DripFloorPerSecond.</summary>
+    public float DripPricePerSecond { get; init; }
+
     public static readonly PlayerBuffs None = new();
 }

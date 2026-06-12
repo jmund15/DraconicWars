@@ -63,7 +63,7 @@ public partial class BattleSceneController : Node2D
             CampaignCatalog.BuildBattleDefs(_level, GameSession.Profile),
             ConduitDefs.All,
             seed: LevelSeed(_level.Id),
-            DraconicWars.Sim.Augments.AugmentCatalog.All);
+            DraconicWars.Sim.Pacts.PactCatalog.All);
         Runner.Director = new WaveDirector(_level.Waves, _level.RepeatingWaves);
         Runner.State.Left.EquippedDragonId =
             GameSession.Profile.UnitLevels.ContainsKey("pyraxis")
@@ -171,20 +171,20 @@ public partial class BattleSceneController : Node2D
         var state = Runner.State;
         var opponent = state.Player(
             _localSide == PlayerSide.Left ? PlayerSide.Right : PlayerSide.Left);
-        if (opponent.AwaitingDraft && opponent.PendingOffers.Count > 0)
+        if (opponent.AwaitingParley && opponent.PendingOffers.Count > 0)
         {
             // Scripted opponent picks its first offer (persona AI is a later Part).
-            Runner.EnqueueCommand(SimCommand.PickAugment(
+            Runner.EnqueueCommand(SimCommand.SealPact(
                 _localSide == PlayerSide.Left ? PlayerSide.Right : PlayerSide.Left,
                 opponent.PendingOffers[0]));
         }
 
         var local = state.Player(_localSide);
-        if (local.AwaitingDraft && _draftPanel is null)
+        if (local.AwaitingParley && _draftPanel is null)
         {
             ShowDraftPanel(local);
         }
-        else if (!local.AwaitingDraft && _draftPanel is not null)
+        else if (!local.AwaitingParley && _draftPanel is not null)
         {
             _draftPanel.QueueFree();
             _draftPanel = null;
@@ -198,43 +198,45 @@ public partial class BattleSceneController : Node2D
         panel.AddChild(vbox);
         vbox.AddChild(new Label
         {
-            Text = "DRACONIC AUGMENT — choose one",
+            Text = "PARLEY — the Broker offers terms",
             HorizontalAlignment = HorizontalAlignment.Center,
         });
 
         foreach (var offerId in local.PendingOffers)
         {
-            var def = DraconicWars.Sim.Augments.AugmentCatalog.ById(offerId);
+            var def = DraconicWars.Sim.Pacts.PactCatalog.ById(offerId);
+            var price = PriceText(def);
             var button = new Button
             {
-                Text = $"[{def.Tier}] {def.DisplayName}  ({def.Category})",
-                CustomMinimumSize = new Vector2(240, 26),
+                Text = $"[{def.Tier}] {def.DisplayName}{price}\n{def.Lore}",
+                CustomMinimumSize = new Vector2(280, 32),
                 Modulate = def.Tier switch
                 {
-                    DraconicWars.Sim.Augments.AugmentTier.Gold => Color.FromHtml("f9c22b"),
-                    DraconicWars.Sim.Augments.AugmentTier.Prismatic => Color.FromHtml("a884f3"),
-                    _ => Color.FromHtml("c7dcd0"),
+                    DraconicWars.Sim.Pacts.PactTier.Drake => Color.FromHtml("4fa4f9"),
+                    DraconicWars.Sim.Pacts.PactTier.Wyrm => Color.FromHtml("a884f3"),
+                    _ => Color.FromHtml("f9a875"),
                 },
             };
             var pickedId = offerId;
             button.Pressed += () =>
-                Runner.EnqueueCommand(SimCommand.PickAugment(_localSide, pickedId));
+                Runner.EnqueueCommand(SimCommand.SealPact(_localSide, pickedId));
             vbox.AddChild(button);
         }
 
-        var reroll = new Button
+        var titheCost = Runner.State.Config.TitheCostMana;
+        var tithe = new Button
         {
-            Text = $"Reroll ({local.RerollsLeft} left)",
-            Disabled = local.RerollsLeft <= 0,
-            CustomMinimumSize = new Vector2(240, 22),
+            Text = $"Tithe the Broker — fresh terms ({(int)titheCost} mana)",
+            Disabled = local.Mana < titheCost,
+            CustomMinimumSize = new Vector2(280, 22),
         };
-        reroll.Pressed += () =>
+        tithe.Pressed += () =>
         {
-            Runner.EnqueueCommand(SimCommand.RerollOffers(_localSide));
+            Runner.EnqueueCommand(SimCommand.PayTithe(_localSide));
             _draftPanel?.QueueFree();
             _draftPanel = null;
         };
-        vbox.AddChild(reroll);
+        vbox.AddChild(tithe);
 
         var center = new CenterContainer
         {
@@ -252,6 +254,20 @@ public partial class BattleSceneController : Node2D
                 center.QueueFree();
             }
         };
+    }
+
+    private static string PriceText(DraconicWars.Sim.Pacts.PactDef def)
+    {
+        var parts = new List<string>(2);
+        if (def.PriceSpireHpPct > 0f)
+        {
+            parts.Add($"{(int)(def.PriceSpireHpPct * 100)}% spire blood");
+        }
+        if (def.PriceDripPerSecond > 0f)
+        {
+            parts.Add($"-{def.PriceDripPerSecond:0.#} drip");
+        }
+        return parts.Count == 0 ? string.Empty : $"  — PRICE: {string.Join(", ", parts)}";
     }
 
     private void FlashScreen(Color color)
