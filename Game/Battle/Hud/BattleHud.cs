@@ -110,7 +110,16 @@ public partial class BattleHud : CanvasLayer
         var player = state.Player(_side);
         var config = state.Config;
 
-        ManaLabel.Text = $"{(int)player.Mana}/{(int)player.EffectiveWalletCap}";
+        var fielded = 0;
+        foreach (var unit in state.Units)
+        {
+            if (unit.Side == _side && unit.IsAlive)
+            {
+                fielded++;
+            }
+        }
+        ManaLabel.Text = $"{(int)player.Mana}/{(int)player.EffectiveWalletCap}"
+            + $"  F{fielded}/{config.MaxFieldedPerSide}";
         var seconds = state.Tick / config.TickRate;
         ClockLabel.Text = $"{seconds / 60}:{seconds % 60:00}";
 
