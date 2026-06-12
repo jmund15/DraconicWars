@@ -20,6 +20,10 @@ public sealed class BattleState
 
     public List<SimUnit> Units { get; } = new();
 
+    /// <summary>Lingering lane zones (signature kits): seeded by contacts, expire on
+    /// their own clock, persist past their caster's death by design.</summary>
+    public List<LaneZone> Zones { get; } = new();
+
     public required SimRng PactRng { get; init; }
 
     /// <summary>Shared pre-rolled tier sequence; each side consumes it at its own

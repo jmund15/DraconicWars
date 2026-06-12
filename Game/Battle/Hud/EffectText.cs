@@ -90,6 +90,72 @@ public static class EffectText
         };
     }
 
+    /// <summary>The unit's signature kit in one line; empty for kit-less units.</summary>
+    public static string ForSignature(Sim.Units.UnitDef def)
+    {
+        var parts = new List<string>(2);
+        if (def.PrefersFarthestTarget)
+        {
+            parts.Add("lobs shots over the line — strikes the FARTHEST enemy in range");
+        }
+        if (def.ReviveHpPct > 0f)
+        {
+            parts.Add($"rises once from death at {def.ReviveHpPct * 100:0}% HP");
+        }
+        if (def.OnDeathBlastDamage > 0)
+        {
+            parts.Add($"detonates on death: {def.OnDeathBlastDamage} dmg"
+                + $" within {def.OnDeathBlastRadius:0.#}m");
+        }
+        if (def.AuraDamagePerTick > 0)
+        {
+            parts.Add($"burns everything within {def.AuraRadius:0.#}m"
+                + $" for {def.AuraDamagePerTick * 30}/s");
+        }
+        if (def.VigilDrMaxPct > 0f)
+        {
+            parts.Add($"holding post hardens him (up to -{def.VigilDrMaxPct * 100:0}%"
+                + " damage taken); knockback breaks the watch");
+        }
+        if (def.ZoneRadius > 0f)
+        {
+            parts.Add($"attacks frost the ground: {def.ZoneSlowPct * 100:0}% slow zone"
+                + $" for {def.ZoneDurationTicks / 30f:0.#}s");
+        }
+        if (def.ShoveDistance > 0f)
+        {
+            parts.Add($"each blow shoves all enemies within {def.ShoveRadius:0.#}m"
+                + $" back {def.ShoveDistance:0.#}m");
+        }
+        if (def.LifestealPct > 0f)
+        {
+            parts.Add($"collects {def.LifestealPct * 100:0}% of damage dealt as HP");
+        }
+        if (def.TollRampPct > 0f)
+        {
+            parts.Add($"each toll rings {def.TollRampPct * 100:0}% harder"
+                + $" (cap +{def.TollRampCap * 100:0}%); knockback resets the toll");
+        }
+        if (def.BonusVsHighHpPct > 0f)
+        {
+            parts.Add($"+{def.BonusVsHighHpPct * 100:0}% damage"
+                + $" vs {def.HighHpThreshold}+ HP targets");
+        }
+        if (def.Unstaggerable)
+        {
+            parts.Add("never staggered — only a dragonlord's Wrath can move it");
+        }
+        if (def.FirstStrikeBonusPct > 0f)
+        {
+            parts.Add($"first strike lands instantly at +{def.FirstStrikeBonusPct * 100:0}% damage");
+        }
+        if (def.StrafeDistance > 0f)
+        {
+            parts.Add($"swoops {def.StrafeDistance:0.#}m past her mark after every attack");
+        }
+        return string.Join("; ", parts);
+    }
+
     public static string ForPactPrice(PactDef def)
     {
         var parts = new List<string>(2);

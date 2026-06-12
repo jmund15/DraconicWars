@@ -29,6 +29,16 @@ public sealed class SimUnit
     public bool IsAlive => Hp > 0;
 
     public Stratum Stratum => Def.Stratum;
+
+    // Signature-kit runtime state (all zero/false unless the def carries the kit).
+
+    public bool RevivedOnce { get; set; }
+
+    public int VigilTicks { get; set; }
+
+    public int TollCount { get; set; }
+
+    public bool HasStruck { get; set; }
 }
 
 public enum AttackPhase

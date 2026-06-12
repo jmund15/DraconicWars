@@ -99,6 +99,7 @@ public sealed class BattleSim
         ProcessLastStand(state);
         TickEconomy(state);
         ProcessCombat(state);
+        ProcessFieldEffects(state);
         ProcessTurrets(state);
         ProcessEdicts(state);
         ProcessAscension(state);
@@ -224,11 +225,14 @@ public sealed class BattleSim
             {
                 // Forced knockback: pushes without i-frames and without consuming
                 // HP-threshold knockbacks (design.md §4); still interrupts the attack.
+                // Moves even the Unstaggerable — Wrath is the one force that does.
                 unit.X = Math.Clamp(
                     unit.X + pushDirection * _config.WrathKnockbackDistance,
                     0f, _config.LaneLength);
                 unit.AttackPhase = AttackPhase.None;
                 unit.PhaseTicksLeft = 0;
+                unit.VigilTicks = 0;
+                unit.TollCount = 0;
             }
         }
     }
@@ -248,6 +252,14 @@ public sealed class BattleSim
             return defender.IsAlive;
         }
 
+        if (defender.Def.VigilDrMaxPct > 0f && defender.VigilTicks > 0)
+        {
+            var vigilDr = MathF.Min(
+                defender.Def.VigilDrMaxPct,
+                defender.VigilTicks / (float)_config.TickRate * defender.Def.VigilDrPerSecond);
+            damage = (int)MathF.Round(damage * (1f - vigilDr));
+        }
+
         defender.Hp -= damage;
         if (defender.IsAlive)
         {
@@ -256,23 +268,54 @@ public sealed class BattleSim
 
         if (defender.Side != attackerSide)
         {
-            var killer = state.Player(attackerSide);
-            var bounty = defender.Def.DeployCost / 5f * (1f + killer.Buffs.KillBountyPct);
-            if (machineKill)
-            {
-                AddMana(killer, bounty * _config.ArmamentKillBountyPct);
-            }
-            else
-            {
-                AddMana(killer, bounty);
-                CreditKillAscension(state, attackerSide, defender.Def);
-            }
+            PayKillReward(state, attackerSide, defender.Def, machineKill);
         }
+
+        if (defender.Def.ReviveHpPct > 0f && !defender.RevivedOnce)
+        {
+            defender.RevivedOnce = true;
+            defender.Hp = (int)(defender.Def.MaxHp * defender.Def.ReviveHpPct);
+            defender.KbIndex = (int)((long)(defender.Def.MaxHp - defender.Hp)
+                * defender.Def.KnockbackCount / defender.Def.MaxHp);
+            defender.IFrameTicks = _config.KnockbackIFrameTicks;
+            defender.AttackPhase = AttackPhase.None;
+            defender.PhaseTicksLeft = 0;
+            return true;
+        }
+
         if (defender.Def.Tier >= 4)
         {
             state.Player(defender.Side).SummoningProgress = 0f;
         }
+        if (defender.Def.OnDeathBlastDamage > 0)
+        {
+            foreach (var other in state.Units.ToList())
+            {
+                if (other.Side == defender.Side || !other.IsAlive
+                    || MathF.Abs(other.X - defender.X) > defender.Def.OnDeathBlastRadius)
+                {
+                    continue;
+                }
+                ApplyDirectDamage(state, defender.Side, other, defender.Def.OnDeathBlastDamage);
+            }
+        }
         return false;
+    }
+
+    private void PayKillReward(
+        BattleState state, PlayerSide killerSide, UnitDef victim, bool machineKill)
+    {
+        var killer = state.Player(killerSide);
+        var bounty = victim.DeployCost / 5f * (1f + killer.Buffs.KillBountyPct);
+        if (machineKill)
+        {
+            AddMana(killer, bounty * _config.ArmamentKillBountyPct);
+        }
+        else
+        {
+            AddMana(killer, bounty);
+            CreditKillAscension(state, killerSide, victim);
+        }
     }
 
     /// <summary>Rebreathing (design directive): once per duel a company re-swears its
@@ -885,6 +928,16 @@ public sealed class BattleSim
             {
                 unit.AttackPhase = AttackPhase.Foreswing;
                 unit.PhaseTicksLeft = ScaledTicks(state, unit, unit.Def.ForeswingTicks);
+                if (unit.Def.FirstStrikeBonusPct > 0f && !unit.HasStruck)
+                {
+                    // The first message skips the wind-up entirely.
+                    unit.PhaseTicksLeft = 1;
+                }
+            }
+
+            if (unit.Def.VigilDrMaxPct > 0f && unit.AttackPhase != AttackPhase.None)
+            {
+                unit.VigilTicks++;
             }
 
             switch (unit.AttackPhase)
@@ -898,7 +951,7 @@ public sealed class BattleSim
                         unit.PhaseTicksLeft = ScaledTicks(state, unit, unit.Def.BackswingTicks);
                         if (unit.PhaseTicksLeft <= 0)
                         {
-                            unit.AttackPhase = AttackPhase.None;
+                            CompleteAttackCycle(state, unit);
                         }
                     }
                     break;
@@ -906,12 +959,73 @@ public sealed class BattleSim
                     unit.PhaseTicksLeft--;
                     if (unit.PhaseTicksLeft <= 0)
                     {
-                        unit.AttackPhase = AttackPhase.None;
+                        CompleteAttackCycle(state, unit);
                     }
                     break;
             }
         }
 
+        state.Units.RemoveAll(unit => !unit.IsAlive);
+    }
+
+    private void CompleteAttackCycle(BattleState state, SimUnit unit)
+    {
+        unit.AttackPhase = AttackPhase.None;
+        if (unit.Def.StrafeDistance > 0f && unit.IsAlive)
+        {
+            unit.X = Math.Clamp(
+                unit.X + Direction(unit.Side) * unit.Def.StrafeDistance,
+                0f, _config.LaneLength);
+        }
+    }
+
+    /// <summary>Signature-kit field pass: walking auras burn, lingering zones slow and
+    /// chip, both on the sim clock — after combat, before turrets.</summary>
+    private void ProcessFieldEffects(BattleState state)
+    {
+        foreach (var unit in state.Units.ToList())
+        {
+            if (!unit.IsAlive || unit.Def.AuraDamagePerTick <= 0)
+            {
+                continue;
+            }
+            foreach (var other in state.Units.ToList())
+            {
+                if (other.Side == unit.Side || !other.IsAlive
+                    || MathF.Abs(other.X - unit.X) > unit.Def.AuraRadius)
+                {
+                    continue;
+                }
+                ApplyDirectDamage(state, unit.Side, other, unit.Def.AuraDamagePerTick);
+            }
+        }
+
+        for (var i = state.Zones.Count - 1; i >= 0; i--)
+        {
+            var zone = state.Zones[i];
+            zone.TicksLeft--;
+            foreach (var unit in state.Units.ToList())
+            {
+                if (unit.Side == zone.Side || !unit.IsAlive
+                    || MathF.Abs(unit.X - zone.X) > zone.Radius)
+                {
+                    continue;
+                }
+                if (zone.DamagePerTick > 0)
+                {
+                    ApplyDirectDamage(state, zone.Side, unit, zone.DamagePerTick);
+                }
+                if (zone.SlowPct >= unit.SlowPct)
+                {
+                    unit.SlowPct = zone.SlowPct;
+                    unit.SlowTicks = Math.Max(unit.SlowTicks, 8);
+                }
+            }
+            if (zone.TicksLeft <= 0)
+            {
+                state.Zones.RemoveAt(i);
+            }
+        }
         state.Units.RemoveAll(unit => !unit.IsAlive);
     }
 
@@ -944,8 +1058,12 @@ public sealed class BattleSim
             }
             else
             {
-                DealDamage(state, attacker, targets[0]);
+                DealDamage(state, attacker,
+                    attacker.Def.PrefersFarthestTarget ? targets[^1] : targets[0]);
             }
+            SeedZone(state, attacker, targets[0].X);
+            ApplyShove(state, attacker);
+            FinishContact(attacker);
             return;
         }
 
@@ -954,12 +1072,88 @@ public sealed class BattleSim
             && spireDistance <= attacker.Def.Range)
         {
             DamageSpire(state, attacker.Side, ScaledDamage(state, attacker));
+            ApplyShove(state, attacker);
+            FinishContact(attacker);
+        }
+    }
+
+    private static void FinishContact(SimUnit attacker)
+    {
+        attacker.HasStruck = true;
+        if (attacker.Def.TollRampPct > 0f)
+        {
+            attacker.TollCount++;
+        }
+    }
+
+    private void SeedZone(BattleState state, SimUnit attacker, float impactX)
+    {
+        if (attacker.Def.ZoneRadius <= 0f)
+        {
+            return;
+        }
+        state.Zones.Add(new LaneZone
+        {
+            Side = attacker.Side,
+            X = impactX,
+            Radius = attacker.Def.ZoneRadius,
+            SlowPct = attacker.Def.ZoneSlowPct,
+            DamagePerTick = attacker.Def.ZoneDamagePerTick,
+            TicksLeft = attacker.Def.ZoneDurationTicks,
+        });
+        // Cap 3 per side — the lane can be tolled, never tiled.
+        var owned = state.Zones.Where(zone => zone.Side == attacker.Side).ToList();
+        if (owned.Count > 3)
+        {
+            state.Zones.Remove(owned[0]);
+        }
+    }
+
+    private void ApplyShove(BattleState state, SimUnit attacker)
+    {
+        if (attacker.Def.ShoveDistance <= 0f)
+        {
+            return;
+        }
+        var dir = Direction(attacker.Side);
+        foreach (var other in state.Units)
+        {
+            if (other.Side == attacker.Side || !other.IsAlive || other.Def.Unstaggerable)
+            {
+                continue;
+            }
+            var ahead = (other.X - attacker.X) * dir;
+            if (ahead <= 0f || ahead > attacker.Def.ShoveRadius)
+            {
+                continue;
+            }
+            other.X = Math.Clamp(
+                other.X + dir * attacker.Def.ShoveDistance, 0f, _config.LaneLength);
+            other.AttackPhase = AttackPhase.None;
+            other.PhaseTicksLeft = 0;
+            other.VigilTicks = 0;
+            other.TollCount = 0;
         }
     }
 
     private static int ScaledDamage(BattleState state, SimUnit attacker, SimUnit? defender = null)
     {
         var multiplier = 1f + state.Player(attacker.Side).Buffs.DamagePct;
+
+        if (attacker.Def.TollRampPct > 0f)
+        {
+            multiplier += MathF.Min(
+                attacker.Def.TollRampCap, attacker.TollCount * attacker.Def.TollRampPct);
+        }
+        if (attacker.Def.FirstStrikeBonusPct > 0f && !attacker.HasStruck)
+        {
+            multiplier += attacker.Def.FirstStrikeBonusPct;
+        }
+        if (attacker.Def.BonusVsHighHpPct > 0f && defender is not null
+            && defender.Def.MaxHp >= attacker.Def.HighHpThreshold)
+        {
+            multiplier += attacker.Def.BonusVsHighHpPct;
+        }
 
         if (attacker.Def.Element == Element.Fire)
         {
@@ -991,7 +1185,18 @@ public sealed class BattleSim
             return;
         }
 
-        if (!ApplyDirectDamage(state, attacker.Side, defender, ScaledDamage(state, attacker, defender)))
+        var preHitHp = defender.Hp;
+        var survived = ApplyDirectDamage(
+            state, attacker.Side, defender, ScaledDamage(state, attacker, defender));
+        if (attacker.Def.LifestealPct > 0f)
+        {
+            var dealt = Math.Max(0, preHitHp - Math.Max(0, defender.Hp));
+            dealt = Math.Min(dealt, preHitHp);
+            attacker.Hp = Math.Min(
+                attacker.Def.MaxHp,
+                attacker.Hp + (int)MathF.Round(dealt * attacker.Def.LifestealPct));
+        }
+        if (!survived)
         {
             return;
         }
@@ -1008,6 +1213,10 @@ public sealed class BattleSim
         }
 
         var def = defender.Def;
+        if (def.Unstaggerable)
+        {
+            return;
+        }
         var newKbIndex = (int)((long)(def.MaxHp - defender.Hp) * def.KnockbackCount / def.MaxHp);
         if (newKbIndex <= defender.KbIndex)
         {
@@ -1022,6 +1231,8 @@ public sealed class BattleSim
         defender.IFrameTicks = _config.KnockbackIFrameTicks;
         defender.AttackPhase = AttackPhase.None;
         defender.PhaseTicksLeft = 0;
+        defender.VigilTicks = 0;
+        defender.TollCount = 0;
     }
 
     private void DamageSpire(BattleState state, PlayerSide attackerSide, float damage)
@@ -1254,6 +1465,7 @@ public sealed class BattleSim
 
             var maxAdvance = MathF.Max(0f, spireDistance - unit.Def.Range);
             unit.X += MathF.Min(step, maxAdvance) * dir;
+            unit.VigilTicks = 0;
         }
     }
 
