@@ -93,3 +93,4 @@ gdunit4_testadapter_v5/
 
 # Python bytecode caches (art pipeline)
 art_pipeline/__pycache__/
+.claude/scratch/

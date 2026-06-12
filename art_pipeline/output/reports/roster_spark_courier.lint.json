@@ -1,0 +1,64 @@
+{
+  "sheet": "C:\\Users\\jmund\\Game_Dev\\Godot_Projects\\DraconicWars\\art_pipeline\\output\\units\\spark_courier_sheet.png",
+  "manifest": "C:\\Users\\jmund\\Game_Dev\\Godot_Projects\\DraconicWars\\art_pipeline\\output\\units\\spark_courier.manifest.json",
+  "passed": true,
+  "checks": {
+    "on_palette": {
+      "passed": true,
+      "off_palette_colors": {}
+    },
+    "no_aa": {
+      "passed": true,
+      "semi_transparent_pixels": 0,
+      "samples": []
+    },
+    "orphan_pixels": {
+      "passed": true,
+      "count": 0,
+      "offenders": [],
+      "whitelist": [
+        "d5e04b",
+        "ffffff"
+      ]
+    },
+    "outline_1px": {
+      "passed": true,
+      "boundary_dark_coverage": 1.0,
+      "light_boundary_samples": [],
+      "ink_2x2_blocks": []
+    },
+    "frames": {
+      "passed": true,
+      "failures": []
+    },
+    "banding": {
+      "passed": true,
+      "max_run": 6,
+      "offenders": []
+    },
+    "manifest_contract": {
+      "passed": true,
+      "errors": []
+    },
+    "body_size": {
+      "passed": true,
+      "errors": [],
+      "warnings": [],
+      "measured": {
+        "width": 17,
+        "height": 26
+      },
+      "rules": {
+        "min_h": 24,
+        "max_h": 28,
+        "min_w": 14,
+        "max_w": 18
+      }
+    },
+    "whitelist_cap": {
+      "passed": true,
+      "cap": 6,
+      "offenders": []
+    }
+  }
+}

@@ -1,0 +1,218 @@
+{
+  "units": [
+    {
+      "name": "cinder_acolyte",
+      "regenerated": true,
+      "reason": "forced",
+      "lint_pass": true,
+      "failed_checks": [],
+      "warnings": [],
+      "body_size": {
+        "width": 16,
+        "height": 24
+      },
+      "contact_sheets": [
+        "C:\\Users\\jmund\\Game_Dev\\Godot_Projects\\DraconicWars\\art_pipeline\\output\\contact_sheets\\cinder_acolyte_contact_1x.png",
+        "C:\\Users\\jmund\\Game_Dev\\Godot_Projects\\DraconicWars\\art_pipeline\\output\\contact_sheets\\cinder_acolyte_contact_3x.png"
+      ]
+    },
+    {
+      "name": "ash_revenant",
+      "regenerated": true,
+      "reason": "forced",
+      "lint_pass": true,
+      "failed_checks": [],
+      "warnings": [],
+      "body_size": {
+        "width": 17,
+        "height": 26
+      },
+      "contact_sheets": [
+        "C:\\Users\\jmund\\Game_Dev\\Godot_Projects\\DraconicWars\\art_pipeline\\output\\contact_sheets\\ash_revenant_contact_1x.png",
+        "C:\\Users\\jmund\\Game_Dev\\Godot_Projects\\DraconicWars\\art_pipeline\\output\\contact_sheets\\ash_revenant_contact_3x.png"
+      ]
+    },
+    {
+      "name": "cinder_wyrmling",
+      "regenerated": true,
+      "reason": "forced",
+      "lint_pass": true,
+      "failed_checks": [],
+      "warnings": [],
+      "body_size": {
+        "width": 25,
+        "height": 18,
+        "wingspan": 25
+      },
+      "contact_sheets": [
+        "C:\\Users\\jmund\\Game_Dev\\Godot_Projects\\DraconicWars\\art_pipeline\\output\\contact_sheets\\cinder_wyrmling_contact_1x.png",
+        "C:\\Users\\jmund\\Game_Dev\\Godot_Projects\\DraconicWars\\art_pipeline\\output\\contact_sheets\\cinder_wyrmling_contact_3x.png"
+      ]
+    },
+    {
+      "name": "pyre_ogre",
+      "regenerated": true,
+      "reason": "forced",
+      "lint_pass": true,
+      "failed_checks": [],
+      "warnings": [],
+      "body_size": {
+        "width": 17,
+        "height": 26
+      },
+      "contact_sheets": [
+        "C:\\Users\\jmund\\Game_Dev\\Godot_Projects\\DraconicWars\\art_pipeline\\output\\contact_sheets\\pyre_ogre_contact_1x.png",
+        "C:\\Users\\jmund\\Game_Dev\\Godot_Projects\\DraconicWars\\art_pipeline\\output\\contact_sheets\\pyre_ogre_contact_3x.png"
+      ]
+    },
+    {
+      "name": "rime_sentry",
+      "regenerated": true,
+      "reason": "forced",
+      "lint_pass": true,
+      "failed_checks": [],
+      "warnings": [],
+      "body_size": {
+        "width": 16,
+        "height": 26
+      },
+      "contact_sheets": [
+        "C:\\Users\\jmund\\Game_Dev\\Godot_Projects\\DraconicWars\\art_pipeline\\output\\contact_sheets\\rime_sentry_contact_1x.png",
+        "C:\\Users\\jmund\\Game_Dev\\Godot_Projects\\DraconicWars\\art_pipeline\\output\\contact_sheets\\rime_sentry_contact_3x.png"
+      ]
+    },
+    {
+      "name": "glacier_adept",
+      "regenerated": true,
+      "reason": "forced",
+      "lint_pass": true,
+      "failed_checks": [],
+      "warnings": [],
+      "body_size": {
+        "width": 16,
+        "height": 24
+      },
+      "contact_sheets": [
+        "C:\\Users\\jmund\\Game_Dev\\Godot_Projects\\DraconicWars\\art_pipeline\\output\\contact_sheets\\glacier_adept_contact_1x.png",
+        "C:\\Users\\jmund\\Game_Dev\\Godot_Projects\\DraconicWars\\art_pipeline\\output\\contact_sheets\\glacier_adept_contact_3x.png"
+      ]
+    },
+    {
+      "name": "boreal_colossus",
+      "regenerated": true,
+      "reason": "forced",
+      "lint_pass": true,
+      "failed_checks": [],
+      "warnings": [],
+      "body_size": {
+        "width": 17,
+        "height": 26
+      },
+      "contact_sheets": [
+        "C:\\Users\\jmund\\Game_Dev\\Godot_Projects\\DraconicWars\\art_pipeline\\output\\contact_sheets\\boreal_colossus_contact_1x.png",
+        "C:\\Users\\jmund\\Game_Dev\\Godot_Projects\\DraconicWars\\art_pipeline\\output\\contact_sheets\\boreal_colossus_contact_3x.png"
+      ]
+    },
+    {
+      "name": "bog_stalker",
+      "regenerated": true,
+      "reason": "forced",
+      "lint_pass": true,
+      "failed_checks": [],
+      "warnings": [],
+      "body_size": {
+        "width": 17,
+        "height": 26
+      },
+      "contact_sheets": [
+        "C:\\Users\\jmund\\Game_Dev\\Godot_Projects\\DraconicWars\\art_pipeline\\output\\contact_sheets\\bog_stalker_contact_1x.png",
+        "C:\\Users\\jmund\\Game_Dev\\Godot_Projects\\DraconicWars\\art_pipeline\\output\\contact_sheets\\bog_stalker_contact_3x.png"
+      ]
+    },
+    {
+      "name": "plague_bell",
+      "regenerated": true,
+      "reason": "forced",
+      "lint_pass": true,
+      "failed_checks": [],
+      "warnings": [],
+      "body_size": {
+        "width": 26,
+        "height": 21
+      },
+      "contact_sheets": [
+        "C:\\Users\\jmund\\Game_Dev\\Godot_Projects\\DraconicWars\\art_pipeline\\output\\contact_sheets\\plague_bell_contact_1x.png",
+        "C:\\Users\\jmund\\Game_Dev\\Godot_Projects\\DraconicWars\\art_pipeline\\output\\contact_sheets\\plague_bell_contact_3x.png"
+      ]
+    },
+    {
+      "name": "quarry_slinger",
+      "regenerated": true,
+      "reason": "forced",
+      "lint_pass": true,
+      "failed_checks": [],
+      "warnings": [],
+      "body_size": {
+        "width": 19,
+        "height": 43
+      },
+      "contact_sheets": [
+        "C:\\Users\\jmund\\Game_Dev\\Godot_Projects\\DraconicWars\\art_pipeline\\output\\contact_sheets\\quarry_slinger_contact_1x.png",
+        "C:\\Users\\jmund\\Game_Dev\\Godot_Projects\\DraconicWars\\art_pipeline\\output\\contact_sheets\\quarry_slinger_contact_3x.png"
+      ]
+    },
+    {
+      "name": "deepway_bulwark",
+      "regenerated": true,
+      "reason": "forced",
+      "lint_pass": true,
+      "failed_checks": [],
+      "warnings": [],
+      "body_size": {
+        "width": 16,
+        "height": 26
+      },
+      "contact_sheets": [
+        "C:\\Users\\jmund\\Game_Dev\\Godot_Projects\\DraconicWars\\art_pipeline\\output\\contact_sheets\\deepway_bulwark_contact_1x.png",
+        "C:\\Users\\jmund\\Game_Dev\\Godot_Projects\\DraconicWars\\art_pipeline\\output\\contact_sheets\\deepway_bulwark_contact_3x.png"
+      ]
+    },
+    {
+      "name": "spark_courier",
+      "regenerated": true,
+      "reason": "forced",
+      "lint_pass": true,
+      "failed_checks": [],
+      "warnings": [],
+      "body_size": {
+        "width": 17,
+        "height": 26
+      },
+      "contact_sheets": [
+        "C:\\Users\\jmund\\Game_Dev\\Godot_Projects\\DraconicWars\\art_pipeline\\output\\contact_sheets\\spark_courier_contact_1x.png",
+        "C:\\Users\\jmund\\Game_Dev\\Godot_Projects\\DraconicWars\\art_pipeline\\output\\contact_sheets\\spark_courier_contact_3x.png"
+      ]
+    },
+    {
+      "name": "gale_harrier",
+      "regenerated": true,
+      "reason": "forced",
+      "lint_pass": true,
+      "failed_checks": [],
+      "warnings": [],
+      "body_size": {
+        "width": 25,
+        "height": 18,
+        "wingspan": 25
+      },
+      "contact_sheets": [
+        "C:\\Users\\jmund\\Game_Dev\\Godot_Projects\\DraconicWars\\art_pipeline\\output\\contact_sheets\\gale_harrier_contact_1x.png",
+        "C:\\Users\\jmund\\Game_Dev\\Godot_Projects\\DraconicWars\\art_pipeline\\output\\contact_sheets\\gale_harrier_contact_3x.png"
+      ]
+    }
+  ],
+  "silhouette_strip": [
+    "C:\\Users\\jmund\\Game_Dev\\Godot_Projects\\DraconicWars\\art_pipeline\\output\\contact_sheets\\roster_silhouette_strip_1x.png",
+    "C:\\Users\\jmund\\Game_Dev\\Godot_Projects\\DraconicWars\\art_pipeline\\output\\contact_sheets\\roster_silhouette_strip_4x.png"
+  ]
+}
