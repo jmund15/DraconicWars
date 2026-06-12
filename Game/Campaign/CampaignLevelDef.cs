@@ -17,7 +17,8 @@ public sealed record CampaignLevelDef(
     IReadOnlyList<WaveEntry> Waves,
     IReadOnlyList<RepeatingWave> RepeatingWaves,
     int BaseGoldReward,
-    string? BondedDragonId = null)
+    string? BondedDragonId = null,
+    string Blurb = "")
 {
     public const string EnemyIdPrefix = "enemy:";
 

@@ -39,6 +39,7 @@ public partial class LevelSelect : Control
                 Text = $"{i + 1}. {level.DisplayName}{(cleared ? "  ✓" : string.Empty)}",
                 Disabled = !unlocked,
                 CustomMinimumSize = new Vector2(220, 28),
+                TooltipText = level.Blurb,
             };
             var levelIndex = i;
             button.Pressed += () =>
