@@ -35,6 +35,10 @@ public partial class BattleSceneController : Node2D
 
     [Export, RequiredExport] public Button ContinueButton { get; set; } = null!;
 
+    [Export, RequiredExport] public Sprite2D LeftSpire { get; set; } = null!;
+
+    [Export, RequiredExport] public Sprite2D RightSpire { get; set; } = null!;
+
     private readonly Dictionary<int, UnitView> _views = new();
     private UnitSpriteLibrary _sprites = null!;
     private CampaignLevelDef _level = null!;
@@ -217,6 +221,7 @@ public partial class BattleSceneController : Node2D
     {
         var player = Runner.State.Player(_localSide);
         UpdateDraftState();
+        UpdateSpires();
 
         if (player.WrathCooldownTicks > _lastWrathCooldown)
         {
@@ -383,6 +388,21 @@ public partial class BattleSceneController : Node2D
                 center.QueueFree();
             }
         };
+    }
+
+    /// <summary>Sheet layout: 4 tier columns x 3 damage rows. The spire reads the
+    /// battle — its crown shows the side's Ascension, its wounds show its HP thirds.</summary>
+    private void UpdateSpires()
+    {
+        var state = Runner.State;
+        LeftSpire.Frame = SpireFrame(state.Left.AscensionTier, state.LeftSpireHp, state.Config.SpireMaxHp);
+        RightSpire.Frame = SpireFrame(state.Right.AscensionTier, state.RightSpireHp, state.Config.SpireMaxHp);
+    }
+
+    private static int SpireFrame(int tier, float hp, float maxHp)
+    {
+        var damageRow = hp >= maxHp * 2f / 3f ? 0 : hp >= maxHp / 3f ? 1 : 2;
+        return damageRow * 4 + Mathf.Clamp(tier, 1, 4) - 1;
     }
 
     private void FlashScreen(Color color)

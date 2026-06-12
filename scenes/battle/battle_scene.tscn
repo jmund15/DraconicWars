@@ -1,4 +1,4 @@
-[gd_scene load_steps=10 format=3]
+[gd_scene load_steps=11 format=3]
 
 [ext_resource type="Script" path="res://Game/Battle/BattleSceneController.cs" id="1"]
 [ext_resource type="Script" path="res://Game/Battle/BattleRunner.cs" id="2"]
@@ -9,11 +9,14 @@
 [ext_resource type="Texture2D" path="res://art_pipeline/output/backgrounds/cinderfell_far.png" id="6"]
 [ext_resource type="Texture2D" path="res://art_pipeline/output/backgrounds/cinderfell_mid.png" id="7"]
 [ext_resource type="Texture2D" path="res://art_pipeline/output/backgrounds/cinderfell_ground.png" id="8"]
+[ext_resource type="Texture2D" path="res://art_pipeline/output/spires/spire_sheet.png" id="10"]
 
-[node name="BattleScene" type="Node2D" node_paths=PackedStringArray("Runner", "UnitLayer", "Hud", "OutcomePanel", "OutcomeLabel", "ContinueButton")]
+[node name="BattleScene" type="Node2D" node_paths=PackedStringArray("Runner", "UnitLayer", "Hud", "OutcomePanel", "OutcomeLabel", "ContinueButton", "LeftSpire", "RightSpire")]
 script = ExtResource("1")
 Runner = NodePath("Runner")
 UnitLayer = NodePath("UnitLayer")
+LeftSpire = NodePath("Spires/LeftSpire")
+RightSpire = NodePath("Spires/RightSpire")
 Hud = NodePath("Hud")
 OutcomePanel = NodePath("Hud/OutcomeCenter/OutcomePanel")
 OutcomeLabel = NodePath("Hud/OutcomeCenter/OutcomePanel/VBox/OutcomeLabel")
@@ -50,6 +53,23 @@ centered = false
 position = Vector2(0, 280)
 texture = ExtResource("8")
 centered = false
+
+[node name="Spires" type="Node2D" parent="."]
+
+[node name="LeftSpire" type="Sprite2D" parent="Spires"]
+position = Vector2(-26, 146)
+texture = ExtResource("10")
+centered = false
+hframes = 4
+vframes = 3
+
+[node name="RightSpire" type="Sprite2D" parent="Spires"]
+position = Vector2(570, 146)
+texture = ExtResource("10")
+centered = false
+flip_h = true
+hframes = 4
+vframes = 3
 
 [node name="UnitLayer" type="Node2D" parent="."]
 
