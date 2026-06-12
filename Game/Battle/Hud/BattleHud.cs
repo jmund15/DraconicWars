@@ -246,26 +246,40 @@ public partial class BattleHud : CanvasLayer
     {
         var segment = System.Math.Min(player.AscensionTier - 1, 2);
         var parts = new List<string>(2);
+        var tooltip = new List<string>(4)
+        {
+            "Edicts of Ascent — the Court's open trials."
+            + $" First claim: +{state.Config.EdictSurgePct * 100:0}% of the tier gap;"
+            + " the runner-up takes half.",
+        };
         foreach (var edict in state.Edicts)
         {
             if (edict.TierIndex != segment)
             {
                 continue;
             }
+            var requirement = EffectText.ForEdict(edict.Def);
             if (edict.ClaimedBy(_side))
             {
                 parts.Add($"✓ {edict.Def.DisplayName.Replace("Edict of the ", "")}");
+                tooltip.Add($"✓ {edict.Def.DisplayName} — {requirement} (claimed)");
                 continue;
             }
             var progress = DraconicWars.Sim.Edicts.EdictProgress.Of(player, edict.Def);
             var halfNote = edict.FirstClaimant is not null ? " (half)" : string.Empty;
             parts.Add($"{edict.Def.DisplayName.Replace("Edict of the ", "")}"
                 + $" {progress:0}/{edict.Def.Threshold:0}{halfNote}");
+            tooltip.Add($"⚖ {edict.Def.DisplayName} — {requirement}"
+                + $" ({progress:0}/{edict.Def.Threshold:0}{halfNote})"
+                + $"\n   \"{edict.Def.Lore}\"");
         }
         EdictLabel.Text = string.Join("  ·  ", parts);
+        EdictLabel.MouseFilter = Control.MouseFilterEnum.Stop;
+        EdictLabel.TooltipText = string.Join("\n", tooltip);
         if (EdictLabel.GetParent() is Control edictChip)
         {
             edictChip.Visible = parts.Count > 0 && player.AscensionTier < 4;
+            edictChip.TooltipText = EdictLabel.TooltipText;
         }
     }
 

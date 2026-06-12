@@ -67,6 +67,29 @@ public static class EffectText
         return string.Join(", ", parts);
     }
 
+    /// <summary>The trial's requirement in plain mechanics — what the lore line is
+    /// actually asking the player to DO (playtest: lore alone was undigestible
+    /// mid-battle).</summary>
+    public static string ForEdict(Sim.Edicts.EdictDef def)
+    {
+        return def.Kind switch
+        {
+            Sim.Edicts.EdictKind.ElementManaDeployed =>
+                $"Deploy {def.Threshold:0} mana of {def.RequiredElement} units",
+            Sim.Edicts.EdictKind.SingleDeployCost =>
+                $"Deploy one unit costing {def.Threshold:0}+ mana",
+            Sim.Edicts.EdictKind.ConduitGrafts =>
+                $"Build {def.Threshold:0} conduits this battle",
+            Sim.Edicts.EdictKind.Kills =>
+                $"Slay {def.Threshold:0} enemy units",
+            Sim.Edicts.EdictKind.BreathPulses =>
+                $"Land {def.Threshold:0} breath pulses",
+            Sim.Edicts.EdictKind.BankedMana =>
+                $"Hold {def.Threshold:0} unspent mana at once",
+            _ => string.Empty,
+        };
+    }
+
     public static string ForPactPrice(PactDef def)
     {
         var parts = new List<string>(2);

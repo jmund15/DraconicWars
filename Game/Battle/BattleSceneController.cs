@@ -51,6 +51,9 @@ public partial class BattleSceneController : Node2D
     private PanelContainer? _draftPanel;
     private Label? _parleyCountdown;
     private bool _breathHintShown;
+    private bool _breathExhausted;
+    private PanelContainer? _hoverPopup;
+    private Label _hoverLabel = null!;
 
     public override void _Ready()
     {
@@ -139,16 +142,33 @@ public partial class BattleSceneController : Node2D
         }
         var breathHeld = Input.IsMouseButtonPressed(MouseButton.Right);
         var player = Runner.State.Player(_localSide);
-        var hasEnergy = player.BreathEnergySeconds >= 1f / Runner.State.Config.TickRate;
-        if (breathHeld)
+        var config = Runner.State.Config;
+        // Exhaustion latch with hysteresis: an empty tank shows NO beam until a real
+        // working charge returns (the raw threshold flickers — playtest read it as
+        // "blinking at zero"). Blink is reserved for the low-tank warning.
+        if (player.BreathEnergySeconds < 1f / config.TickRate)
         {
-            var laneX = GetGlobalMousePosition().X / LaneGeometry.PixelsPerMeter;
-            Runner.EnqueueCommand(SimCommand.FireBreath(_localSide, laneX));
+            _breathExhausted = true;
         }
-        var perchX = _localSide == PlayerSide.Left ? 1.2f : Runner.State.Config.LaneLength - 1.2f;
+        else if (player.BreathEnergySeconds >= 0.5f)
+        {
+            _breathExhausted = false;
+        }
+        var mouse = GetGlobalMousePosition();
+        var midX = config.LaneLength * 0.5f * LaneGeometry.PixelsPerMeter;
+        var aim = _localSide == PlayerSide.Left
+            ? new Vector2(Mathf.Min(mouse.X, midX), mouse.Y)
+            : new Vector2(Mathf.Max(mouse.X, midX), mouse.Y);
+        if (breathHeld && !_breathExhausted)
+        {
+            Runner.EnqueueCommand(SimCommand.FireBreath(
+                _localSide, aim.X / LaneGeometry.PixelsPerMeter));
+        }
+        var perchX = _localSide == PlayerSide.Left ? 1.2f : config.LaneLength - 1.2f;
         var perch = new Vector2(perchX * LaneGeometry.PixelsPerMeter, LaneGeometry.AirY - 36f);
-        var aim = GetGlobalMousePosition();
-        _breathBeam.UpdateBeam(perch, aim, breathHeld && hasEnergy, delta);
+        var lowCharge = player.BreathEnergySeconds < config.BreathMaxSeconds * 0.25f;
+        _breathBeam.UpdateBeam(perch, aim, breathHeld && !_breathExhausted, lowCharge, delta);
+        UpdateHoverPopup();
         if (Input.IsKeyPressed(Key.E))
         {
             Runner.EnqueueCommand(SimCommand.ChannelMana(_localSide, ChannelPerTick));
@@ -194,12 +214,15 @@ public partial class BattleSceneController : Node2D
                 new Color(0.8f, 0.8f, 0.8f));
             return;
         }
-        var baseDef = UnitCatalog.FirstPlayable.FirstOrDefault(d => d.Id == defId);
+        var baseDef = UnitCatalog.FullRoster.FirstOrDefault(d => d.Id == defId);
         if (baseDef is null || baseDef.Tier >= 4)
         {
             return;
         }
-        var cost = (int)(baseDef.DeployCost * Runner.State.Config.RebreathCostFactor);
+        var config = Runner.State.Config;
+        var freeReswear = player.FreeAttunements > 0;
+        var cost = (int)(baseDef.DeployCost * config.RebreathCostFactor
+            * (1f + player.PaidRebreaths * config.RebreathCostStepPct));
         var options = new List<Sim.Units.Element>();
         foreach (var key in GameSession.Profile.AttunementsOwned)
         {
@@ -219,9 +242,10 @@ public partial class BattleSceneController : Node2D
         }
 
         var menu = new PopupMenu();
+        var priceNote = freeReswear ? "FREE — Broker's gift" : $"{cost} mana";
         for (var i = 0; i < options.Count; i++)
         {
-            menu.AddItem($"Re-swear to {options[i]}  ({cost} mana, once per battle)", i);
+            menu.AddItem($"Re-swear to {options[i]}  ({priceNote}, once per battle)", i);
         }
         var captured = options;
         menu.IdPressed += id => Runner.EnqueueCommand(
@@ -498,6 +522,50 @@ public partial class BattleSceneController : Node2D
             hash *= 1099511628211UL;
         }
         return hash;
+    }
+
+    /// <summary>One popup above the nearest hovered unit: who it is, what element it
+    /// fights under (and re-sworn provenance), live HP. World-space so it tracks.</summary>
+    private void UpdateHoverPopup()
+    {
+        UnitView? nearest = null;
+        var mouse = UnitLayer.GetGlobalMousePosition();
+        var best = 18f * 18f;
+        foreach (var view in _views.Values)
+        {
+            var d = (view.GlobalPosition - mouse).LengthSquared();
+            if (d < best)
+            {
+                best = d;
+                nearest = view;
+            }
+        }
+        var text = nearest?.HoverText() ?? string.Empty;
+        if (text.Length == 0)
+        {
+            if (_hoverPopup is not null)
+            {
+                _hoverPopup.Visible = false;
+            }
+            return;
+        }
+        if (_hoverPopup is null)
+        {
+            _hoverLabel = new Label { HorizontalAlignment = HorizontalAlignment.Center };
+            _hoverPopup = new PanelContainer
+            {
+                MouseFilter = Control.MouseFilterEnum.Ignore,
+                Theme = GD.Load<Theme>("res://assets/ui/hud_theme.tres"),
+                ZIndex = 50,
+            };
+            _hoverPopup.AddChild(_hoverLabel);
+            UnitLayer.AddChild(_hoverPopup);
+        }
+        _hoverPopup.Visible = true;
+        _hoverLabel.Text = text;
+        _hoverPopup.ResetSize();
+        _hoverPopup.GlobalPosition = nearest!.GlobalPosition
+            + new Vector2(-_hoverPopup.Size.X * 0.5f, -40f - _hoverPopup.Size.Y);
     }
 
     private void OnUnitSpawned(SimUnit unit)

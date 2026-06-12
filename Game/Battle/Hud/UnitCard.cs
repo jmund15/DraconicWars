@@ -40,15 +40,6 @@ public partial class UnitCard : Button
         };
     }
 
-    private static readonly System.Collections.Generic.Dictionary<Element, Color> ElementTints = new()
-    {
-        [Element.Fire] = Color.FromHtml("f9a875"),
-        [Element.Storm] = Color.FromHtml("d3fc7e"),
-        [Element.Venom] = Color.FromHtml("99e65f"),
-        [Element.Stone] = Color.FromHtml("d1b187"),
-        [Element.Frost] = Color.FromHtml("8fd3ff"),
-    };
-
     private bool _attunedShown;
 
     /// <summary>Marks the card once its company has re-sworn this battle.</summary>
@@ -59,7 +50,7 @@ public partial class UnitCard : Button
             return;
         }
         _attunedShown = true;
-        NameLabel.Modulate = ElementTints.GetValueOrDefault(element, Colors.White);
+        NameLabel.Modulate = ElementColors.Of(element);
         TooltipText += $"\nRe-sworn to {element} this battle";
     }
 
@@ -68,6 +59,7 @@ public partial class UnitCard : Button
         UnitDefId = def.Id;
         _deployCost = def.DeployCost;
         NameLabel.Text = ShortName(def.DisplayName);
+        NameLabel.Modulate = ElementColors.Of(def.Element);
         CostLabel.Text = def.DeployCost.ToString();
         var levelLine = level > 0 ? $"  Lv{level}" : string.Empty;
         var lore = DraconicWars.Game.Content.UnitLore.For(def.Id);

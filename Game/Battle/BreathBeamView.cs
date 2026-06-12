@@ -42,7 +42,7 @@ public partial class BreathBeamView : Node2D
         Visible = false;
     }
 
-    public void UpdateBeam(Vector2 origin, Vector2 target, bool active, double delta)
+    public void UpdateBeam(Vector2 origin, Vector2 target, bool active, bool lowCharge, double delta)
     {
         Visible = active;
         if (!active)
@@ -51,6 +51,11 @@ public partial class BreathBeamView : Node2D
         }
 
         _pulse += (float)delta * 18f;
+        // Hard blink warns of a LOW tank; an EMPTY tank shows no beam at all
+        // (the caller gates `active` — blinking must never mean zero).
+        Modulate = lowCharge && Mathf.Sin(_pulse * 1.1f) < 0f
+            ? new Color(1f, 1f, 1f, 0.35f)
+            : Colors.White;
         var wobble = Mathf.Sin(_pulse) * 1.2f;
         var points = new[] { origin, (origin + target) * 0.5f + new Vector2(0, wobble), target };
         _outer.Points = points;

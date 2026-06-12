@@ -33,11 +33,30 @@ public partial class UnitView : Node2D
             Centered = true,
             FlipH = unit.Side == PlayerSide.Right,
         };
+        // Element identity is always-on (playtest: tints only on re-sworn units made
+        // both elements and Rebreathing illegible). Re-sworn companies read louder.
+        var attuned = unit.Def.NativeElement is { } native && native != unit.Def.Element;
+        _sprite.Modulate = Colors.White.Lerp(
+            ElementColors.Of(unit.Def.Element), attuned ? 0.55f : 0.35f);
         AddChild(_sprite);
         _moveAnim = frames.HasAnimation(FlyAnim) ? FlyAnim : WalkAnim;
         _lastX = unit.X;
         Position = LaneGeometry.ToWorld(unit.X, unit.Stratum);
         PlayIfAvailable(IdleAnim);
+    }
+
+    /// <summary>Hover popup body: name, element provenance, live HP.</summary>
+    public string HoverText()
+    {
+        if (_unit is null || !_unit.IsAlive)
+        {
+            return string.Empty;
+        }
+        var def = _unit.Def;
+        var elementLine = def.NativeElement is { } native && native != def.Element
+            ? $"{def.Element} (re-sworn from {native})"
+            : def.Element.ToString();
+        return $"{def.DisplayName}\nT{def.Tier} {elementLine}\nHP {_unit.Hp}/{def.MaxHp}";
     }
 
     public override void _Process(double delta)

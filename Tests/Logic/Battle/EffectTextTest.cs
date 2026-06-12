@@ -68,4 +68,22 @@ public class EffectTextTest
             AssertThat(EffectText.ForPact(pact).Length > 0).IsTrue();
         }
     }
+
+    [TestCase]
+    public void EdictTextStatesTheRequirementPlainly()
+    {
+        var sky = DraconicWars.Sim.Edicts.EdictCatalog.All[0];
+
+        AssertThat(EffectText.ForEdict(sky)).IsEqual("Deploy 400 mana of Storm units");
+    }
+
+    [TestCase]
+    public void EveryEdictProducesNonEmptyRequirementText()
+    {
+        foreach (var edict in DraconicWars.Sim.Edicts.EdictCatalog.All)
+        {
+            AssertThat(EffectText.ForEdict(edict).Length > 0)
+                .OverrideFailureMessage($"{edict.Id} renders no requirement text").IsTrue();
+        }
+    }
 }
