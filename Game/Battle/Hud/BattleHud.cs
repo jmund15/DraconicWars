@@ -39,6 +39,8 @@ public partial class BattleHud : CanvasLayer
 
     [Export, RequiredExport] public Label SynergyLabel { get; set; } = null!;
 
+    [Export, RequiredExport] public Label EdictLabel { get; set; } = null!;
+
     [Export, RequiredExport] public HBoxContainer DeployBar { get; set; } = null!;
 
     [Export, RequiredExport] public HBoxContainer ConduitRow { get; set; } = null!;
@@ -158,6 +160,8 @@ public partial class BattleHud : CanvasLayer
             synergyChip.Visible = synergyText.Length > 0;
         }
 
+        RefreshEdicts(state, player);
+
         foreach (var card in _cards)
         {
             var defId = card.UnitDefId;
@@ -193,6 +197,35 @@ public partial class BattleHud : CanvasLayer
     private UnitDef? FindDef(string defId)
     {
         return _loadoutDefs.GetValueOrDefault(defId);
+    }
+
+    /// <summary>Published trials for the player's CURRENT segment: progress while
+    /// unclaimed, a check once claimed, "(half)" when racing for the runner-up share.</summary>
+    private void RefreshEdicts(BattleState state, PlayerState player)
+    {
+        var segment = System.Math.Min(player.AscensionTier - 1, 2);
+        var parts = new List<string>(2);
+        foreach (var edict in state.Edicts)
+        {
+            if (edict.TierIndex != segment)
+            {
+                continue;
+            }
+            if (edict.ClaimedBy(_side))
+            {
+                parts.Add($"✓ {edict.Def.DisplayName.Replace("Edict of the ", "")}");
+                continue;
+            }
+            var progress = DraconicWars.Sim.Edicts.EdictProgress.Of(player, edict.Def);
+            var halfNote = edict.FirstClaimant is not null ? " (half)" : string.Empty;
+            parts.Add($"{edict.Def.DisplayName.Replace("Edict of the ", "")}"
+                + $" {progress:0}/{edict.Def.Threshold:0}{halfNote}");
+        }
+        EdictLabel.Text = string.Join("  ·  ", parts);
+        if (EdictLabel.GetParent() is Control edictChip)
+        {
+            edictChip.Visible = parts.Count > 0 && player.AscensionTier < 4;
+        }
     }
 
     #region Test Helpers

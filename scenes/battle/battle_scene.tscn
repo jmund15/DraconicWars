@@ -59,9 +59,10 @@ script = ExtResource("2")
 [node name="Camera" type="Camera2D" parent="."]
 anchor_mode = 0
 
-[node name="Hud" type="CanvasLayer" parent="." node_paths=PackedStringArray("ManaLabel", "ClockLabel", "LeftSpireBar", "RightSpireBar", "AscensionBar", "AscensionLabel", "BreathBar", "SummonBar", "SynergyLabel", "DeployBar", "ConduitRow")]
+[node name="Hud" type="CanvasLayer" parent="." node_paths=PackedStringArray("ManaLabel", "ClockLabel", "LeftSpireBar", "RightSpireBar", "AscensionBar", "AscensionLabel", "BreathBar", "SummonBar", "SynergyLabel", "DeployBar", "ConduitRow", "EdictLabel")]
 script = ExtResource("3")
 SynergyLabel = NodePath("SynergyChip/SynergyLabel")
+EdictLabel = NodePath("EdictChip/EdictLabel")
 ManaLabel = NodePath("TopBar/ManaLabel")
 ClockLabel = NodePath("TopBar/ClockLabel")
 LeftSpireBar = NodePath("TopBar/LeftSpireBar")
@@ -145,6 +146,19 @@ offset_right = -164.0
 offset_bottom = 40.0
 theme = ExtResource("9")
 theme_override_constants/separation = 2
+
+[node name="EdictChip" type="PanelContainer" parent="Hud"]
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -160.0
+offset_top = 34.0
+offset_right = -4.0
+offset_bottom = 46.0
+theme = ExtResource("9")
+
+[node name="EdictLabel" type="Label" parent="Hud/EdictChip"]
+horizontal_alignment = 1
 
 [node name="DeployBar" type="HBoxContainer" parent="Hud"]
 anchors_preset = 12

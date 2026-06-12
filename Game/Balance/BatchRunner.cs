@@ -117,7 +117,19 @@ public static class BatchRunner
             ComebackWin: ComputeComeback(state.Outcome, leftSpire, rightSpire),
             LeftManaCurve: leftMana,
             RightManaCurve: rightMana,
-            DeploysByUnit: deploysByUnit);
+            DeploysByUnit: deploysByUnit,
+            LeftAscension: SourcesOf(state.Left),
+            RightAscension: SourcesOf(state.Right));
+    }
+
+    private static AscensionSources SourcesOf(PlayerState player)
+    {
+        return new AscensionSources(
+            player.AscensionFromTrickle,
+            player.AscensionFromKills,
+            player.AscensionFromLane,
+            player.AscensionFromChip,
+            player.AscensionFromEdicts);
     }
 
     public static List<BattleTelemetry> Run(

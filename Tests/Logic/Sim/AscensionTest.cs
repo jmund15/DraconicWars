@@ -11,8 +11,10 @@ public class AscensionTest
 {
     private static (BattleSim sim, BattleState state) CreateBattle()
     {
+        // EdictsPerTier 0: these tests pin pure trickle/kill/lane meter math, and
+        // the 5000-mana fixture wallet would instantly claim the Deep Coffer edict.
         var sim = new BattleSim(
-            BattleConfig.Default,
+            BattleConfig.Default with { EdictsPerTier = 0 },
             new[] { TestUnits.Grunt(), TestUnits.Elite(), TestUnits.Dragon() });
         var state = sim.CreateInitialState(1UL);
         state.Left.Mana = 5000f;

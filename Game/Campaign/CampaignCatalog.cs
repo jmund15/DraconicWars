@@ -13,7 +13,8 @@ using DraconicWars.Sim.Units;
 public static class CampaignCatalog
 {
     private static BattleConfig Compressed(
-        int crescendoSec, int suddenDeathSec, int hardEndSec, params int[] parleyTiers)
+        int crescendoSec, int suddenDeathSec, int hardEndSec,
+        int edictsPerTier, params int[] parleyTiers)
     {
         return BattleConfig.Default with
         {
@@ -23,6 +24,7 @@ public static class CampaignCatalog
             HardEndTick = hardEndSec * 30,
             LastStandEnabled = true,
             AscensionThresholds = new[] { 42f, 110f, 240f },
+            EdictsPerTier = edictsPerTier,
             ParleyTiers = parleyTiers,
         };
     }
@@ -31,7 +33,7 @@ public static class CampaignCatalog
     {
         new CampaignLevelDef(
             Id: "cm_01", DisplayName: "First Sparks",
-            Config: Compressed(150, 180, 240 /* no parleys: teaching level */),
+            Config: Compressed(150, 180, 240, edictsPerTier: 0 /* no parleys, no edicts: teaching */),
             EnemyUnitIds: new[] { "kobold_spearman", "frost_whelp" },
             MagnificationPct: 100,
             Waves: new[]
@@ -50,7 +52,7 @@ public static class CampaignCatalog
 
         new CampaignLevelDef(
             Id: "cm_02", DisplayName: "The Tide Teaches",
-            Config: Compressed(150, 180, 240, 2 /* first Broker visit at Tier II */),
+            Config: Compressed(150, 180, 240, edictsPerTier: 0, 2 /* first Broker visit at Tier II */),
             EnemyUnitIds: new[] { "kobold_spearman", "forest_archer" },
             MagnificationPct: 100,
             Waves: Enumerable.Range(0, 6)
@@ -68,7 +70,7 @@ public static class CampaignCatalog
 
         new CampaignLevelDef(
             Id: "cm_03", DisplayName: "Augury",
-            Config: Compressed(160, 200, 260, 2, 3),
+            Config: Compressed(160, 200, 260, edictsPerTier: 2, 2, 3),
             EnemyUnitIds: new[] { "kobold_spearman", "forest_archer", "dune_marksman" },
             MagnificationPct: 100,
             Waves: new[] { new WaveEntry(3000, "enemy:forest_archer") },
@@ -84,7 +86,7 @@ public static class CampaignCatalog
 
         new CampaignLevelDef(
             Id: "cm_04", DisplayName: "The Refit",
-            Config: Compressed(170, 210, 280, 2, 3),
+            Config: Compressed(170, 210, 280, edictsPerTier: 2, 2, 3),
             EnemyUnitIds: new[] { "kobold_spearman", "forest_archer", "frost_whelp", "storm_monk" },
             MagnificationPct: 120,
             Waves: new[] { new WaveEntry(2400, "enemy:frost_whelp"), new WaveEntry(2460, "enemy:frost_whelp") },

@@ -1,6 +1,7 @@
 namespace DraconicWars.Sim.Battle;
 
 using System.Collections.Generic;
+using DraconicWars.Sim.Units;
 
 public sealed class PlayerState
 {
@@ -58,6 +59,30 @@ public sealed class PlayerState
 
     /// <summary>Tick at which the open parley auto-seals its first offer.</summary>
     public int ParleyDeadlineTick { get; set; }
+
+    // Edict counters (cumulative; EdictProgress reads them).
+
+    public Dictionary<Element, float> ManaDeployedByElement { get; } = new();
+
+    public float MaxSingleDeployCost { get; set; }
+
+    public int ConduitGrafts { get; set; }
+
+    public int Kills { get; set; }
+
+    public int BreathPulsesLanded { get; set; }
+
+    // Ascension provenance, for telemetry-driven "earned vs passive" tuning.
+
+    public float AscensionFromTrickle { get; set; }
+
+    public float AscensionFromKills { get; set; }
+
+    public float AscensionFromLane { get; set; }
+
+    public float AscensionFromChip { get; set; }
+
+    public float AscensionFromEdicts { get; set; }
 
     public float EffectiveWalletCap => WalletCap + Buffs.WalletCapBonus;
 }

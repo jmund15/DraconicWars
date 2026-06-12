@@ -26,6 +26,10 @@ public sealed class BattleState
     /// pace as it earns parleys by tiering up (symmetric in PvP by construction).</summary>
     public required IReadOnlyList<DraconicWars.Sim.Pacts.PactTier> ParleyTierPath { get; init; }
 
+    /// <summary>The Court's trials for this duel — same set for both sides, rolled
+    /// at battle start and published (design.md §8, Edicts of Ascent).</summary>
+    public List<DraconicWars.Sim.Edicts.ActiveEdict> Edicts { get; } = new();
+
     public float LeftSpireHp { get; set; }
 
     public float RightSpireHp { get; set; }

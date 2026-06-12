@@ -64,6 +64,15 @@ public sealed record BattleConfig(
     /// first offer (gameplay continues throughout — replay-safe, PvP-fair).</summary>
     public int ParleyPickTicks { get; init; } = 450;
 
+    /// <summary>Edicts of Ascent rolled per tier segment (0 disables the trials).</summary>
+    public int EdictsPerTier { get; init; } = 2;
+
+    /// <summary>First claimant's surge as a fraction of the segment's threshold gap.</summary>
+    public float EdictSurgePct { get; init; } = 0.3f;
+
+    /// <summary>Runner-up's share of the surge (anti-snowball: the race stays live).</summary>
+    public float EdictRunnerUpPct { get; init; } = 0.5f;
+
     public static readonly BattleConfig Default = new(
         TickRate: 30,
         LaneLength: 38f,

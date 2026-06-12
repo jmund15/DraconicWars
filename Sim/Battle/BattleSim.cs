@@ -38,7 +38,7 @@ public sealed class BattleSim
     {
         var rng = new SimRng(seed);
         var pactRng = rng.DeriveChild("pacts");
-        return new BattleState
+        var state = new BattleState
         {
             Config = _config,
             Rng = rng,
@@ -49,6 +49,8 @@ public sealed class BattleSim
             LeftSpireHp = _config.SpireMaxHp,
             RightSpireHp = _config.SpireMaxHp,
         };
+        RollEdicts(state, rng.DeriveChild("edicts"));
+        return state;
 
         PlayerState NewPlayer()
         {
@@ -58,6 +60,31 @@ public sealed class BattleSim
                 WalletCap = _config.StartingWalletCap,
                 WrathCooldownTicks = _config.WrathCooldownTicks,
             };
+        }
+    }
+
+    /// <summary>Rolls the Court's trials: the same published set for both sides;
+    /// element-keyed edicts only enter when the def pool can field that element.</summary>
+    private void RollEdicts(BattleState state, SimRng edictRng)
+    {
+        if (_config.EdictsPerTier <= 0)
+        {
+            return;
+        }
+        var fieldableElements = _defs.Values.Select(def => def.Element).ToHashSet();
+        var eligible = Edicts.EdictCatalog.All
+            .Where(def => def.RequiredElement is not { } element
+                || fieldableElements.Contains(element))
+            .ToList();
+
+        for (var tierIndex = 0; tierIndex < 3; tierIndex++)
+        {
+            for (var i = 0; i < _config.EdictsPerTier && eligible.Count > 0; i++)
+            {
+                var pick = eligible[edictRng.NextInt(eligible.Count)];
+                eligible.Remove(pick);
+                state.Edicts.Add(new Edicts.ActiveEdict { Def = pick, TierIndex = tierIndex });
+            }
         }
     }
 
@@ -72,6 +99,7 @@ public sealed class BattleSim
         ProcessLastStand(state);
         TickEconomy(state);
         ProcessCombat(state);
+        ProcessEdicts(state);
         ProcessAscension(state);
         ProcessParleys(state);
         MoveUnits(state);
@@ -140,6 +168,7 @@ public sealed class BattleSim
         // Friendly fire is ON by design (§10a): the pulse hits every unit in radius.
         var pulseDamage = (int)MathF.Round(
             _config.BreathPulseDamage * (1f + player.Buffs.BreathDamagePct));
+        var anyHit = false;
         foreach (var unit in state.Units)
         {
             if (!unit.IsAlive || MathF.Abs(unit.X - x) > _config.BreathRadius)
@@ -147,6 +176,11 @@ public sealed class BattleSim
                 continue;
             }
             ApplyDirectDamage(state, side, unit, pulseDamage);
+            anyHit = true;
+        }
+        if (anyHit)
+        {
+            player.BreathPulsesLanded++;
         }
     }
 
@@ -255,6 +289,9 @@ public sealed class BattleSim
         player.Mana -= def.DeployCost;
         player.DeployCooldowns[unitDefId] = Math.Max(
             0, (int)(def.DeployCooldownTicks * (1f - player.Buffs.DeployCooldownPct)));
+        player.ManaDeployedByElement[def.Element] =
+            player.ManaDeployedByElement.GetValueOrDefault(def.Element) + def.DeployCost;
+        player.MaxSingleDeployCost = MathF.Max(player.MaxSingleDeployCost, def.DeployCost);
         SpawnUnit(state, side, def);
     }
 
@@ -334,6 +371,7 @@ public sealed class BattleSim
         player.Conduits[conduitId] = 1;
         player.ConduitSpent[conduitId] = cost;
         player.SpireShield += def.SpireShieldPerTier;
+        player.ConduitGrafts++;
         RecomputeBuffs(player);
     }
 
@@ -358,6 +396,7 @@ public sealed class BattleSim
         player.Conduits[conduitId] = tier + 1;
         player.ConduitSpent[conduitId] += cost;
         player.SpireShield += def.SpireShieldPerTier;
+        player.ConduitGrafts++;
         RecomputeBuffs(player);
     }
 
@@ -817,12 +856,15 @@ public sealed class BattleSim
         }
 
         // Contact is always +EV for someone: chip damage pays the attacker tier-time.
-        state.Player(attackerSide).AscensionMeter += remainder * _config.ChipDamageAscensionRate;
+        var chipCredit = remainder * _config.ChipDamageAscensionRate;
+        state.Player(attackerSide).AscensionMeter += chipCredit;
+        state.Player(attackerSide).AscensionFromChip += chipCredit;
     }
 
     private void CreditKillAscension(BattleState state, PlayerSide killerSide, UnitDef victim)
     {
         var player = state.Player(killerSide);
+        player.Kills++;
         if (player.AscensionTier >= 4)
         {
             return;
@@ -839,6 +881,7 @@ public sealed class BattleSim
         }
         player.AscensionMeter += allowed;
         player.KillMeterThisSegment += allowed;
+        player.AscensionFromKills += allowed;
     }
 
     private float SegmentSize(int tier)
@@ -847,6 +890,36 @@ public sealed class BattleSim
         var target = thresholds[tier - 1];
         var previous = tier >= 2 ? thresholds[tier - 2] : 0f;
         return target - previous;
+    }
+
+    /// <summary>The Court's trials: first claimant takes the full surge, the
+    /// runner-up still collects half — the race stays live without snowballing.
+    /// Surges feed the meter (and can cascade straight into a tier-up + parley).</summary>
+    private void ProcessEdicts(BattleState state)
+    {
+        foreach (var edict in state.Edicts)
+        {
+            foreach (var side in Sides)
+            {
+                var player = state.Player(side);
+                if (edict.ClaimedBy(side)
+                    || !Edicts.EdictProgress.Completed(player, edict.Def))
+                {
+                    continue;
+                }
+                var isFirst = edict.FirstClaimant is null;
+                edict.MarkClaimed(side);
+                if (player.AscensionTier >= 4)
+                {
+                    continue;
+                }
+                var gap = SegmentSize(edict.TierIndex + 1);
+                var surge = gap * _config.EdictSurgePct
+                    * (isFirst ? 1f : _config.EdictRunnerUpPct);
+                player.AscensionMeter += surge;
+                player.AscensionFromEdicts += surge;
+            }
+        }
     }
 
     private void ProcessAscension(BattleState state)
@@ -860,17 +933,18 @@ public sealed class BattleSim
             }
 
             var enemyTier = state.Player(Opponent(side)).AscensionTier;
-            var perSecond = _config.AscensionTricklePerSecond
+            var tricklePerSecond = _config.AscensionTricklePerSecond
                 * (1f + player.Buffs.AscensionTricklePct);
             if (enemyTier - player.AscensionTier >= 1)
             {
-                perSecond *= _config.TierBehindTrickleMultiplier;
+                tricklePerSecond *= _config.TierBehindTrickleMultiplier;
             }
-            if (HasFrontlinePastMidfield(state, side))
-            {
-                perSecond += _config.LaneControlBonusPerSecond;
-            }
-            player.AscensionMeter += perSecond / _config.TickRate;
+            var laneBonus = HasFrontlinePastMidfield(state, side)
+                ? _config.LaneControlBonusPerSecond
+                : 0f;
+            player.AscensionMeter += (tricklePerSecond + laneBonus) / _config.TickRate;
+            player.AscensionFromTrickle += tricklePerSecond / _config.TickRate;
+            player.AscensionFromLane += laneBonus / _config.TickRate;
 
             while (player.AscensionTier < 4
                 && player.AscensionMeter >= _config.AscensionThresholds[player.AscensionTier - 1])
