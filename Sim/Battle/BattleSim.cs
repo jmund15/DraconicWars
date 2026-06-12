@@ -243,6 +243,20 @@ public sealed class BattleSim
         {
             return;
         }
+        // Squad cap: harness probe showed unlimited fields reward chaff-spam (76% of
+        // all deploys were the cheapest unit, battles ended pre-crescendo).
+        var fielded = 0;
+        foreach (var unit in state.Units)
+        {
+            if (unit.Side == side && unit.IsAlive)
+            {
+                fielded++;
+            }
+        }
+        if (fielded >= _config.MaxFieldedPerSide)
+        {
+            return;
+        }
 
         player.Mana -= def.DeployCost;
         player.DeployCooldowns[unitDefId] = Math.Max(

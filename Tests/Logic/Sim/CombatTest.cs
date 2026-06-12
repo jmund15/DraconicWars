@@ -204,6 +204,27 @@ public class CombatTest
     }
 
     [TestCase]
+    public void DeployRejectedWhenFieldIsFull_AndDeathFreesTheSlot()
+    {
+        var grunt = TestUnits.Grunt(deployCooldownTicks: 0);
+        var (sim, state) = CreateBattle(grunt);
+
+        for (var i = 0; i < BattleConfig.Default.MaxFieldedPerSide; i++)
+        {
+            Spawn(sim, state, PlayerSide.Left, "grunt", 5f + i);
+        }
+        AssertThat(state.Units.Count).IsEqual(BattleConfig.Default.MaxFieldedPerSide);
+
+        sim.Advance(state, new List<SimCommand> { SimCommand.Deploy(PlayerSide.Left, "grunt") });
+        AssertThat(state.Units.Count).IsEqual(BattleConfig.Default.MaxFieldedPerSide);
+
+        state.Units[0].Hp = 0;
+        sim.Advance(state, SimCommand.None);
+        sim.Advance(state, new List<SimCommand> { SimCommand.Deploy(PlayerSide.Left, "grunt") });
+        AssertThat(state.Units.Count).IsEqual(BattleConfig.Default.MaxFieldedPerSide);
+    }
+
+    [TestCase]
     public void SniperDeadzoneAppliesBehindToo()
     {
         var sniper = TestUnits.Sniper();

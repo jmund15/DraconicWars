@@ -45,7 +45,8 @@ public sealed record BattleConfig(
     int WrathDamage,
     float WrathKnockbackDistance,
     float TitheCostMana,
-    float DripFloorPerSecond)
+    float DripFloorPerSecond,
+    int MaxFieldedPerSide)
 {
     /// <summary>Cumulative meter required to REACH tiers 2, 3, and Dragon (4).</summary>
     public static readonly float[] DefaultAscensionThresholds = { 100f, 250f, 450f };
@@ -63,7 +64,7 @@ public sealed record BattleConfig(
         BaseDripPerSecond: 12f,
         StartingMana: 60f,
         StartingWalletCap: 600f,
-        SpireMaxHp: 4000f,
+        SpireMaxHp: 7000f,
         DeploySpawnOffset: 1.5f,
         CrescendoStartTick: 8 * 60 * 30,
         SuddenDeathStartTick: 10 * 60 * 30,
@@ -78,7 +79,7 @@ public sealed record BattleConfig(
         SlowAuraRange: 6f,
         LastStandEnabled: false,
         LastStandDripBonus: 12f,
-        AscensionTricklePerSecond: 0.7f,
+        AscensionTricklePerSecond: 1.0f,
         LaneControlBonusPerSecond: 0.3f,
         TierBehindTrickleMultiplier: 1.5f,
         KillAscensionCapPct: 0.3f,
@@ -95,7 +96,8 @@ public sealed record BattleConfig(
         WrathDamage: 30,
         WrathKnockbackDistance: 3f,
         TitheCostMana: 60f,
-        DripFloorPerSecond: 2f);
+        DripFloorPerSecond: 2f,
+        MaxFieldedPerSide: 12);
 
     public float DripPerTick => BaseDripPerSecond / TickRate;
 }
