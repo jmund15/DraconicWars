@@ -58,44 +58,62 @@ public partial class BattleSceneController : Node2D
         GameSession.EnsureProfileLoaded();
         _sprites = new UnitSpriteLibrary(SheetRoot);
 
-        var levelIndex = Mathf.Clamp(
-            GameSession.SelectedLevelIndex, 0, CampaignCatalog.Levels.Count - 1);
-        _level = CampaignCatalog.Levels[levelIndex];
-
         Runner.UnitSpawned += OnUnitSpawned;
         Runner.UnitDied += OnUnitDied;
         Runner.TickAdvanced += OnTickAdvanced;
-        var battleDefs = CampaignCatalog.BuildBattleDefs(_level, GameSession.Profile);
-        Runner.Initialize(
-            _level.Config,
-            battleDefs,
-            ConduitDefs.All,
-            seed: LevelSeed(_level.Id),
-            DraconicWars.Sim.Pacts.PactCatalog.All);
-        Runner.Director = new WaveDirector(_level.Waves, _level.RepeatingWaves);
-        Runner.State.Left.EquippedDragonId =
-            GameSession.Profile.UnitLevels.ContainsKey("pyraxis")
-                ? "pyraxis"
-                : UnitCatalog.RentalDragonId;
-        Runner.State.Right.EquippedDragonId = UnitCatalog.RentalDragonId;
 
-        // Deploy cards show the LEVEL-SCALED defs the sim actually fights with —
-        // base-catalog stats on the tooltip would misreport every upgraded unit.
-        var playerLoadout = new List<DraconicWars.Sim.Units.UnitDef>();
-        foreach (var def in battleDefs)
+        if (GameSession.LocalPvp)
         {
-            if (!def.Id.StartsWith(CampaignLevelDef.EnemyIdPrefix))
-            {
-                playerLoadout.Add(def);
-            }
+            // War Standard: clamped defs, full library, rental dragons, no rewards.
+            var pvpDefs = Meta.WarStandard.BuildPvpDefs(UnitCatalog.FirstPlayable);
+            Runner.Initialize(
+                BattleConfig.Default,
+                pvpDefs,
+                ConduitDefs.All,
+                seed: (ulong)Time.GetTicksUsec(),
+                DraconicWars.Sim.Pacts.PactCatalog.All);
+            Runner.State.Left.EquippedDragonId = UnitCatalog.RentalDragonId;
+            Runner.State.Right.EquippedDragonId = UnitCatalog.RentalDragonId;
+            Hud.Initialize(Runner, _localSide, pvpDefs, ConduitDefs.All);
+            SetupPvp();
         }
-        CampaignProgress.EnsureBaseConduits(GameSession.Profile);
-        var conduitLibrary = ConduitDefs.All
-            .Where(def => GameSession.Profile.ConduitsUnlocked.Contains(def.Id))
-            .ToList();
-        Hud.Initialize(
-            Runner, _localSide, playerLoadout, conduitLibrary,
-            GameSession.Profile.UnitLevels);
+        else
+        {
+            var levelIndex = Mathf.Clamp(
+                GameSession.SelectedLevelIndex, 0, CampaignCatalog.Levels.Count - 1);
+            _level = CampaignCatalog.Levels[levelIndex];
+            var battleDefs = CampaignCatalog.BuildBattleDefs(_level, GameSession.Profile);
+            Runner.Initialize(
+                _level.Config,
+                battleDefs,
+                ConduitDefs.All,
+                seed: LevelSeed(_level.Id),
+                DraconicWars.Sim.Pacts.PactCatalog.All);
+            Runner.Director = new WaveDirector(_level.Waves, _level.RepeatingWaves);
+            Runner.State.Left.EquippedDragonId =
+                GameSession.Profile.UnitLevels.ContainsKey("pyraxis")
+                    ? "pyraxis"
+                    : UnitCatalog.RentalDragonId;
+            Runner.State.Right.EquippedDragonId = UnitCatalog.RentalDragonId;
+
+            // Deploy cards show the LEVEL-SCALED defs the sim actually fights with —
+            // base-catalog stats on the tooltip would misreport every upgraded unit.
+            var playerLoadout = new List<DraconicWars.Sim.Units.UnitDef>();
+            foreach (var def in battleDefs)
+            {
+                if (!def.Id.StartsWith(CampaignLevelDef.EnemyIdPrefix))
+                {
+                    playerLoadout.Add(def);
+                }
+            }
+            CampaignProgress.EnsureBaseConduits(GameSession.Profile);
+            var conduitLibrary = ConduitDefs.All
+                .Where(def => GameSession.Profile.ConduitsUnlocked.Contains(def.Id))
+                .ToList();
+            Hud.Initialize(
+                Runner, _localSide, playerLoadout, conduitLibrary,
+                GameSession.Profile.UnitLevels);
+        }
         Hud.DeployRequested += id => Runner.EnqueueCommand(SimCommand.Deploy(_localSide, id));
         Hud.AttuneRequested += OnAttuneRequested;
         Hud.ConduitBuildRequested += OnConduitBuildRequested;
@@ -106,7 +124,9 @@ public partial class BattleSceneController : Node2D
         UnitLayer.AddChild(_breathBeam);
 
         ContinueButton.Pressed += () =>
-            GetTree().ChangeSceneToFile("res://scenes/menu/level_select.tscn");
+            GetTree().ChangeSceneToFile(GameSession.LocalPvp
+                ? "res://scenes/menu/main_menu.tscn"
+                : "res://scenes/menu/level_select.tscn");
         OutcomePanel.Visible = false;
         JmoLogger.Info(this, $"[Battle] Level '{_level.Id}' ready");
     }
@@ -134,7 +154,11 @@ public partial class BattleSceneController : Node2D
             Runner.EnqueueCommand(SimCommand.ChannelMana(_localSide, ChannelPerTick));
         }
         // PvE 2x speed toggle (design.md §12) — drops to 1x while breath is aimed.
-        Runner.SpeedMultiplier = _fastForward && !breathHeld ? 2f : 1f;
+        Runner.SpeedMultiplier = !GameSession.LocalPvp && _fastForward && !breathHeld ? 2f : 1f;
+        if (GameSession.LocalPvp)
+        {
+            ProcessPvpInput(delta);
+        }
     }
 
     public override void _UnhandledKeyInput(InputEvent @event)
@@ -222,6 +246,10 @@ public partial class BattleSceneController : Node2D
         var player = Runner.State.Player(_localSide);
         UpdateDraftState();
         UpdateSpires();
+        if (GameSession.LocalPvp)
+        {
+            UpdatePvpHud();
+        }
 
         if (player.WrathCooldownTicks > _lastWrathCooldown)
         {
@@ -248,7 +276,7 @@ public partial class BattleSceneController : Node2D
         var state = Runner.State;
         var opponent = state.Player(
             _localSide == PlayerSide.Left ? PlayerSide.Right : PlayerSide.Left);
-        if (opponent.AwaitingParley && opponent.PendingOffers.Count > 0)
+        if (!GameSession.LocalPvp && opponent.AwaitingParley && opponent.PendingOffers.Count > 0)
         {
             // Scripted opponent picks its first offer (persona AI is a later Part).
             Runner.EnqueueCommand(SimCommand.SealPact(
@@ -427,6 +455,21 @@ public partial class BattleSceneController : Node2D
             return;
         }
         _resultApplied = true;
+        if (GameSession.LocalPvp)
+        {
+            // War Standard: no profile rewards; just call the field.
+            var pvpHeadline = Runner.State.Outcome switch
+            {
+                BattleOutcome.LeftVictory => "PLAYER 1 TAKES THE SPAN",
+                BattleOutcome.RightVictory => "PLAYER 2 TAKES THE SPAN",
+                _ => retreated ? (won ? "PLAYER 2 CONCEDES" : "PLAYER 1 CONCEDES")
+                    : "THE COURT CALLS THE FIELD — DRAW",
+            };
+            OutcomeLabel.Text = pvpHeadline;
+            OutcomePanel.Visible = true;
+            JmoLogger.Info(this, $"[Battle] PvP result: {pvpHeadline}");
+            return;
+        }
         Runner.Paused = true;
 
         var state = Runner.State;

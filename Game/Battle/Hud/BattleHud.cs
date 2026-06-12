@@ -53,7 +53,19 @@ public partial class BattleHud : CanvasLayer
 
     private readonly List<UnitCard> _cards = new();
     private readonly Dictionary<string, Button> _conduitButtons = new();
+    private readonly List<string> _conduitOrder = new();
     private Button _socketButton = null!;
+
+    /// <summary>Deploy cards in bar order (PvP cursor + tests).</summary>
+    public IReadOnlyList<UnitCard> Cards => _cards;
+
+    /// <summary>Conduit ids in strip order (PvP cursor).</summary>
+    public IReadOnlyList<string> ConduitOrder => _conduitOrder;
+
+    public Button? ConduitButton(string conduitId)
+    {
+        return _conduitButtons.GetValueOrDefault(conduitId);
+    }
     private readonly Dictionary<string, UnitDef> _loadoutDefs = new();
     private BattleRunner _runner = null!;
     private PlayerSide _side;
@@ -106,6 +118,7 @@ public partial class BattleHud : CanvasLayer
             };
             ConduitRow.AddChild(button);
             _conduitButtons[conduitId] = button;
+            _conduitOrder.Add(conduitId);
         }
 
         _socketButton = new Button

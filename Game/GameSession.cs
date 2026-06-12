@@ -18,6 +18,10 @@ public static class GameSession
 
     public static int SelectedLevelIndex { get; set; }
 
+    /// <summary>Local PvP runs under War Standard: clamped defs, full conduit
+    /// library, no profile rewards. Cleared when the match ends.</summary>
+    public static bool LocalPvp { get; set; }
+
     private static bool _loaded;
 
     public static void EnsureProfileLoaded()
