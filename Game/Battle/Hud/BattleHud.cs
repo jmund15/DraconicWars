@@ -84,7 +84,7 @@ public partial class BattleHud : CanvasLayer
             var button = new Button
             {
                 Text = $"{conduit.DisplayName}\n{conduit.CostForTier(1)}",
-                CustomMinimumSize = new Vector2(58, 30),
+                CustomMinimumSize = new Vector2(54, 20),
                 TooltipText = $"{conduit.DisplayName} — left-click build/upgrade, right-click sell",
             };
             var conduitId = conduit.Id;
@@ -144,6 +144,10 @@ public partial class BattleHud : CanvasLayer
             }
         }
         SynergyLabel.Text = synergyText;
+        if (SynergyLabel.GetParent() is Control synergyChip)
+        {
+            synergyChip.Visible = synergyText.Length > 0;
+        }
 
         foreach (var card in _cards)
         {

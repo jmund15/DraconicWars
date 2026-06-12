@@ -33,10 +33,18 @@ public partial class UnitCard : Button
     {
         UnitDefId = def.Id;
         _deployCost = def.DeployCost;
-        NameLabel.Text = def.DisplayName;
+        NameLabel.Text = ShortName(def.DisplayName);
         CostLabel.Text = def.DeployCost.ToString();
         TooltipText = $"{def.DisplayName}\nTier {def.Tier} {def.Element} {def.TypeClass}\n"
             + $"HP {def.MaxHp}  DMG {def.Damage}  RNG {def.Range}";
+    }
+
+    /// <summary>Cards are 56px wide; the last word stays unique across the roster
+    /// ("Spearman", "Gryphon") while the tooltip carries the full name.</summary>
+    private static string ShortName(string displayName)
+    {
+        var lastSpace = displayName.LastIndexOf(' ');
+        return lastSpace < 0 ? displayName : displayName[(lastSpace + 1)..];
     }
 
     public void UpdateState(float mana, int cooldownTicksLeft, int cooldownTotal, bool tierLocked)

@@ -3,7 +3,7 @@
 [ext_resource type="Script" path="res://Game/Battle/Hud/UnitCard.cs" id="1"]
 
 [node name="UnitCard" type="Button" node_paths=PackedStringArray("NameLabel", "CostLabel", "CooldownBar")]
-custom_minimum_size = Vector2(56, 40)
+custom_minimum_size = Vector2(56, 34)
 script = ExtResource("1")
 NameLabel = NodePath("VBox/Name")
 CostLabel = NodePath("VBox/Cost")

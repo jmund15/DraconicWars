@@ -1,9 +1,10 @@
-[gd_scene load_steps=9 format=3]
+[gd_scene load_steps=10 format=3]
 
 [ext_resource type="Script" path="res://Game/Battle/BattleSceneController.cs" id="1"]
 [ext_resource type="Script" path="res://Game/Battle/BattleRunner.cs" id="2"]
 [ext_resource type="Script" path="res://Game/Battle/Hud/BattleHud.cs" id="3"]
 [ext_resource type="PackedScene" path="res://scenes/battle/unit_card.tscn" id="4"]
+[ext_resource type="Theme" path="res://assets/ui/hud_theme.tres" id="9"]
 [ext_resource type="Texture2D" path="res://art_pipeline/output/backgrounds/cinderfell_sky.png" id="5"]
 [ext_resource type="Texture2D" path="res://art_pipeline/output/backgrounds/cinderfell_far.png" id="6"]
 [ext_resource type="Texture2D" path="res://art_pipeline/output/backgrounds/cinderfell_mid.png" id="7"]
@@ -60,7 +61,7 @@ anchor_mode = 0
 
 [node name="Hud" type="CanvasLayer" parent="." node_paths=PackedStringArray("ManaLabel", "ClockLabel", "LeftSpireBar", "RightSpireBar", "AscensionBar", "AscensionLabel", "BreathBar", "SummonBar", "SynergyLabel", "DeployBar", "ConduitRow")]
 script = ExtResource("3")
-SynergyLabel = NodePath("SynergyLabel")
+SynergyLabel = NodePath("SynergyChip/SynergyLabel")
 ManaLabel = NodePath("TopBar/ManaLabel")
 ClockLabel = NodePath("TopBar/ClockLabel")
 LeftSpireBar = NodePath("TopBar/LeftSpireBar")
@@ -80,6 +81,7 @@ offset_left = 4.0
 offset_top = 2.0
 offset_right = -4.0
 offset_bottom = 16.0
+theme = ExtResource("9")
 theme_override_constants/separation = 6
 
 [node name="ManaLabel" type="Label" parent="Hud/TopBar"]
@@ -121,21 +123,27 @@ size_flags_vertical = 4
 show_percentage = false
 visible = false
 
-[node name="SynergyLabel" type="Label" parent="Hud"]
+[node name="SynergyChip" type="PanelContainer" parent="Hud"]
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -160.0
+offset_top = 18.0
+offset_right = -4.0
+offset_bottom = 32.0
+theme = ExtResource("9")
+
+[node name="SynergyLabel" type="Label" parent="Hud/SynergyChip"]
+horizontal_alignment = 1
+
+[node name="ConduitRow" type="HBoxContainer" parent="Hud"]
 anchors_preset = 10
 anchor_right = 1.0
 offset_left = 4.0
 offset_top = 18.0
-offset_bottom = 30.0
-horizontal_alignment = 1
-
-[node name="ConduitRow" type="HBoxContainer" parent="Hud"]
-anchors_preset = 2
-anchor_top = 1.0
-anchor_bottom = 1.0
-offset_left = 4.0
-offset_top = -78.0
-offset_bottom = -48.0
+offset_right = -164.0
+offset_bottom = 40.0
+theme = ExtResource("9")
 theme_override_constants/separation = 2
 
 [node name="DeployBar" type="HBoxContainer" parent="Hud"]
@@ -144,10 +152,11 @@ anchor_top = 1.0
 anchor_right = 1.0
 anchor_bottom = 1.0
 offset_left = 4.0
-offset_top = -44.0
+offset_top = -38.0
 offset_right = -4.0
 offset_bottom = -2.0
 alignment = 1
+theme = ExtResource("9")
 theme_override_constants/separation = 4
 
 [node name="OutcomeCenter" type="CenterContainer" parent="Hud"]
@@ -155,6 +164,7 @@ anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 mouse_filter = 2
+theme = ExtResource("9")
 
 [node name="OutcomePanel" type="PanelContainer" parent="Hud/OutcomeCenter"]
 visible = false
