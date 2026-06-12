@@ -74,6 +74,30 @@ public static class MetaProgression
         };
     }
 
+    /// <summary>Rank rewards in ascending order, for "next unlock" UI. Thresholds
+    /// mirror LevelCap/ConduitSockets — keep all three in sync.</summary>
+    public static readonly (int Rank, string Reward)[] RankMilestones =
+    {
+        (40, "unit level cap 6"),
+        (60, "4th conduit socket"),
+        (90, "unit level cap 8"),
+        (150, "unit level cap 10"),
+        (180, "5th conduit socket"),
+        (220, "unit level cap 13"),
+    };
+
+    public static (int Rank, string Reward)? NextMilestone(int rank)
+    {
+        foreach (var milestone in RankMilestones)
+        {
+            if (milestone.Rank > rank)
+            {
+                return milestone;
+            }
+        }
+        return null;
+    }
+
     public static bool TryBuyLevel(PlayerProfile profile, string unitId)
     {
         if (!profile.UnitLevels.TryGetValue(unitId, out var level))

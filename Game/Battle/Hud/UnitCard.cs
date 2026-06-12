@@ -29,14 +29,17 @@ public partial class UnitCard : Button
         Pressed += () => DeployRequested(UnitDefId);
     }
 
-    public void Bind(UnitDef def)
+    public void Bind(UnitDef def, int level = 0)
     {
         UnitDefId = def.Id;
         _deployCost = def.DeployCost;
         NameLabel.Text = ShortName(def.DisplayName);
         CostLabel.Text = def.DeployCost.ToString();
-        TooltipText = $"{def.DisplayName}\nTier {def.Tier} {def.Element} {def.TypeClass}\n"
-            + $"HP {def.MaxHp}  DMG {def.Damage}  RNG {def.Range}";
+        var levelLine = level > 0 ? $"  Lv{level}" : string.Empty;
+        TooltipText = $"{def.DisplayName}{levelLine}\nTier {def.Tier} {def.Element} {def.TypeClass}\n"
+            + $"HP {def.MaxHp}  DMG {def.Damage}  RNG {def.Range}\n"
+            + $"Speed {def.MoveSpeed:0.#} m/s  Attack {def.ForeswingTicks + def.BackswingTicks}t"
+            + $"  KB x{def.KnockbackCount}";
     }
 
     /// <summary>Cards are 56px wide; the last word stays unique across the roster

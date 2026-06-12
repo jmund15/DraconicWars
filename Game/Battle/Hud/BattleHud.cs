@@ -60,7 +60,8 @@ public partial class BattleHud : CanvasLayer
         BattleRunner runner,
         PlayerSide side,
         IEnumerable<UnitDef> loadout,
-        IEnumerable<ConduitDef> conduits)
+        IEnumerable<ConduitDef> conduits,
+        IReadOnlyDictionary<string, int>? unitLevels = null)
     {
         _runner = runner;
         _side = side;
@@ -74,7 +75,7 @@ public partial class BattleHud : CanvasLayer
             _loadoutDefs[def.Id] = def;
             var card = UnitCardScene.Instantiate<UnitCard>();
             DeployBar.AddChild(card);
-            card.Bind(def);
+            card.Bind(def, unitLevels?.GetValueOrDefault(def.Id) ?? 0);
             card.DeployRequested += id => DeployRequested(id);
             _cards.Add(card);
         }
@@ -85,7 +86,6 @@ public partial class BattleHud : CanvasLayer
             {
                 Text = $"{conduit.DisplayName}\n{conduit.CostForTier(1)}",
                 CustomMinimumSize = new Vector2(54, 20),
-                TooltipText = $"{conduit.DisplayName} — left-click build/upgrade, right-click sell",
             };
             var conduitId = conduit.Id;
             button.Pressed += () => ConduitBuildRequested(conduitId);
@@ -169,6 +169,15 @@ public partial class BattleHud : CanvasLayer
                     ? $"{def.DisplayName}\nT{conduitTier} MAX"
                     : $"{def.DisplayName}\nT{conduitTier}→{def.CostForTier(conduitTier + 1)}"
                 : $"{def.DisplayName}\n{def.CostForTier(1)}";
+            button.TooltipText = built
+                ? $"{def.DisplayName} T{conduitTier}: {EffectText.ForConduit(def, conduitTier)}"
+                    + (conduitTier < ConduitDef.MaxTier
+                        ? $"\nUpgrade T{conduitTier + 1}: {EffectText.ForConduit(def, conduitTier + 1)}"
+                            + $" ({def.CostForTier(conduitTier + 1)} mana)"
+                        : string.Empty)
+                    + "\nRight-click sells for 50% of spent mana"
+                : $"{def.DisplayName} T1: {EffectText.ForConduit(def, 1)}"
+                    + $" ({def.CostForTier(1)} mana)\nOne socket per conduit type";
         }
     }
 

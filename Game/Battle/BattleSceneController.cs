@@ -58,9 +58,10 @@ public partial class BattleSceneController : Node2D
         Runner.UnitSpawned += OnUnitSpawned;
         Runner.UnitDied += OnUnitDied;
         Runner.TickAdvanced += OnTickAdvanced;
+        var battleDefs = CampaignCatalog.BuildBattleDefs(_level, GameSession.Profile);
         Runner.Initialize(
             _level.Config,
-            CampaignCatalog.BuildBattleDefs(_level, GameSession.Profile),
+            battleDefs,
             ConduitDefs.All,
             seed: LevelSeed(_level.Id),
             DraconicWars.Sim.Pacts.PactCatalog.All);
@@ -71,7 +72,19 @@ public partial class BattleSceneController : Node2D
                 : UnitCatalog.RentalDragonId;
         Runner.State.Right.EquippedDragonId = UnitCatalog.RentalDragonId;
 
-        Hud.Initialize(Runner, _localSide, UnitCatalog.FirstPlayable, ConduitDefs.All);
+        // Deploy cards show the LEVEL-SCALED defs the sim actually fights with —
+        // base-catalog stats on the tooltip would misreport every upgraded unit.
+        var playerLoadout = new List<DraconicWars.Sim.Units.UnitDef>();
+        foreach (var def in battleDefs)
+        {
+            if (!def.Id.StartsWith(CampaignLevelDef.EnemyIdPrefix))
+            {
+                playerLoadout.Add(def);
+            }
+        }
+        Hud.Initialize(
+            Runner, _localSide, playerLoadout, ConduitDefs.All,
+            GameSession.Profile.UnitLevels);
         Hud.DeployRequested += id => Runner.EnqueueCommand(SimCommand.Deploy(_localSide, id));
         Hud.ConduitBuildRequested += OnConduitBuildRequested;
         Hud.ConduitSellRequested += id => Runner.EnqueueCommand(SimCommand.SellConduit(_localSide, id));
@@ -205,11 +218,13 @@ public partial class BattleSceneController : Node2D
         foreach (var offerId in local.PendingOffers)
         {
             var def = DraconicWars.Sim.Pacts.PactCatalog.ById(offerId);
-            var price = PriceText(def);
+            var price = EffectText.ForPactPrice(def);
+            var priceLine = price.Length > 0 ? $"  — PRICE: {price}" : string.Empty;
             var button = new Button
             {
-                Text = $"[{def.Tier}] {def.DisplayName}{price}\n{def.Lore}",
-                CustomMinimumSize = new Vector2(280, 32),
+                Text = $"[{def.Tier}] {def.DisplayName}{priceLine}\n"
+                    + $"{EffectText.ForPact(def)}\n{def.Lore}",
+                CustomMinimumSize = new Vector2(300, 40),
                 Modulate = def.Tier switch
                 {
                     DraconicWars.Sim.Pacts.PactTier.Drake => Color.FromHtml("4fa4f9"),
@@ -256,20 +271,6 @@ public partial class BattleSceneController : Node2D
         };
     }
 
-    private static string PriceText(DraconicWars.Sim.Pacts.PactDef def)
-    {
-        var parts = new List<string>(2);
-        if (def.PriceSpireHpPct > 0f)
-        {
-            parts.Add($"{(int)(def.PriceSpireHpPct * 100)}% spire blood");
-        }
-        if (def.PriceDripPerSecond > 0f)
-        {
-            parts.Add($"-{def.PriceDripPerSecond:0.#} drip");
-        }
-        return parts.Count == 0 ? string.Empty : $"  — PRICE: {string.Join(", ", parts)}";
-    }
-
     private void FlashScreen(Color color)
     {
         var flash = new ColorRect
@@ -305,6 +306,7 @@ public partial class BattleSceneController : Node2D
         var goldEarned = GameSession.Profile.Gold - goldBefore;
         var headline = won ? "VICTORY" : retreated ? "RETREAT" : "DEFEAT";
         OutcomeLabel.Text = $"{headline}\n+{goldEarned} gold"
+            + (won ? string.Empty : "\nWar salvage — defeat still pays for time held and spire damage dealt")
             + (firstClear ? "\nFirst clear! Next level unlocked." : string.Empty);
         OutcomePanel.Visible = true;
         JmoLogger.Info(this, $"[Battle] Result applied: {headline}, +{goldEarned}g");
