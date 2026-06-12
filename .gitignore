@@ -87,3 +87,9 @@ Tests/_log_analysis.json
 # Godot editor csproj backups
 *.csproj.old
 *.csproj.old.*
+
+# GdUnit4 v5 adapter generated runner scene (per-machine)
+gdunit4_testadapter_v5/
+
+# Python bytecode caches (art pipeline)
+art_pipeline/__pycache__/
