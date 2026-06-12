@@ -11,9 +11,9 @@ config_version=5
 [application]
 
 config/name="DraconicWars"
-config/features=PackedStringArray("4.6", "Forward Plus")
-config/icon="res://icon.svg"
 run/main_scene="res://scenes/menu/main_menu.tscn"
+config/features=PackedStringArray("4.6", "C#", "Forward Plus")
+config/icon="res://icon.svg"
 
 [display]
 
@@ -22,8 +22,8 @@ window/size/viewport_height=360
 window/size/window_width_override=1280
 window/size/window_height_override=720
 window/stretch/mode="canvas_items"
-window/stretch/aspect="expand"
-window/stretch/scale_mode="integer"
+window/stretch/aspect="keep"
+window/stretch/scale_mode="fractional"
 
 [dotnet]
 
@@ -35,9 +35,8 @@ project/assembly_name="DraconicWars"
 
 [rendering]
 
-renderer/rendering_method="forward_plus"
-rendering_device/driver.windows="d3d12"
 textures/canvas_textures/default_texture_filter=0
-2d/snap/snap_2d_transforms_to_pixel=true
+rendering_device/driver.windows="d3d12"
 viewport/hdr_2d=true
 environment/defaults/default_clear_color=Color(0.180392, 0.133333, 0.184314, 1)
+2d/snap/snap_2d_transforms_to_pixel=true

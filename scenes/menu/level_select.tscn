@@ -1,60 +1,69 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene load_steps=3 format=3]
 
 [ext_resource type="Script" path="res://Game/Menu/LevelSelect.cs" id="1"]
+[ext_resource type="Theme" path="res://assets/ui/hud_theme.tres" id="2"]
 
 [node name="LevelSelect" type="Control" node_paths=PackedStringArray("LevelList", "GoldLabel", "RankLabel", "BackButton", "UpgradeList")]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
+theme = ExtResource("2")
 script = ExtResource("1")
-LevelList = NodePath("Center/VBox/Levels")
-GoldLabel = NodePath("Center/VBox/TopRow/Gold")
-RankLabel = NodePath("Center/VBox/TopRow/Rank")
-BackButton = NodePath("Center/VBox/Back")
-UpgradeList = NodePath("Center/VBox/Upgrades")
+LevelList = NodePath("Scroll/Center/VBox/Levels")
+GoldLabel = NodePath("Scroll/Center/VBox/TopRow/Gold")
+RankLabel = NodePath("Scroll/Center/VBox/TopRow/Rank")
+BackButton = NodePath("Scroll/Center/VBox/Back")
+UpgradeList = NodePath("Scroll/Center/VBox/Upgrades")
 
-[node name="Center" type="CenterContainer" parent="."]
+[node name="Scroll" type="ScrollContainer" parent="."]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
+horizontal_scroll_mode = 0
 
-[node name="VBox" type="VBoxContainer" parent="Center"]
+[node name="Center" type="CenterContainer" parent="Scroll"]
 layout_mode = 2
-theme_override_constants/separation = 8
+size_flags_horizontal = 3
+size_flags_vertical = 3
 
-[node name="Header" type="Label" parent="Center/VBox"]
+[node name="VBox" type="VBoxContainer" parent="Scroll/Center"]
 layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="Header" type="Label" parent="Scroll/Center/VBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 12
 text = "The Cinderfell Marches"
 horizontal_alignment = 1
 
-[node name="TopRow" type="HBoxContainer" parent="Center/VBox"]
+[node name="TopRow" type="HBoxContainer" parent="Scroll/Center/VBox"]
 layout_mode = 2
 theme_override_constants/separation = 24
 alignment = 1
 
-[node name="Gold" type="Label" parent="Center/VBox/TopRow"]
+[node name="Gold" type="Label" parent="Scroll/Center/VBox/TopRow"]
 layout_mode = 2
 text = "Gold: 0"
 
-[node name="Rank" type="Label" parent="Center/VBox/TopRow"]
+[node name="Rank" type="Label" parent="Scroll/Center/VBox/TopRow"]
 layout_mode = 2
 text = "Dragon Rank: 0"
 
-[node name="Levels" type="VBoxContainer" parent="Center/VBox"]
+[node name="Levels" type="VBoxContainer" parent="Scroll/Center/VBox"]
 layout_mode = 2
 theme_override_constants/separation = 4
 
-[node name="UpgradeHeader" type="Label" parent="Center/VBox"]
+[node name="UpgradeHeader" type="Label" parent="Scroll/Center/VBox"]
 layout_mode = 2
 text = "Warband"
 horizontal_alignment = 1
 
-[node name="Upgrades" type="VBoxContainer" parent="Center/VBox"]
+[node name="Upgrades" type="VBoxContainer" parent="Scroll/Center/VBox"]
 layout_mode = 2
 theme_override_constants/separation = 2
 
-[node name="Back" type="Button" parent="Center/VBox"]
+[node name="Back" type="Button" parent="Scroll/Center/VBox"]
 layout_mode = 2
 text = "Back"
