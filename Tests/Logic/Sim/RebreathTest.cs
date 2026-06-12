@@ -132,6 +132,32 @@ public class RebreathTest
     }
 
     [TestCase]
+    public void PrismParleyGrantsFreeReswears_ThenManaPricingResumes()
+    {
+        var (sim, state) = CreateBattle();
+        state.Left.FreeAttunements = 2;
+        var manaBefore = state.Left.Mana;
+
+        sim.Advance(state, new List<SimCommand>
+        {
+            SimCommand.AttuneUnit(PlayerSide.Left, "grunt", Element.Fire),
+            SimCommand.AttuneUnit(PlayerSide.Left, "g2", Element.Frost),
+        });
+
+        AssertThat(state.Left.FreeAttunements).IsEqual(0);
+        AssertThat(state.Left.AttunedThisBattle.Count).IsEqual(2);
+        // Free re-swears spent no mana (drip may have added a tick's worth).
+        AssertThat(state.Left.Mana >= manaBefore).IsTrue();
+
+        sim.Advance(state, new List<SimCommand>
+        {
+            SimCommand.AttuneUnit(PlayerSide.Left, "g3", Element.Storm),
+        });
+        AssertThat(state.Left.AttunedThisBattle.Count).IsEqual(3);
+        AssertThat(state.Left.Mana < manaBefore).IsTrue();
+    }
+
+    [TestCase]
     public void MetaUnlockCostsGoldAndFeedsDragonRank()
     {
         var profile = new PlayerProfile { Gold = 1000 };

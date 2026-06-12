@@ -294,6 +294,22 @@ public class PactTest
     }
 
     [TestCase]
+    public void PrismParleyGrantsTwoFreeReswearsOnSeal()
+    {
+        var (sim, state) = CreateBattle();
+        ReachNextTier(sim, state, PlayerSide.Left);
+        state.Left.PendingOffers.Clear();
+        state.Left.PendingOffers.Add("prism_parley");
+
+        sim.Advance(state, new List<SimCommand>
+        {
+            SimCommand.SealPact(PlayerSide.Left, "prism_parley"),
+        });
+
+        AssertThat(state.Left.FreeAttunements).IsEqual(2);
+    }
+
+    [TestCase]
     public void SalvageCharterRaisesConduitRefundToThreeQuarters()
     {
         var (sim, state) = CreateBattle();

@@ -49,5 +49,7 @@ public sealed record PactDef(
     float SummonCostPct = 0f,
     float WrathCooldownPct = 0f,
     float ConduitRefundBonusPct = 0f,
+    float TurretCadencePct = 0f,
+    int FreeAttunements = 0,
     float PriceSpireHpPct = 0f,
     float PriceDripPerSecond = 0f);

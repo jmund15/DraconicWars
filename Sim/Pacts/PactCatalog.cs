@@ -51,6 +51,12 @@ public static class PactCatalog
         new PactDef("venom_coffers", "Venom Coffers", PactTier.Ember, PactCategory.Economy,
             Lore: "Every corpse owes the Marches a toll.",
             RelevantElement: Element.Venom, KillBountyPct: 0.2f),
+        new PactDef("wardens_levy", "Warden's Levy", PactTier.Ember, PactCategory.Combat,
+            Lore: "The levy is paid in patience.",
+            RelevantElement: Element.Stone, DamagePct: 0.03f, WalletCapBonus: 50f),
+        new PactDef("skyward_eyes", "Skyward Eyes", PactTier.Ember, PactCategory.Breath,
+            Lore: "The watchers bill by the hour.",
+            RelevantElement: Element.Storm, BreathRegenPct: 0.15f, SpeedPct: 0.04f),
 
         // Drake — strong terms, still freely given
         new PactDef("ley_geyser", "Ley Geyser", PactTier.Drake, PactCategory.Economy,
@@ -89,6 +95,15 @@ public static class PactCatalog
         new PactDef("salvage_charter", "Salvage Charter", PactTier.Drake, PactCategory.Economy,
             Lore: "The Court honors honest demolition: three parts back in four.",
             ConduitRefundBonusPct: 0.25f),
+        new PactDef("prism_parley", "Prism Parley", PactTier.Drake, PactCategory.Deployment,
+            Lore: "\"Re-swear two oaths, freely. The Court will notarize.\"",
+            FreeAttunements: 2),
+        new PactDef("crownwright", "Crownwright", PactTier.Drake, PactCategory.Breath,
+            Lore: "A finer mount for a fiercer weapon.",
+            BreathDamagePct: 0.1f, TurretCadencePct: 0.15f),
+        new PactDef("war_ledger", "War Ledger", PactTier.Drake, PactCategory.Economy,
+            Lore: "Every name entered twice.",
+            KillBountyPct: 0.3f, AscensionTricklePct: 0.1f),
 
         // Wyrm — mythic terms; the Broker always names a Price
         new PactDef("avatar_of_war", "Avatar of War", PactTier.Wyrm, PactCategory.Combat,
@@ -116,6 +131,10 @@ public static class PactCatalog
             Lore: "\"Sign in blood AND coin. The Court is thorough.\"",
             SummonCostPct: 0.25f, AscensionTricklePct: 0.2f, DamagePct: 0.1f,
             PriceSpireHpPct: 0.1f, PriceDripPerSecond: 2f),
+        new PactDef("leyrent_seizure", "Leyrent Seizure", PactTier.Wyrm, PactCategory.Economy,
+            Lore: "\"Seize the rent. Mind the landlord.\"",
+            DripBonusPerSecond: 10f, WalletCapBonus: 200f,
+            PriceSpireHpPct: 0.15f),
     };
 
     private static readonly Dictionary<string, PactDef> Index = All.ToDictionary(def => def.Id);
