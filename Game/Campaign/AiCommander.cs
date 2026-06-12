@@ -39,21 +39,20 @@ public sealed class AiCommander
     {
         var player = state.Player(_side);
 
-        if (player.AwaitingParley)
+        // Parleys no longer pause the sim — answer the Broker AND keep fighting.
+        if (player.AwaitingParley && player.PendingOffers.Count > 0)
         {
-            if (player.PendingOffers.Count > 0)
+            var preferredOffer = FindPreferredOffer(player.PendingOffers);
+            if (preferredOffer is null
+                && player.TithesPaidThisParley == 0
+                && player.Mana >= state.Config.TitheCostMana * 3f)
             {
-                var preferredOffer = FindPreferredOffer(player.PendingOffers);
-                if (preferredOffer is null
-                    && player.TithesPaidThisParley == 0
-                    && player.Mana >= state.Config.TitheCostMana * 3f)
-                {
-                    yield return SimCommand.PayTithe(_side);
-                    yield break;
-                }
+                yield return SimCommand.PayTithe(_side);
+            }
+            else
+            {
                 yield return SimCommand.SealPact(_side, preferredOffer ?? player.PendingOffers[0]);
             }
-            yield break;
         }
 
         foreach (var command in EconomyCommands(state, player))

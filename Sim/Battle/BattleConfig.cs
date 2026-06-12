@@ -53,10 +53,16 @@ public sealed record BattleConfig(
 
     public IReadOnlyList<float> AscensionThresholds { get; init; } = DefaultAscensionThresholds;
 
-    /// <summary>Draft window timestamps in sim ticks; per-level authorable (design.md §9).</summary>
-    public static readonly int[] DefaultParleyTicks = { 2 * 60 * 30, 5 * 60 * 30, 8 * 60 * 30 };
+    /// <summary>Ascension tiers whose attainment summons the Broker (design.md §9 —
+    /// parleys are EARNED by tiering up, not granted by the clock). Per-level authorable;
+    /// empty disables parleys.</summary>
+    public static readonly int[] DefaultParleyTiers = { 2, 3, 4 };
 
-    public IReadOnlyList<int> ParleyTicks { get; init; } = DefaultParleyTicks;
+    public IReadOnlyList<int> ParleyTiers { get; init; } = DefaultParleyTiers;
+
+    /// <summary>Ticks a parley stays open before the sim deterministically seals the
+    /// first offer (gameplay continues throughout — replay-safe, PvP-fair).</summary>
+    public int ParleyPickTicks { get; init; } = 450;
 
     public static readonly BattleConfig Default = new(
         TickRate: 30,

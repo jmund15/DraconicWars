@@ -22,12 +22,9 @@ public sealed class BattleState
 
     public required SimRng PactRng { get; init; }
 
+    /// <summary>Shared pre-rolled tier sequence; each side consumes it at its own
+    /// pace as it earns parleys by tiering up (symmetric in PvP by construction).</summary>
     public required IReadOnlyList<DraconicWars.Sim.Pacts.PactTier> ParleyTierPath { get; init; }
-
-    public int NextWindowIndex { get; set; }
-
-    /// <summary>Index of the currently open draft window; -1 when none.</summary>
-    public int CurrentWindowIndex { get; set; } = -1;
 
     public float LeftSpireHp { get; set; }
 

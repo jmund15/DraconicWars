@@ -48,7 +48,7 @@ public class BatchRunnerTest
             CrescendoStartTick = 1500,
             SuddenDeathStartTick = 1650,
             HardEndTick = 1800,
-            ParleyTicks = System.Array.Empty<int>(),
+            ParleyTiers = System.Array.Empty<int>(),
         };
         var telemetry = BatchRunner.RunOne(
             AiPersona.Rusher, AiPersona.Rusher, seed: 5UL, config: shortConfig);

@@ -51,16 +51,13 @@ public class AiCommanderTest
     }
 
     [TestCase]
-    public void AiResolvesDraftWindowsImmediately()
+    public void AiSealsAParleyWithinAFewTicksOfTieringUp()
     {
-        var config = BattleConfig.Default with { ParleyTicks = new[] { 10 } };
-        var sim = new BattleSim(
-            config, UnitCatalog.FirstPlayable, ConduitDefs.All,
-            DraconicWars.Sim.Pacts.PactCatalog.All);
-        var state = sim.CreateInitialState(11UL);
+        var (sim, state) = CreateBattle();
         var ai = new AiCommander(AiPersona.Streamer, PlayerSide.Right, seed: 3UL);
+        state.Right.AscensionMeter = state.Config.AscensionThresholds[0] - 0.001f;
 
-        for (var i = 0; i < 12; i++)
+        for (var i = 0; i < 6; i++)
         {
             sim.Advance(state, ai.CommandsForTick(state).ToList());
         }
@@ -138,14 +135,15 @@ public class AiCommanderTest
         // Streamer doctrine prefers Combat; offer it a coin-counter's table.
         state.Right.PendingOffers.AddRange(new[] { "ley_tap", "iron_rations", "venom_coffers" });
 
+        // The AI answers the Broker AND keeps fighting — assert the parley command
+        // is present, not that it is alone.
         var first = ai.CommandsForTick(state).ToList();
-        AssertThat(first.Count).IsEqual(1);
-        AssertThat(first[0].Kind).IsEqual(SimCommandKind.PayTithe);
+        AssertThat(first.Count(c => c.Kind == SimCommandKind.PayTithe)).IsEqual(1);
+        AssertThat(first.Any(c => c.Kind == SimCommandKind.SealPact)).IsFalse();
 
         state.Right.TithesPaidThisParley = 1;
         var second = ai.CommandsForTick(state).ToList();
-        AssertThat(second.Count).IsEqual(1);
-        AssertThat(second[0].Kind).IsEqual(SimCommandKind.SealPact);
+        AssertThat(second.Count(c => c.Kind == SimCommandKind.SealPact)).IsEqual(1);
     }
 
     [TestCase]

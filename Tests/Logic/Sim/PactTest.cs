@@ -2,28 +2,25 @@ namespace DraconicWars.Tests.Logic.Sim;
 
 using System.Collections.Generic;
 using System.Linq;
-using DraconicWars.Sim.Pacts;
 using DraconicWars.Sim.Battle;
 using DraconicWars.Sim.Core;
+using DraconicWars.Sim.Pacts;
 using GdUnit4;
 using static GdUnit4.Assertions;
 
 [TestSuite]
-public class AugmentTest
+public class PactTest
 {
-    private static BattleConfig WindowedConfig => BattleConfig.Default with
-    {
-        ParleyTicks = new[] { 60 },
-    };
-
-    private static (BattleSim sim, BattleState state) CreateBattle(BattleConfig config)
+    private static (BattleSim sim, BattleState state) CreateBattle(BattleConfig? config = null)
     {
         var sim = new BattleSim(
-            config,
+            config ?? BattleConfig.Default,
             new[] { TestUnits.Grunt(), TestUnits.Grunt(id: "fire2") with { Element = DraconicWars.Sim.Units.Element.Fire } },
             DraconicWars.Sim.Conduits.ConduitDefs.All,
             PactCatalog.All);
         var state = sim.CreateInitialState(7UL);
+        state.Left.WalletCap = 50000f;
+        state.Right.WalletCap = 50000f;
         state.Left.Mana = 5000f;
         state.Right.Mana = 5000f;
         return (sim, state);
@@ -37,15 +34,25 @@ public class AugmentTest
         }
     }
 
+    /// <summary>Pushes the side's meter to the brink and advances one tick — the
+    /// tier-up queues a parley and ProcessParleys opens it within the same Advance.</summary>
+    private static void ReachNextTier(BattleSim sim, BattleState state, PlayerSide side)
+    {
+        var player = state.Player(side);
+        player.AscensionMeter =
+            state.Config.AscensionThresholds[player.AscensionTier - 1] - 0.001f;
+        sim.Advance(state, SimCommand.None);
+    }
+
     [TestCase]
-    public void TierPathTableIsNormalizedAndEveryRowGuaranteesGoldOrBetter()
+    public void TierPathTableIsNormalizedAndEveryRowGuaranteesDrakeOrBetter()
     {
         var total = 0f;
         foreach (var row in TierPath.WeightedSequences)
         {
             total += row.Weight;
-            var hasGoldPlus = row.Tiers.Any(t => t != PactTier.Ember);
-            AssertThat(hasGoldPlus).IsTrue();
+            var hasDrakePlus = row.Tiers.Any(t => t != PactTier.Ember);
+            AssertThat(hasDrakePlus).IsTrue();
             AssertThat(row.Tiers.Length).IsEqual(3);
         }
         AssertThat(total).IsEqualApprox(1f, 0.001f);
@@ -60,48 +67,77 @@ public class AugmentTest
     }
 
     [TestCase]
-    public void WindowFreezesTheSimUntilBothSidesPick()
+    public void ParleyOpensOnTierUp_AndGameplayContinues()
     {
-        var (sim, state) = CreateBattle(WindowedConfig);
-        AdvanceTicks(sim, state, 61);
+        var (sim, state) = CreateBattle();
 
+        ReachNextTier(sim, state, PlayerSide.Left);
+
+        AssertThat(state.Left.AscensionTier).IsEqual(2);
         AssertThat(state.Left.AwaitingParley).IsTrue();
-        AssertThat(state.Right.AwaitingParley).IsTrue();
         AssertThat(state.Left.PendingOffers.Count).IsEqual(3);
-        var frozenTick = state.Tick;
-        var frozenMana = state.Left.Mana;
+        AssertThat(state.Right.AwaitingParley).IsFalse();
 
+        // The Broker does not stop the war: ticks and mana keep flowing.
+        var tickBefore = state.Tick;
+        var manaBefore = state.Left.Mana;
         AdvanceTicks(sim, state, 10);
-        AssertThat(state.Tick).IsEqual(frozenTick);
-        AssertThat(state.Left.Mana).IsEqualApprox(frozenMana, 0.001f);
+        AssertThat(state.Tick).IsEqual(tickBefore + 10);
+        AssertThat(state.Left.Mana > manaBefore).IsTrue();
+    }
+
+    [TestCase]
+    public void OpenParleyAutoSealsItsFirstOfferAtTheDeadline()
+    {
+        var (sim, state) = CreateBattle();
+        ReachNextTier(sim, state, PlayerSide.Left);
+        var firstOffer = state.Left.PendingOffers[0];
+
+        AdvanceTicks(sim, state, state.Config.ParleyPickTicks + 2);
+
+        AssertThat(state.Left.AwaitingParley).IsFalse();
+        AssertThat(state.Left.SealedPacts.Count).IsEqual(1);
+        AssertThat(state.Left.SealedPacts[0]).IsEqual(firstOffer);
+    }
+
+    [TestCase]
+    public void EachSideConsumesTheSharedPathAtItsOwnPace()
+    {
+        var (sim, state) = CreateBattle();
+
+        ReachNextTier(sim, state, PlayerSide.Left);
+        AssertThat(state.Left.ParleysOpened).IsEqual(1);
+        AssertThat(state.Right.ParleysOpened).IsEqual(0);
 
         sim.Advance(state, new List<SimCommand>
         {
             SimCommand.SealPact(PlayerSide.Left, state.Left.PendingOffers[0]),
         });
-        AssertThat(state.Tick).IsEqual(frozenTick);
+        ReachNextTier(sim, state, PlayerSide.Left);
+        AssertThat(state.Left.ParleysOpened).IsEqual(2);
 
-        sim.Advance(state, new List<SimCommand>
+        ReachNextTier(sim, state, PlayerSide.Right);
+        AssertThat(state.Right.ParleysOpened).IsEqual(1);
+        // Right's first offers draw from the path's FIRST row even though Left is ahead.
+        var firstTier = state.ParleyTierPath[0];
+        foreach (var offer in state.Right.PendingOffers)
         {
-            SimCommand.SealPact(PlayerSide.Right, state.Right.PendingOffers[0]),
-        });
-        sim.Advance(state, SimCommand.None);
-        AssertThat(state.Tick > frozenTick).IsTrue();
-        AssertThat(state.Left.AwaitingParley).IsFalse();
+            AssertThat(PactCatalog.ById(offer).Tier).IsEqual(firstTier);
+        }
     }
 
     [TestCase]
-    public void PickedAugmentAppliesItsEffect()
+    public void SealedPactAppliesItsEffect()
     {
-        var (sim, state) = CreateBattle(WindowedConfig);
-        AdvanceTicks(sim, state, 61);
+        var (sim, state) = CreateBattle();
+        ReachNextTier(sim, state, PlayerSide.Left);
 
         // Force a known pact: ley_tap grants +3 drip/s.
-        state.Left.PendingOffers[0] = "ley_tap";
+        state.Left.PendingOffers.Clear();
+        state.Left.PendingOffers.Add("ley_tap");
         sim.Advance(state, new List<SimCommand>
         {
             SimCommand.SealPact(PlayerSide.Left, "ley_tap"),
-            SimCommand.SealPact(PlayerSide.Right, state.Right.PendingOffers[0]),
         });
 
         AssertThat(state.Left.SealedPacts.Contains("ley_tap")).IsTrue();
@@ -111,16 +147,15 @@ public class AugmentTest
     [TestCase]
     public void PayingTheTitheCostsManaAndDrawsFreshTermsInTier()
     {
-        var (sim, state) = CreateBattle(WindowedConfig);
-        AdvanceTicks(sim, state, 61);
+        var (sim, state) = CreateBattle();
+        ReachNextTier(sim, state, PlayerSide.Left);
         var tier = state.ParleyTierPath[0];
-        var manaBefore = state.Left.Mana;
+        state.Left.Mana = 500f;
 
         sim.Advance(state, new List<SimCommand> { SimCommand.PayTithe(PlayerSide.Left) });
 
         AssertThat(state.Left.TithesPaidThisParley).IsEqual(1);
-        AssertThat(state.Left.Mana).IsEqualApprox(
-            manaBefore - WindowedConfig.TitheCostMana, 0.001f);
+        AssertThat(state.Left.Mana <= 500f - state.Config.TitheCostMana + 2f).IsTrue();
         AssertThat(state.Left.PendingOffers.Count).IsEqual(3);
         foreach (var offer in state.Left.PendingOffers)
         {
@@ -130,16 +165,14 @@ public class AugmentTest
         // The Broker keeps dealing while the mana lasts — no free-reroll cap.
         sim.Advance(state, new List<SimCommand> { SimCommand.PayTithe(PlayerSide.Left) });
         AssertThat(state.Left.TithesPaidThisParley).IsEqual(2);
-        AssertThat(state.Left.Mana).IsEqualApprox(
-            manaBefore - 2 * WindowedConfig.TitheCostMana, 0.001f);
     }
 
     [TestCase]
     public void TitheIsRejectedWhenUnaffordable()
     {
-        var (sim, state) = CreateBattle(WindowedConfig);
-        AdvanceTicks(sim, state, 61);
-        state.Left.Mana = WindowedConfig.TitheCostMana - 1f;
+        var (sim, state) = CreateBattle();
+        ReachNextTier(sim, state, PlayerSide.Left);
+        state.Left.Mana = 10f;
         var offersBefore = state.Left.PendingOffers.ToList();
 
         sim.Advance(state, new List<SimCommand> { SimCommand.PayTithe(PlayerSide.Left) });
@@ -151,17 +184,15 @@ public class AugmentTest
     [TestCase]
     public void TitheCountResetsAtTheNextParley()
     {
-        var config = BattleConfig.Default with { ParleyTicks = new[] { 60, 120 } };
-        var (sim, state) = CreateBattle(config);
-        AdvanceTicks(sim, state, 61);
+        var (sim, state) = CreateBattle();
+        ReachNextTier(sim, state, PlayerSide.Left);
         sim.Advance(state, new List<SimCommand> { SimCommand.PayTithe(PlayerSide.Left) });
         sim.Advance(state, new List<SimCommand>
         {
             SimCommand.SealPact(PlayerSide.Left, state.Left.PendingOffers[0]),
-            SimCommand.SealPact(PlayerSide.Right, state.Right.PendingOffers[0]),
         });
 
-        AdvanceTicks(sim, state, 120);
+        ReachNextTier(sim, state, PlayerSide.Left);
 
         AssertThat(state.Left.AwaitingParley).IsTrue();
         AssertThat(state.Left.TithesPaidThisParley).IsEqual(0);
@@ -170,16 +201,16 @@ public class AugmentTest
     [TestCase]
     public void SealingAWyrmPactTakesItsBloodPriceFromTheSpire()
     {
-        var bloodOath = new DraconicWars.Sim.Pacts.PactDef(
+        var bloodOath = new PactDef(
             "blood_oath", "Blood Oath", PactTier.Wyrm, PactCategory.Combat,
             Lore: "test", DamagePct: 0.3f, PriceSpireHpPct: 0.2f);
         var sim = new BattleSim(
-            WindowedConfig,
+            BattleConfig.Default,
             new[] { TestUnits.Grunt() },
             DraconicWars.Sim.Conduits.ConduitDefs.All,
             new[] { bloodOath });
         var state = sim.CreateInitialState(7UL);
-        AdvanceTicks(sim, state, 61);
+        ReachNextTier(sim, state, PlayerSide.Left);
         state.Left.PendingOffers.Clear();
         state.Left.PendingOffers.Add("blood_oath");
 
@@ -189,38 +220,77 @@ public class AugmentTest
         });
 
         AssertThat(state.LeftSpireHp).IsEqualApprox(
-            WindowedConfig.SpireMaxHp * 0.8f, 0.01f);
-        AssertThat(state.RightSpireHp).IsEqualApprox(WindowedConfig.SpireMaxHp, 0.01f);
+            BattleConfig.Default.SpireMaxHp * 0.8f, 0.01f);
+        AssertThat(state.RightSpireHp).IsEqualApprox(BattleConfig.Default.SpireMaxHp, 0.01f);
     }
 
     [TestCase]
     public void OngoingDripPriceReducesIncomeButRespectsTheFloor()
     {
-        var deepTithe = new DraconicWars.Sim.Pacts.PactDef(
+        var deepTithe = new PactDef(
             "deep_tithe", "Deep Tithe", PactTier.Wyrm, PactCategory.Economy,
             Lore: "test", WalletCapBonus: 500f, PriceDripPerSecond: 50f);
         var sim = new BattleSim(
-            WindowedConfig,
+            BattleConfig.Default,
             new[] { TestUnits.Grunt() },
             DraconicWars.Sim.Conduits.ConduitDefs.All,
             new[] { deepTithe });
         var state = sim.CreateInitialState(7UL);
-        AdvanceTicks(sim, state, 61);
+        ReachNextTier(sim, state, PlayerSide.Left);
         state.Left.PendingOffers.Clear();
         state.Left.PendingOffers.Add("deep_tithe");
-        state.Right.PendingOffers.Clear();
-        state.Right.PendingOffers.Add("deep_tithe");
         sim.Advance(state, new List<SimCommand>
         {
             SimCommand.SealPact(PlayerSide.Left, "deep_tithe"),
-            SimCommand.SealPact(PlayerSide.Right, "deep_tithe"),
         });
         var manaBefore = state.Left.Mana;
 
         AdvanceTicks(sim, state, 30);
 
-        var expected = manaBefore + WindowedConfig.DripFloorPerSecond;
-        AssertThat(state.Left.Mana).IsEqualApprox(expected, 0.05f);
+        // Tier 2 is up: floor rate x the ascension drip escalation for one second.
+        var escalation = System.MathF.Pow(state.Config.AscensionDripEscalation, 1);
+        var expected = manaBefore + state.Config.DripFloorPerSecond * escalation;
+        AssertThat(state.Left.Mana).IsEqualApprox(expected, 0.1f);
+    }
+
+    [TestCase]
+    public void EmptyParleyTiersMeansTheBrokerNeverComes()
+    {
+        var config = BattleConfig.Default with { ParleyTiers = System.Array.Empty<int>() };
+        var (sim, state) = CreateBattle(config);
+
+        ReachNextTier(sim, state, PlayerSide.Left);
+
+        AssertThat(state.Left.AscensionTier).IsEqual(2);
+        AssertThat(state.Left.AwaitingParley).IsFalse();
+        AssertThat(state.Left.PendingParleys).IsEqual(0);
+    }
+
+    [TestCase]
+    public void OffersAreDistinctAndMatchThePathTier()
+    {
+        var (sim, state) = CreateBattle();
+        ReachNextTier(sim, state, PlayerSide.Left);
+
+        var tier = state.ParleyTierPath[0];
+        var offers = state.Left.PendingOffers;
+        AssertThat(offers.Distinct().Count()).IsEqual(3);
+        foreach (var offer in offers)
+        {
+            AssertThat(PactCatalog.ById(offer).Tier).IsEqual(tier);
+        }
+    }
+
+    [TestCase]
+    public void SameSeedProducesIdenticalOffers()
+    {
+        var (simA, stateA) = CreateBattle();
+        var (simB, stateB) = CreateBattle();
+        ReachNextTier(simA, stateA, PlayerSide.Left);
+        ReachNextTier(simB, stateB, PlayerSide.Left);
+
+        AssertThat(stateA.Left.PendingOffers.SequenceEqual(stateB.Left.PendingOffers)).IsTrue();
+        AssertThat(stateA.ParleyTierPath.SequenceEqual(stateB.ParleyTierPath)).IsTrue();
     }
 
     [TestCase]
@@ -247,44 +317,5 @@ public class AugmentTest
         {
             AssertThat(def.Lore.Length > 0).IsTrue();
         }
-    }
-
-    [TestCase]
-    public void OffersAreDistinctAndMatchThePathTier()
-    {
-        var (sim, state) = CreateBattle(WindowedConfig);
-        AdvanceTicks(sim, state, 61);
-
-        var tier = state.ParleyTierPath[0];
-        var offers = state.Left.PendingOffers;
-        AssertThat(offers.Distinct().Count()).IsEqual(3);
-        foreach (var offer in offers)
-        {
-            AssertThat(PactCatalog.ById(offer).Tier).IsEqual(tier);
-        }
-    }
-
-    [TestCase]
-    public void NoWindowsConfiguredMeansNoFreezes()
-    {
-        var config = BattleConfig.Default with { ParleyTicks = System.Array.Empty<int>() };
-        var (sim, state) = CreateBattle(config);
-
-        AdvanceTicks(sim, state, 200);
-
-        AssertThat(state.Tick).IsEqual(200);
-        AssertThat(state.Left.AwaitingParley).IsFalse();
-    }
-
-    [TestCase]
-    public void SameSeedProducesIdenticalOffers()
-    {
-        var (simA, stateA) = CreateBattle(WindowedConfig);
-        var (simB, stateB) = CreateBattle(WindowedConfig);
-        AdvanceTicks(simA, stateA, 61);
-        AdvanceTicks(simB, stateB, 61);
-
-        AssertThat(stateA.Left.PendingOffers.SequenceEqual(stateB.Left.PendingOffers)).IsTrue();
-        AssertThat(stateA.ParleyTierPath.SequenceEqual(stateB.ParleyTierPath)).IsTrue();
     }
 }

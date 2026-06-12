@@ -68,24 +68,12 @@ public sealed class BattleSim
             return;
         }
 
-        if (state.Left.AwaitingParley || state.Right.AwaitingParley)
-        {
-            ProcessParleyCommands(state, commands);
-            return;
-        }
-        if (_pacts.Count > 0
-            && state.NextWindowIndex < _config.ParleyTicks.Count
-            && state.Tick == _config.ParleyTicks[state.NextWindowIndex])
-        {
-            OpenParley(state);
-            return;
-        }
-
         ProcessCommands(state, commands);
         ProcessLastStand(state);
         TickEconomy(state);
         ProcessCombat(state);
         ProcessAscension(state);
+        ProcessParleys(state);
         MoveUnits(state);
         ProcessTimeline(state);
         EvaluateOutcome(state);
@@ -121,6 +109,12 @@ public sealed class BattleSim
                     break;
                 case SimCommandKind.CastWrath:
                     TryCastWrath(state, command.Side);
+                    break;
+                case SimCommandKind.SealPact:
+                    TrySealPact(state, command.Side, command.TargetId);
+                    break;
+                case SimCommandKind.PayTithe:
+                    TryPayTithe(state, command.Side);
                     break;
             }
         }
@@ -432,24 +426,41 @@ public sealed class BattleSim
         };
     }
 
-    private void OpenParley(BattleState state)
+    /// <summary>Tier-ups queue parleys; one opens per side as soon as no parley is
+    /// already on the table, and an open parley auto-seals its first offer at the
+    /// deadline — gameplay never pauses, replays never need an extra command.</summary>
+    private void ProcessParleys(BattleState state)
     {
-        state.CurrentWindowIndex = state.NextWindowIndex;
-        state.NextWindowIndex++;
         foreach (var side in Sides)
         {
             var player = state.Player(side);
-            GenerateOffers(state, side);
-            player.AwaitingParley = true;
-            player.TithesPaidThisParley = 0;
+            if (player.AwaitingParley && state.Tick >= player.ParleyDeadlineTick)
+            {
+                if (player.PendingOffers.Count > 0)
+                {
+                    TrySealPact(state, side, player.PendingOffers[0]);
+                }
+                else
+                {
+                    player.AwaitingParley = false;
+                }
+            }
+            if (!player.AwaitingParley && player.PendingParleys > 0)
+            {
+                player.PendingParleys--;
+                GenerateOffers(state, side, player.ParleysOpened);
+                player.ParleysOpened++;
+                player.AwaitingParley = true;
+                player.TithesPaidThisParley = 0;
+                player.ParleyDeadlineTick = state.Tick + _config.ParleyPickTicks;
+            }
         }
     }
 
-    private void GenerateOffers(BattleState state, PlayerSide side)
+    private void GenerateOffers(BattleState state, PlayerSide side, int windowIndex)
     {
         var player = state.Player(side);
-        var windowIndex = Math.Min(state.CurrentWindowIndex, state.ParleyTierPath.Count - 1);
-        var tier = state.ParleyTierPath[windowIndex];
+        var tier = state.ParleyTierPath[Math.Min(windowIndex, state.ParleyTierPath.Count - 1)];
 
         var pool = _pacts.Values
             .Where(def => def.Tier == tier && !player.SealedPacts.Contains(def.Id))
@@ -495,34 +506,31 @@ public sealed class BattleSim
         return picks;
     }
 
-    private void ProcessParleyCommands(BattleState state, IReadOnlyList<SimCommand> commands)
+    private void TrySealPact(BattleState state, PlayerSide side, string pactId)
     {
-        foreach (var command in commands)
+        var player = state.Player(side);
+        if (!player.AwaitingParley || !player.PendingOffers.Contains(pactId))
         {
-            var player = state.Player(command.Side);
-            switch (command.Kind)
-            {
-                case SimCommandKind.SealPact when player.AwaitingParley
-                    && player.PendingOffers.Contains(command.TargetId):
-                    player.SealedPacts.Add(command.TargetId);
-                    player.PendingOffers.Clear();
-                    player.AwaitingParley = false;
-                    RecomputeBuffs(player);
-                    TakeBloodPrice(state, command.Side, _pacts[command.TargetId]);
-                    break;
-                case SimCommandKind.PayTithe when player.AwaitingParley
-                    && player.Mana >= _config.TitheCostMana:
-                    player.Mana -= _config.TitheCostMana;
-                    player.TithesPaidThisParley++;
-                    GenerateOffers(state, command.Side);
-                    break;
-            }
+            return;
         }
+        player.SealedPacts.Add(pactId);
+        player.PendingOffers.Clear();
+        player.AwaitingParley = false;
+        RecomputeBuffs(player);
+        TakeBloodPrice(state, side, _pacts[pactId]);
+    }
 
-        if (!state.Left.AwaitingParley && !state.Right.AwaitingParley)
+    private void TryPayTithe(BattleState state, PlayerSide side)
+    {
+        var player = state.Player(side);
+        if (!player.AwaitingParley || player.Mana < _config.TitheCostMana)
         {
-            state.CurrentWindowIndex = -1;
+            return;
         }
+        player.Mana -= _config.TitheCostMana;
+        player.TithesPaidThisParley++;
+        // ParleysOpened already advanced past the open window — redraw the same row.
+        GenerateOffers(state, side, player.ParleysOpened - 1);
     }
 
     /// <summary>One-time Wyrm-pact blood price: the sealing side's spire pays in HP.
@@ -869,6 +877,10 @@ public sealed class BattleSim
             {
                 player.AscensionTier++;
                 player.KillMeterThisSegment = 0f;
+                if (_pacts.Count > 0 && _config.ParleyTiers.Contains(player.AscensionTier))
+                {
+                    player.PendingParleys++;
+                }
             }
         }
     }

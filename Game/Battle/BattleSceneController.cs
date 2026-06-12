@@ -44,6 +44,7 @@ public partial class BattleSceneController : Node2D
     private int _lastWrathCooldown;
     private int _lastAscensionTier = 1;
     private PanelContainer? _draftPanel;
+    private Label? _parleyCountdown;
 
     public override void _Ready()
     {
@@ -170,6 +171,7 @@ public partial class BattleSceneController : Node2D
         {
             _lastAscensionTier = player.AscensionTier;
             FlashScreen(new Color(0.66f, 0.52f, 0.95f, 0.35f));
+            ShowToast(TierUpText(player.AscensionTier), new Color(0.78f, 0.65f, 1f));
         }
 
         if (Runner.State.Outcome != BattleOutcome.Ongoing && !_resultApplied)
@@ -195,13 +197,62 @@ public partial class BattleSceneController : Node2D
         var local = state.Player(_localSide);
         if (local.AwaitingParley && _draftPanel is null)
         {
+            FlashScreen(new Color(0.95f, 0.72f, 0.35f, 0.25f));
+            ShowToast("A war-bell tolls — the Broker attends your ascent",
+                new Color(0.98f, 0.82f, 0.5f));
             ShowDraftPanel(local);
         }
         else if (!local.AwaitingParley && _draftPanel is not null)
         {
             _draftPanel.QueueFree();
             _draftPanel = null;
+            _parleyCountdown = null;
         }
+        if (local.AwaitingParley && _parleyCountdown is not null)
+        {
+            var ticksLeft = Mathf.Max(0, local.ParleyDeadlineTick - state.Tick);
+            _parleyCountdown.Text =
+                $"Seal within {ticksLeft / state.Config.TickRate + 1}s — or the Broker chooses";
+        }
+    }
+
+    private string TierUpText(int tier)
+    {
+        if (tier >= 4)
+        {
+            return "DRAGON TIER — the Crossing Toll may be paid (hold E)";
+        }
+        var unlocked = new List<string>();
+        foreach (var def in UnitCatalog.FirstPlayable)
+        {
+            if (def.Tier == tier)
+            {
+                unlocked.Add(def.DisplayName);
+            }
+        }
+        var roman = tier == 2 ? "II" : "III";
+        return unlocked.Count > 0
+            ? $"TIER {roman} — unlocked: {string.Join(", ", unlocked)}"
+            : $"TIER {roman}";
+    }
+
+    private void ShowToast(string text, Color color)
+    {
+        var toast = new Label
+        {
+            Text = text,
+            Modulate = color,
+            HorizontalAlignment = HorizontalAlignment.Center,
+            AnchorRight = 1f,
+            OffsetTop = 48f,
+            OffsetBottom = 64f,
+        };
+        Hud.AddChild(toast);
+        var tween = toast.CreateTween();
+        tween.TweenInterval(1.6);
+        tween.TweenProperty(toast, "modulate:a", 0f, 0.8);
+        tween.Parallel().TweenProperty(toast, "offset_top", 30f, 0.8);
+        tween.TweenCallback(Callable.From(toast.QueueFree));
     }
 
     private void ShowDraftPanel(PlayerState local)
@@ -214,6 +265,12 @@ public partial class BattleSceneController : Node2D
             Text = "PARLEY — the Broker offers terms",
             HorizontalAlignment = HorizontalAlignment.Center,
         });
+        _parleyCountdown = new Label
+        {
+            HorizontalAlignment = HorizontalAlignment.Center,
+            Modulate = new Color(0.98f, 0.82f, 0.5f),
+        };
+        vbox.AddChild(_parleyCountdown);
 
         foreach (var offerId in local.PendingOffers)
         {

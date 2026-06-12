@@ -39,6 +39,8 @@ public sealed class PlayerState
 
     public int WrathCooldownTicks { get; set; }
 
+    /// <summary>A parley is open: offers on the table, gameplay flowing. UI flag only —
+    /// the sim never freezes for it.</summary>
     public bool AwaitingParley { get; set; }
 
     public List<string> PendingOffers { get; } = new();
@@ -47,6 +49,15 @@ public sealed class PlayerState
 
     /// <summary>Tithes paid to the Broker during the current parley (resets per parley).</summary>
     public int TithesPaidThisParley { get; set; }
+
+    /// <summary>Parleys this side has opened — its index into the shared tier path.</summary>
+    public int ParleysOpened { get; set; }
+
+    /// <summary>Tier-ups that earned a parley while one was already open.</summary>
+    public int PendingParleys { get; set; }
+
+    /// <summary>Tick at which the open parley auto-seals its first offer.</summary>
+    public int ParleyDeadlineTick { get; set; }
 
     public float EffectiveWalletCap => WalletCap + Buffs.WalletCapBonus;
 }
