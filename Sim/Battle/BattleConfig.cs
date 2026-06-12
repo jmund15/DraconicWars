@@ -76,6 +76,11 @@ public sealed record BattleConfig(
     /// <summary>Rebreathing cost as a multiple of the unit's deploy cost.</summary>
     public float RebreathCostFactor { get; init; } = 1.0f;
 
+    /// <summary>Machine kills' bounty share (tier credit is ALWAYS denied to
+    /// armaments; this knob exists for harness A/Bs at 0.5/0 if tier-denial alone
+    /// under-deters turtling).</summary>
+    public float ArmamentKillBountyPct { get; init; } = 1.0f;
+
     /// <summary>Mid-battle 4th utility socket: a late-game mana sink, once per battle.</summary>
     public float SocketPurchaseCost { get; init; } = 700f;
 

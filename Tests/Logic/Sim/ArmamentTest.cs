@@ -39,17 +39,36 @@ public class ArmamentTest
     }
 
     [TestCase]
-    public void MountingATurretSilencesBreath_SellingRestoresIt()
+    public void ArmamentsAreOrdinaryConduits_TheyStackAndShareSockets()
     {
         var (sim, state) = CreateBattle();
-        state.Left.BreathEnergySeconds = 4f;
-        var intruder = Spawn(sim, state, PlayerSide.Right, "pillar", 3f);
 
         sim.Advance(state, new List<SimCommand>
         {
             SimCommand.BuildConduit(PlayerSide.Left, "skyward_flak"),
+            SimCommand.BuildConduit(PlayerSide.Left, "siege_mortar"),
+            SimCommand.BuildConduit(PlayerSide.Left, "mana_well"),
         });
-        AssertThat(state.Left.MountedArmamentId).IsEqual("skyward_flak");
+        AssertThat(state.Left.Conduits.Count).IsEqual(3);
+
+        // The sockets are full: defense ate the whole build.
+        sim.Advance(state, new List<SimCommand>
+        {
+            SimCommand.BuildConduit(PlayerSide.Left, "war_horn"),
+        });
+        AssertThat(state.Left.Conduits.ContainsKey("war_horn")).IsFalse();
+    }
+
+    [TestCase]
+    public void BreathStaysLiveAlongsideTurrets()
+    {
+        var (sim, state) = CreateBattle();
+        state.Left.BreathEnergySeconds = 4f;
+        var intruder = Spawn(sim, state, PlayerSide.Right, "pillar", 3f);
+        sim.Advance(state, new List<SimCommand>
+        {
+            SimCommand.BuildConduit(PlayerSide.Left, "skyward_flak"),
+        });
 
         var hpBefore = intruder.Hp;
         for (var i = 0; i < 12; i++)
@@ -59,63 +78,79 @@ public class ArmamentTest
                 SimCommand.FireBreath(PlayerSide.Left, intruder.X),
             });
         }
-        AssertThat(intruder.Hp).IsEqual(hpBefore);
 
-        sim.Advance(state, new List<SimCommand>
-        {
-            SimCommand.SellConduit(PlayerSide.Left, "skyward_flak"),
-        });
-        AssertThat(state.Left.MountedArmamentId).IsEqual(null);
-        for (var i = 0; i < 12; i++)
-        {
-            sim.Advance(state, new List<SimCommand>
-            {
-                SimCommand.FireBreath(PlayerSide.Left, intruder.X),
-            });
-        }
         AssertThat(intruder.Hp < hpBefore).IsTrue();
     }
 
     [TestCase]
-    public void TheSpireBearsOneCrown_AndArmamentsSkipUtilitySockets()
+    public void BothTurretsFireIndependentlyOnTheirOwnCadence()
     {
         var (sim, state) = CreateBattle();
-
+        var airTarget = Spawn(sim, state, PlayerSide.Right, "whelp", 6f);
+        var groundTarget = Spawn(sim, state, PlayerSide.Right, "pillar", 12f);
         sim.Advance(state, new List<SimCommand>
         {
             SimCommand.BuildConduit(PlayerSide.Left, "skyward_flak"),
             SimCommand.BuildConduit(PlayerSide.Left, "siege_mortar"),
         });
-        AssertThat(state.Left.MountedArmamentId).IsEqual("skyward_flak");
-        AssertThat(state.Left.Conduits.ContainsKey("siege_mortar")).IsFalse();
+        var flak = ConduitDefs.ById("skyward_flak");
+        var mortar = ConduitDefs.ById("siege_mortar");
+        AssertThat(flak.TurretCadenceTicks < mortar.TurretCadenceTicks).IsTrue();
 
-        // The Crownmount is its own socket: three utilities still fit beside it.
-        sim.Advance(state, new List<SimCommand>
-        {
-            SimCommand.BuildConduit(PlayerSide.Left, "mana_well"),
-            SimCommand.BuildConduit(PlayerSide.Left, "war_horn"),
-            SimCommand.BuildConduit(PlayerSide.Left, "rampart"),
-        });
-        AssertThat(state.Left.Conduits.Count).IsEqual(4);
+        // The faster flak fires first; the mortar hasn't.
+        AdvanceTicks(sim, state, flak.TurretCadenceTicks + 1);
+        AssertThat(airTarget.Hp < airTarget.Def.MaxHp).IsTrue();
+        AssertThat(airTarget.SlowTicks > 0).IsTrue();
+        AssertThat(groundTarget.Hp).IsEqual(groundTarget.Def.MaxHp);
+
+        // The mortar lands on its own cadence.
+        AdvanceTicks(sim, state, mortar.TurretCadenceTicks - flak.TurretCadenceTicks);
+        AssertThat(groundTarget.Hp).IsEqual(groundTarget.Def.MaxHp - mortar.TurretDamagePerTier);
     }
 
     [TestCase]
-    public void FlakFiresOnCadence_AirOnly_Deterministically()
+    public void MachineKillsFeedNoAscensionAndNoEdicts_ButPayBounty()
     {
         var (sim, state) = CreateBattle();
-        var airTarget = Spawn(sim, state, PlayerSide.Right, "whelp", 6f);
-        var groundTarget = Spawn(sim, state, PlayerSide.Right, "pillar", 5f);
+        var victim = Spawn(sim, state, PlayerSide.Right, "whelp", 6f);
+        victim.Hp = 1;
         sim.Advance(state, new List<SimCommand>
         {
             SimCommand.BuildConduit(PlayerSide.Left, "skyward_flak"),
         });
         var flak = ConduitDefs.ById("skyward_flak");
+        var kills = state.Left.Kills;
+        var fromKills = state.Left.AscensionFromKills;
+        var manaBefore = state.Left.Mana;
 
         AdvanceTicks(sim, state, flak.TurretCadenceTicks + 1);
 
-        AssertThat(airTarget.Hp).IsEqual(airTarget.Def.MaxHp - flak.TurretDamagePerTier);
-        AssertThat(airTarget.SlowTicks > 0).IsTrue();
-        AssertThat(groundTarget.Hp).IsEqual(groundTarget.Def.MaxHp);
+        AssertThat(victim.IsAlive).IsFalse();
+        AssertThat(state.Left.AscensionFromKills).IsEqualApprox(fromKills, 0.001f);
+        AssertThat(state.Left.Kills).IsEqual(kills);
+        // Bounty still pays (config knob, default 100%).
+        AssertThat(state.Left.Mana > manaBefore).IsTrue();
+    }
+
+    [TestCase]
+    public void BreathKillsStillCreditAscension()
+    {
+        var (sim, state) = CreateBattle();
+        state.Left.BreathEnergySeconds = 4f;
+        var victim = Spawn(sim, state, PlayerSide.Right, "pillar", 3f);
+        victim.Hp = 1;
+        var fromKills = state.Left.AscensionFromKills;
+
+        for (var i = 0; i < 8; i++)
+        {
+            sim.Advance(state, new List<SimCommand>
+            {
+                SimCommand.FireBreath(PlayerSide.Left, victim.X),
+            });
+        }
+
+        AssertThat(victim.IsAlive).IsFalse();
+        AssertThat(state.Left.AscensionFromKills > fromKills).IsTrue();
     }
 
     [TestCase]
@@ -169,7 +204,6 @@ public class ArmamentTest
             SimCommand.BuildConduit(PlayerSide.Left, "rampart"),
         });
 
-        // Gated: tier 1 cannot buy.
         sim.Advance(state, new List<SimCommand> { SimCommand.BuySocket(PlayerSide.Left) });
         AssertThat(state.Left.BonusSockets).IsEqual(0);
 
@@ -180,7 +214,6 @@ public class ArmamentTest
         AssertThat(manaBefore - state.Left.Mana
             >= BattleConfig.Default.SocketPurchaseCost - 1f).IsTrue();
 
-        // Once per battle.
         sim.Advance(state, new List<SimCommand> { SimCommand.BuySocket(PlayerSide.Left) });
         AssertThat(state.Left.BonusSockets).IsEqual(1);
 

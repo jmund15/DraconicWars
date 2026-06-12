@@ -64,11 +64,12 @@ public sealed class PlayerState
     /// A company re-swears ONCE per duel; future deploys spawn attuned.</summary>
     public Dictionary<string, Element> AttunedThisBattle { get; } = new();
 
-    /// <summary>The Crownmount: the armament conduit currently mounted, or null when
-    /// the innate Dragon's Breath holds the crown. One spire, one weapon.</summary>
-    public string? MountedArmamentId { get; set; }
+    /// <summary>Per-armament fire cooldowns. Armaments are ordinary conduits — they
+    /// stack freely; the tax is sockets spent and ascension-dead machine kills.</summary>
+    public Dictionary<string, int> TurretCooldowns { get; } = new();
 
-    public int TurretCooldownTicks { get; set; }
+    /// <summary>Prism Parley grants: re-swears that cost no mana.</summary>
+    public int FreeAttunements { get; set; }
 
     /// <summary>Utility sockets bought mid-battle (Tier-3-gated, once per battle).</summary>
     public int BonusSockets { get; set; }

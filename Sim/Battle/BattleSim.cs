@@ -158,12 +158,6 @@ public sealed class BattleSim
     private void TryFireBreath(BattleState state, PlayerSide side, float x)
     {
         var player = state.Player(side);
-        // A mounted armament holds the Crownmount — the dragon's breath is silent
-        // until the turret is sold.
-        if (player.MountedArmamentId is not null)
-        {
-            return;
-        }
         var drainPerTick = 1f / _config.TickRate;
         if (player.BreathEnergySeconds < drainPerTick)
         {
@@ -235,10 +229,14 @@ public sealed class BattleSim
     }
 
     /// <summary>
-    /// Damage without knockback-threshold mechanics (breath, Wrath). Returns true if
-    /// the defender survived. Kill rewards credit only cross-side kills.
+    /// Damage without knockback-threshold mechanics (breath, Wrath, turrets). Returns
+    /// true if the defender survived. Kill rewards credit only cross-side kills;
+    /// machine kills (armaments) pay configurable bounty but NEVER feed Ascension or
+    /// edict counters — the Court credits no ascent for machine-work.
     /// </summary>
-    private bool ApplyDirectDamage(BattleState state, PlayerSide attackerSide, SimUnit defender, int damage)
+    private bool ApplyDirectDamage(
+        BattleState state, PlayerSide attackerSide, SimUnit defender, int damage,
+        bool machineKill = false)
     {
         if (defender.IFrameTicks > 0)
         {
@@ -255,8 +253,15 @@ public sealed class BattleSim
         {
             var killer = state.Player(attackerSide);
             var bounty = defender.Def.DeployCost / 5f * (1f + killer.Buffs.KillBountyPct);
-            AddMana(killer, bounty);
-            CreditKillAscension(state, attackerSide, defender.Def);
+            if (machineKill)
+            {
+                AddMana(killer, bounty * _config.ArmamentKillBountyPct);
+            }
+            else
+            {
+                AddMana(killer, bounty);
+                CreditKillAscension(state, attackerSide, defender.Def);
+            }
         }
         if (defender.Def.Tier >= 4)
         {
@@ -276,7 +281,9 @@ public sealed class BattleSim
             return;
         }
         var player = state.Player(side);
-        var cost = def.DeployCost * _config.RebreathCostFactor;
+        var cost = player.FreeAttunements > 0
+            ? 0f
+            : def.DeployCost * _config.RebreathCostFactor;
         if (player.AttunedThisBattle.ContainsKey(unitDefId)
             || element == def.Element
             || def.Tier >= 4
@@ -285,6 +292,10 @@ public sealed class BattleSim
             return;
         }
         player.Mana -= cost;
+        if (player.FreeAttunements > 0)
+        {
+            player.FreeAttunements--;
+        }
         player.AttunedThisBattle[unitDefId] = element;
     }
 
@@ -396,19 +407,8 @@ public sealed class BattleSim
             return;
         }
         var player = state.Player(side);
-        if (player.Conduits.ContainsKey(conduitId))
-        {
-            return;
-        }
-        if (def.IsArmament)
-        {
-            // The spire bears one crown: a second armament never mounts.
-            if (player.MountedArmamentId is not null)
-            {
-                return;
-            }
-        }
-        else if (UtilityConduitCount(player) >= _config.ConduitSockets + player.BonusSockets)
+        if (player.Conduits.ContainsKey(conduitId)
+            || player.Conduits.Count >= _config.ConduitSockets + player.BonusSockets)
         {
             return;
         }
@@ -425,23 +425,9 @@ public sealed class BattleSim
         player.ConduitGrafts++;
         if (def.IsArmament)
         {
-            player.MountedArmamentId = conduitId;
-            player.TurretCooldownTicks = def.TurretCadenceTicks;
+            player.TurretCooldowns[conduitId] = def.TurretCadenceTicks;
         }
         RecomputeBuffs(player);
-    }
-
-    private int UtilityConduitCount(PlayerState player)
-    {
-        var count = 0;
-        foreach (var conduitId in player.Conduits.Keys)
-        {
-            if (!_conduits[conduitId].IsArmament)
-            {
-                count++;
-            }
-        }
-        return count;
     }
 
     private void TryUpgradeConduit(BattleState state, PlayerSide side, string conduitId)
@@ -481,12 +467,7 @@ public sealed class BattleSim
             * (0.5f + player.Buffs.ConduitRefundBonusPct);
         player.Conduits.Remove(conduitId);
         player.ConduitSpent.Remove(conduitId);
-        if (player.MountedArmamentId == conduitId)
-        {
-            // The crown reverts to the dragon: breath is live again next tick.
-            player.MountedArmamentId = null;
-            player.TurretCooldownTicks = 0;
-        }
+        player.TurretCooldowns.Remove(conduitId);
         RecomputeBuffs(player);
         AddMana(player, refund);
     }
@@ -525,6 +506,7 @@ public sealed class BattleSim
             summon += def.SummonCostPct;
             wrath += def.WrathCooldownPct;
             refund += def.ConduitRefundBonusPct;
+            cadence += def.TurretCadencePct;
             dripPrice += def.PriceDripPerSecond;
         }
         player.Buffs = new PlayerBuffs
@@ -560,85 +542,99 @@ public sealed class BattleSim
         player.BonusSockets++;
     }
 
-    /// <summary>The mounted armament's deterministic auto-fire: cadence-gated target
+    /// <summary>Built armaments auto-fire deterministically: cadence-gated target
     /// selection by lane distance from the firing spire with the InstanceId tiebreak
-    /// (same contract as unit targeting — replay/PvP-safe, no per-frame micro).</summary>
+    /// (same contract as unit targeting — replay/PvP-safe, no per-frame micro).
+    /// Machine kills pay bounty but never feed Ascension or edicts — the Court
+    /// credits no ascent for machine-work, which is what keeps turtling honest.</summary>
     private void ProcessTurrets(BattleState state)
     {
         foreach (var side in Sides)
         {
             var player = state.Player(side);
-            if (player.MountedArmamentId is null
-                || !player.Conduits.TryGetValue(player.MountedArmamentId, out var tier))
+            if (player.TurretCooldowns.Count == 0)
             {
                 continue;
             }
-            var def = _conduits[player.MountedArmamentId];
-            if (--player.TurretCooldownTicks > 0)
+            foreach (var armamentId in player.TurretCooldowns.Keys.ToList())
             {
-                continue;
+                if (!player.Conduits.TryGetValue(armamentId, out var tier))
+                {
+                    continue;
+                }
+                var def = _conduits[armamentId];
+                var remaining = player.TurretCooldowns[armamentId] - 1;
+                if (remaining > 0)
+                {
+                    player.TurretCooldowns[armamentId] = remaining;
+                    continue;
+                }
+                player.TurretCooldowns[armamentId] = Math.Max(
+                    6, (int)(def.TurretCadenceTicks * (1f - player.Buffs.TurretCadencePct)));
+                FireTurret(state, side, def, tier);
             }
-            player.TurretCooldownTicks = Math.Max(
-                6, (int)(def.TurretCadenceTicks * (1f - player.Buffs.TurretCadencePct)));
+        }
+    }
 
-            var spireX = side == PlayerSide.Left ? 0f : _config.LaneLength;
-            SimUnit? primary = null;
-            var primaryDistance = float.MaxValue;
-            foreach (var unit in state.Units)
-            {
-                if (unit.Side == side || !unit.IsAlive)
-                {
-                    continue;
-                }
-                var strataOk = unit.Stratum == Stratum.Air ? def.TargetsAir : def.TargetsGround;
-                if (!strataOk)
-                {
-                    continue;
-                }
-                var distance = MathF.Abs(unit.X - spireX);
-                if (distance < def.TurretRangeMin || distance > def.TurretRange)
-                {
-                    continue;
-                }
-                if (distance < primaryDistance
-                    || (distance == primaryDistance
-                        && unit.InstanceId < (primary?.InstanceId ?? int.MaxValue)))
-                {
-                    primary = unit;
-                    primaryDistance = distance;
-                }
-            }
-            if (primary is null)
+    private void FireTurret(BattleState state, PlayerSide side, ConduitDef def, int tier)
+    {
+        var spireX = side == PlayerSide.Left ? 0f : _config.LaneLength;
+        SimUnit? primary = null;
+        var primaryDistance = float.MaxValue;
+        foreach (var unit in state.Units)
+        {
+            if (unit.Side == side || !unit.IsAlive)
             {
                 continue;
             }
+            var strataOk = unit.Stratum == Stratum.Air ? def.TargetsAir : def.TargetsGround;
+            if (!strataOk)
+            {
+                continue;
+            }
+            var distance = MathF.Abs(unit.X - spireX);
+            if (distance < def.TurretRangeMin || distance > def.TurretRange)
+            {
+                continue;
+            }
+            if (distance < primaryDistance
+                || (distance == primaryDistance
+                    && unit.InstanceId < (primary?.InstanceId ?? int.MaxValue)))
+            {
+                primary = unit;
+                primaryDistance = distance;
+            }
+        }
+        if (primary is null)
+        {
+            return;
+        }
 
-            var damage = def.TurretDamagePerTier * tier;
-            if (def.TurretAoeRadius > 0f)
+        var damage = def.TurretDamagePerTier * tier;
+        if (def.TurretAoeRadius > 0f)
+        {
+            var impactX = primary.X;
+            foreach (var unit in state.Units.ToList())
             {
-                var impactX = primary.X;
-                foreach (var unit in state.Units.ToList())
+                if (unit.Side == side || !unit.IsAlive
+                    || (unit.Stratum == Stratum.Air ? !def.TargetsAir : !def.TargetsGround)
+                    || MathF.Abs(unit.X - impactX) > def.TurretAoeRadius)
                 {
-                    if (unit.Side == side || !unit.IsAlive
-                        || (unit.Stratum == Stratum.Air ? !def.TargetsAir : !def.TargetsGround)
-                        || MathF.Abs(unit.X - impactX) > def.TurretAoeRadius)
-                    {
-                        continue;
-                    }
-                    HitWithTurret(state, side, unit, damage, def);
+                    continue;
                 }
+                HitWithTurret(state, side, unit, damage, def);
             }
-            else
-            {
-                HitWithTurret(state, side, primary, damage, def);
-            }
+        }
+        else
+        {
+            HitWithTurret(state, side, primary, damage, def);
         }
     }
 
     private void HitWithTurret(
         BattleState state, PlayerSide side, SimUnit target, int damage, ConduitDef def)
     {
-        ApplyDirectDamage(state, side, target, damage);
+        ApplyDirectDamage(state, side, target, damage, machineKill: true);
         if (def.OnHitSlowPct > 0f && target.IsAlive)
         {
             target.SlowPct = MathF.Max(target.SlowPct, def.OnHitSlowPct);
@@ -737,7 +733,9 @@ public sealed class BattleSim
         player.PendingOffers.Clear();
         player.AwaitingParley = false;
         RecomputeBuffs(player);
-        TakeBloodPrice(state, side, _pacts[pactId]);
+        var sealedPact = _pacts[pactId];
+        player.FreeAttunements += sealedPact.FreeAttunements;
+        TakeBloodPrice(state, side, sealedPact);
     }
 
     private void TryPayTithe(BattleState state, PlayerSide side)

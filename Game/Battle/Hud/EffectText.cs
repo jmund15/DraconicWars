@@ -39,7 +39,7 @@ public static class EffectText
                 parts.Add($"slows {def.OnHitSlowPct * 100:0}%");
             }
             parts.Add($"range {def.TurretRangeMin:0}-{def.TurretRange:0}m");
-            parts.Add("replaces breath while mounted");
+            parts.Add("machine kills feed no Ascension");
         }
         return string.Join(", ", parts);
     }
@@ -59,6 +59,11 @@ public static class EffectText
         AddPct(parts, def.SummonCostPct, "-{0}% summon cost");
         AddPct(parts, def.WrathCooldownPct, "-{0}% wrath cd");
         AddPct(parts, def.ConduitRefundBonusPct, "+{0}% conduit refund");
+        AddPct(parts, def.TurretCadencePct, "-{0}% armament cadence");
+        if (def.FreeAttunements > 0)
+        {
+            parts.Add($"{def.FreeAttunements} free re-swears");
+        }
         return string.Join(", ", parts);
     }
 

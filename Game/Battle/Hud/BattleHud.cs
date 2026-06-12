@@ -156,10 +156,6 @@ public partial class BattleHud : CanvasLayer
         }
 
         BreathBar.Value = 100.0 * player.BreathEnergySeconds / config.BreathMaxSeconds;
-        // A mounted armament silences breath — dim the bar so the trade is legible.
-        BreathBar.Modulate = player.MountedArmamentId is null
-            ? Colors.White
-            : new Color(0.45f, 0.45f, 0.5f);
 
         _socketButton.Visible = player.BonusSockets == 0
             && player.AscensionTier >= config.SocketPurchaseTierGate;
