@@ -19,7 +19,8 @@ public sealed record CampaignLevelDef(
     int BaseGoldReward,
     string? BondedDragonId = null,
     string Blurb = "",
-    string? UnlockConduitId = null)
+    string? UnlockConduitId = null,
+    AiPersona? Persona = null)
 {
     public const string EnemyIdPrefix = "enemy:";
 

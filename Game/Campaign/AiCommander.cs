@@ -27,12 +27,19 @@ public sealed class AiCommander
     private readonly AiPersona _persona;
     private readonly PlayerSide _side;
     private readonly SimRng _rng;
+    private readonly IReadOnlyList<UnitDef> _deployPool;
 
-    public AiCommander(AiPersona persona, PlayerSide side, ulong seed)
+    /// <summary>Null deployPool means the base catalog (harness/skirmish); campaign
+    /// passes the level's magnified enemy defs so the AI fields ITS army, not the
+    /// player's stat-line.</summary>
+    public AiCommander(
+        AiPersona persona, PlayerSide side, ulong seed,
+        IReadOnlyList<UnitDef>? deployPool = null)
     {
         _persona = persona;
         _side = side;
         _rng = new SimRng(seed);
+        _deployPool = deployPool ?? DraconicWars.Game.Content.UnitCatalog.FirstPlayable;
     }
 
     public IEnumerable<SimCommand> CommandsForTick(BattleState state)
@@ -108,9 +115,11 @@ public sealed class AiCommander
             yield break;
         }
 
+        // Each doctrine slots one armament — machine kills pay bounty but no
+        // Ascension, so the AI leans on them for defense, not tempo.
         var desired = _persona == AiPersona.Powerhouse
-            ? new[] { "mana_well", "aurum_vault", "war_horn" }
-            : new[] { "mana_well", "war_horn" };
+            ? new[] { "mana_well", "aurum_vault", "siege_mortar" }
+            : new[] { "mana_well", "war_horn", "skyward_flak" };
         foreach (var conduitId in desired)
         {
             if (player.Conduits.ContainsKey(conduitId))
@@ -156,7 +165,7 @@ public sealed class AiCommander
 
     private IEnumerable<UnitDef> AffordableReadyUnits(BattleState state, PlayerState player)
     {
-        foreach (var def in DraconicWars.Game.Content.UnitCatalog.FirstPlayable)
+        foreach (var def in _deployPool)
         {
             if (def.Tier >= 4 || def.Tier > player.AscensionTier || def.DeployCost > player.Mana)
             {

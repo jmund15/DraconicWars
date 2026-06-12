@@ -84,6 +84,7 @@ public static class CampaignCatalog
             },
             BaseGoldReward: 100,
             UnlockConduitId: "swift_banner",
+            Persona: AiPersona.Rusher,
             Blurb: "The Broker attends your duels now. The Court is watching, which means "
                 + "the Court is wagering. Seal your first pact wisely."),
 
@@ -101,6 +102,7 @@ public static class CampaignCatalog
             },
             BaseGoldReward: 110,
             UnlockConduitId: "skyward_flak",
+            Persona: AiPersona.Streamer,
             Blurb: "Vask's columns answer whatever wall you raise. Sell what stands, graft "
                 + "what's needed — a spire's strength is what it builds next."),
 
@@ -136,6 +138,7 @@ public static class CampaignCatalog
             BaseGoldReward: 150,
             BondedDragonId: "pyraxis",
             UnlockConduitId: "siege_mortar",
+            Persona: AiPersona.Powerhouse,
             Blurb: "Vask broke Court law: Pyraxis fights in chains at his spire. Break the "
                 + "chains and the Marchfire chooses his own lord. Beat the dragon, bond the dragon."),
     };

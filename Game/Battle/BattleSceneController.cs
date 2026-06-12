@@ -52,6 +52,7 @@ public partial class BattleSceneController : Node2D
     private Label? _parleyCountdown;
     private bool _breathHintShown;
     private bool _breathExhausted;
+    private AiCommander? _enemyAi;
     private PanelContainer? _hoverPopup;
     private Label _hoverLabel = null!;
 
@@ -93,6 +94,16 @@ public partial class BattleSceneController : Node2D
                 seed: LevelSeed(_level.Id),
                 DraconicWars.Sim.Pacts.PactCatalog.All);
             Runner.Director = new WaveDirector(_level.Waves, _level.RepeatingWaves);
+            if (_level.Persona is { } persona)
+            {
+                // The level's commander fields the MAGNIFIED enemy defs, never the
+                // player's stat-line; seed split keeps replays of a level identical.
+                var enemyPool = battleDefs
+                    .Where(def => def.Id.StartsWith(CampaignLevelDef.EnemyIdPrefix))
+                    .ToList();
+                _enemyAi = new AiCommander(
+                    persona, PlayerSide.Right, LevelSeed(_level.Id) ^ 0x5A5AUL, enemyPool);
+            }
             Runner.State.Left.EquippedDragonId =
                 GameSession.Profile.UnitLevels.ContainsKey("pyraxis")
                     ? "pyraxis"
@@ -268,6 +279,13 @@ public partial class BattleSceneController : Node2D
     private void OnTickAdvanced()
     {
         var player = Runner.State.Player(_localSide);
+        if (_enemyAi is not null && Runner.State.Outcome == BattleOutcome.Ongoing)
+        {
+            foreach (var command in _enemyAi.CommandsForTick(Runner.State))
+            {
+                Runner.EnqueueCommand(command);
+            }
+        }
         UpdateDraftState();
         UpdateSpires();
         if (GameSession.LocalPvp)
@@ -300,9 +318,10 @@ public partial class BattleSceneController : Node2D
         var state = Runner.State;
         var opponent = state.Player(
             _localSide == PlayerSide.Left ? PlayerSide.Right : PlayerSide.Left);
-        if (!GameSession.LocalPvp && opponent.AwaitingParley && opponent.PendingOffers.Count > 0)
+        if (!GameSession.LocalPvp && _enemyAi is null
+            && opponent.AwaitingParley && opponent.PendingOffers.Count > 0)
         {
-            // Scripted opponent picks its first offer (persona AI is a later Part).
+            // Persona-less teaching levels: the scripted opponent takes its first offer.
             Runner.EnqueueCommand(SimCommand.SealPact(
                 _localSide == PlayerSide.Left ? PlayerSide.Right : PlayerSide.Left,
                 opponent.PendingOffers[0]));

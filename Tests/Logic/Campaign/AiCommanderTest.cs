@@ -147,6 +147,47 @@ public class AiCommanderTest
     }
 
     [TestCase]
+    public void AiDeploysOnlyFromItsInjectedPool()
+    {
+        var enemyKobold = CampaignLevelDef.Magnify(
+            UnitCatalog.FirstPlayable[0], 100, CampaignLevelDef.EnemyIdPrefix);
+        var defs = UnitCatalog.FirstPlayable.Append(enemyKobold).ToList();
+        var sim = new BattleSim(BattleConfig.Default, defs, ConduitDefs.All);
+        var state = sim.CreateInitialState(11UL);
+        state.Right.Mana = 400f;
+        var ai = new AiCommander(
+            AiPersona.Rusher, PlayerSide.Right, seed: 3UL, deployPool: new[] { enemyKobold });
+
+        var commands = ai.CommandsForTick(state).ToList();
+
+        var deploy = commands.First(c => c.Kind == SimCommandKind.Deploy);
+        AssertThat(deploy.TargetId).IsEqual(CampaignLevelDef.EnemyIdPrefix + "kobold_spearman");
+    }
+
+    [TestCase]
+    public void PersonaDoctrinesIncludeAnArmament()
+    {
+        var (sim, state) = CreateBattle();
+        state.Right.Mana = 5000f;
+        state.Right.WalletCap = 50000f;
+
+        var streamer = new AiCommander(AiPersona.Streamer, PlayerSide.Right, seed: 3UL);
+        state.Right.Conduits["mana_well"] = 1;
+        state.Right.Conduits["war_horn"] = 1;
+        var build = streamer.CommandsForTick(state).ToList()
+            .First(c => c.Kind == SimCommandKind.BuildConduit);
+        AssertThat(build.TargetId).IsEqual("skyward_flak");
+
+        state.Right.Conduits.Clear();
+        state.Right.Conduits["mana_well"] = 1;
+        state.Right.Conduits["aurum_vault"] = 1;
+        var powerhouse = new AiCommander(AiPersona.Powerhouse, PlayerSide.Right, seed: 3UL);
+        var build2 = powerhouse.CommandsForTick(state).ToList()
+            .First(c => c.Kind == SimCommandKind.BuildConduit);
+        AssertThat(build2.TargetId).IsEqual("siege_mortar");
+    }
+
+    [TestCase]
     public void SameSeedSameState_ProducesIdenticalCommands()
     {
         var (simA, stateA) = CreateBattle();

@@ -34,12 +34,19 @@ public partial class LevelSelect : Control
             var level = CampaignCatalog.Levels[i];
             var unlocked = CampaignProgress.IsUnlocked(profile, i);
             var cleared = profile.ClearedLevelIds.Contains(level.Id);
+            // Honest-AI charter: the commander's doctrine and handicap are published.
+            var commanderLine = level.Persona is { } persona
+                ? $"\n\nCommander: the {persona} — same rules as you"
+                    + $" (magnification ×{level.MagnificationPct / 100f:0.#},"
+                    + $" breath aim ±{AiCommander.AimJitterMeters:0}m)"
+                : $"\n\nScripted waves, no enemy commander"
+                    + $" (magnification ×{level.MagnificationPct / 100f:0.#})";
             var button = new Button
             {
                 Text = $"{i + 1}. {level.DisplayName}{(cleared ? "  ✓" : string.Empty)}",
                 Disabled = !unlocked,
                 CustomMinimumSize = new Vector2(220, 28),
-                TooltipText = level.Blurb,
+                TooltipText = level.Blurb + commanderLine,
             };
             var levelIndex = i;
             button.Pressed += () =>
