@@ -864,14 +864,15 @@ public sealed class BattleSim
             && spireDistance <= unit.Def.Range;
     }
 
-    /// <summary>Living targetable enemies inside [RangeMin, Range] ahead, nearest first.</summary>
+    /// <summary>Living targetable enemies inside [RangeMin, Range] by ABSOLUTE lane
+    /// distance, nearest first. Units engage intruders behind the line too — forward-only
+    /// scanning let enemies park at the spire while fresh deploys marched past them.</summary>
     private static IEnumerable<SimUnit> EnemiesInBand(BattleState state, SimUnit unit)
     {
-        var dir = Direction(unit.Side);
         return state.Units
             .Where(other => other.Side != unit.Side && other.IsAlive)
             .Where(other => CanTarget(unit, other))
-            .Select(other => (Unit: other, Distance: (other.X - unit.X) * dir))
+            .Select(other => (Unit: other, Distance: MathF.Abs(other.X - unit.X)))
             .Where(pair => pair.Distance >= unit.Def.RangeMin && pair.Distance <= unit.Def.Range)
             .OrderBy(pair => pair.Distance)
             .ThenBy(pair => pair.Unit.InstanceId)
@@ -907,7 +908,7 @@ public sealed class BattleSim
             }
 
             var dir = Direction(unit.Side);
-            var nearestEnemy = FindNearestTargetableDistance(state, unit, dir);
+            var nearestEnemy = FindNearestTargetableDistance(state, unit);
             if (nearestEnemy is { } enemyDistance && enemyDistance <= unit.Def.Range)
             {
                 continue;
@@ -938,7 +939,7 @@ public sealed class BattleSim
         }
     }
 
-    private static float? FindNearestTargetableDistance(BattleState state, SimUnit unit, float dir)
+    private static float? FindNearestTargetableDistance(BattleState state, SimUnit unit)
     {
         float? nearest = null;
         foreach (var other in state.Units)
@@ -951,14 +952,10 @@ public sealed class BattleSim
             {
                 continue;
             }
-            var distanceAhead = (other.X - unit.X) * dir;
-            if (distanceAhead < 0f)
+            var distance = MathF.Abs(other.X - unit.X);
+            if (nearest is null || distance < nearest)
             {
-                continue;
-            }
-            if (nearest is null || distanceAhead < nearest)
-            {
-                nearest = distanceAhead;
+                nearest = distance;
             }
         }
         return nearest;

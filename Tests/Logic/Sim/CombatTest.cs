@@ -172,4 +172,48 @@ public class CombatTest
         AdvanceTicks(sim, state, 10);
         AssertThat(state.Tick).IsEqual(tickAtEnd);
     }
+
+    // Playtest regression (cm_01): an enemy that slipped past the line parked at the
+    // player's spire while fresh deploys marched straight past it — acquisition was
+    // forward-scan only. Units must engage by absolute lane distance.
+
+    [TestCase]
+    public void EnemyBehindNewlyDeployedUnit_IsEngaged()
+    {
+        var grunt = TestUnits.Grunt();
+        var (sim, state) = CreateBattle(grunt, TestUnits.Grunt(id: "pillar", moveSpeed: 0f));
+        var intruder = Spawn(sim, state, PlayerSide.Right, "pillar", 1.0f);
+        Spawn(sim, state, PlayerSide.Left, "grunt", 1.5f);
+
+        AdvanceTicks(sim, state, grunt.ForeswingTicks + 1);
+
+        AssertThat(intruder.Hp < intruder.Def.MaxHp).IsTrue();
+    }
+
+    [TestCase]
+    public void UnitHaltsForEnemyWithinRangeBehindIt()
+    {
+        var grunt = TestUnits.Grunt();
+        var (sim, state) = CreateBattle(grunt, TestUnits.Grunt(id: "pillar", moveSpeed: 0f));
+        Spawn(sim, state, PlayerSide.Right, "pillar", 1.0f);
+        var defender = Spawn(sim, state, PlayerSide.Left, "grunt", 1.5f);
+
+        AdvanceTicks(sim, state, 1);
+
+        AssertThat(defender.X).IsEqualApprox(1.5f, 0.001f);
+    }
+
+    [TestCase]
+    public void SniperDeadzoneAppliesBehindToo()
+    {
+        var sniper = TestUnits.Sniper();
+        var (sim, state) = CreateBattle(sniper, TestUnits.Grunt(id: "pillar", moveSpeed: 0f));
+        var intruder = Spawn(sim, state, PlayerSide.Right, "pillar", 8.5f);
+        var shooter = Spawn(sim, state, PlayerSide.Left, "sniper", 10f);
+
+        AdvanceTicks(sim, state, sniper.ForeswingTicks + 2);
+
+        AssertThat(intruder.Hp).IsEqual(intruder.Def.MaxHp);
+        AssertThat(shooter.X).IsEqualApprox(10f, 0.001f);
+    }
 }
