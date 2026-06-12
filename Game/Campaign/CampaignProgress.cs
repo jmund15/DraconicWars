@@ -31,7 +31,35 @@ public static class CampaignProgress
             // Beat the dragon, bond the dragon (design-meta.md §9).
             profile.UnitLevels[dragonId] = MetaProgression.EntryLevel(4);
         }
+        if (level.UnlockConduitId is { } conduitId)
+        {
+            // Conduit library grows by campaign clears — breadth, never power.
+            profile.ConduitsUnlocked.Add(conduitId);
+        }
         return true;
+    }
+
+    /// <summary>Fresh (and pre-library) profiles own the base trio; the rest unlock
+    /// by first-clears per the level catalog.</summary>
+    public static void EnsureBaseConduits(PlayerProfile profile)
+    {
+        if (profile.ConduitsUnlocked.Count > 0)
+        {
+            return;
+        }
+        profile.ConduitsUnlocked.Add("mana_well");
+        profile.ConduitsUnlocked.Add("war_horn");
+        profile.ConduitsUnlocked.Add("rampart");
+        foreach (var levelId in profile.ClearedLevelIds)
+        {
+            foreach (var level in CampaignCatalog.Levels)
+            {
+                if (level.Id == levelId && level.UnlockConduitId is { } conduitId)
+                {
+                    profile.ConduitsUnlocked.Add(conduitId);
+                }
+            }
+        }
     }
 
     public static bool IsUnlocked(PlayerProfile profile, int levelIndex)

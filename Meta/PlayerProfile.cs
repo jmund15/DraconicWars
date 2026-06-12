@@ -25,6 +25,10 @@ public sealed class PlayerProfile
     /// horizontal unlocks — never respecced.</summary>
     public HashSet<string> AttunementsOwned { get; set; } = new();
 
+    /// <summary>Conduit library: types available in battle. Breadth, never power —
+    /// grows by campaign first-clears; empty set = pre-library profile (re-seeded).</summary>
+    public HashSet<string> ConduitsUnlocked { get; set; } = new();
+
     public int LevelsPurchased { get; set; }
 
     public List<string> ClearedLevelIds { get; set; } = new();

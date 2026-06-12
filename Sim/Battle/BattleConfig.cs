@@ -76,6 +76,11 @@ public sealed record BattleConfig(
     /// <summary>Rebreathing cost as a multiple of the unit's deploy cost.</summary>
     public float RebreathCostFactor { get; init; } = 1.0f;
 
+    /// <summary>Mid-battle 4th utility socket: a late-game mana sink, once per battle.</summary>
+    public float SocketPurchaseCost { get; init; } = 700f;
+
+    public int SocketPurchaseTierGate { get; init; } = 3;
+
     public static readonly BattleConfig Default = new(
         TickRate: 30,
         LaneLength: 38f,

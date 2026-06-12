@@ -85,13 +85,18 @@ public partial class BattleSceneController : Node2D
                 playerLoadout.Add(def);
             }
         }
+        CampaignProgress.EnsureBaseConduits(GameSession.Profile);
+        var conduitLibrary = ConduitDefs.All
+            .Where(def => GameSession.Profile.ConduitsUnlocked.Contains(def.Id))
+            .ToList();
         Hud.Initialize(
-            Runner, _localSide, playerLoadout, ConduitDefs.All,
+            Runner, _localSide, playerLoadout, conduitLibrary,
             GameSession.Profile.UnitLevels);
         Hud.DeployRequested += id => Runner.EnqueueCommand(SimCommand.Deploy(_localSide, id));
         Hud.AttuneRequested += OnAttuneRequested;
         Hud.ConduitBuildRequested += OnConduitBuildRequested;
         Hud.ConduitSellRequested += id => Runner.EnqueueCommand(SimCommand.SellConduit(_localSide, id));
+        Hud.SocketPurchaseRequested += () => Runner.EnqueueCommand(SimCommand.BuySocket(_localSide));
 
         _breathBeam = new BreathBeamView();
         UnitLayer.AddChild(_breathBeam);

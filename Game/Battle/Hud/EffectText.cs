@@ -22,6 +22,25 @@ public static class EffectText
         AddFlat(parts, def.SpireShieldPerTier * tier, "{0} shield");
         AddPct(parts, def.SlowAuraPctPerTier * tier, "{0}% slow aura");
         AddPct(parts, def.BreathRegenPctPerTier * tier, "+{0}% breath regen");
+        AddPct(parts, def.TurretCadencePctPerTier * tier, "-{0}% armament cadence");
+        if (def.IsArmament && def.TurretCadenceTicks > 0)
+        {
+            var strata = def.TargetsAir && def.TargetsGround
+                ? "air+ground"
+                : def.TargetsAir ? "air" : "ground";
+            parts.Add($"{def.TurretDamagePerTier * tier} dmg vs {strata}"
+                + $" every {def.TurretCadenceTicks / 30f:0.#}s");
+            if (def.TurretAoeRadius > 0f)
+            {
+                parts.Add($"{def.TurretAoeRadius:0.#}m splash");
+            }
+            if (def.OnHitSlowPct > 0f)
+            {
+                parts.Add($"slows {def.OnHitSlowPct * 100:0}%");
+            }
+            parts.Add($"range {def.TurretRangeMin:0}-{def.TurretRange:0}m");
+            parts.Add("replaces breath while mounted");
+        }
         return string.Join(", ", parts);
     }
 

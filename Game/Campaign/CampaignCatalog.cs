@@ -47,6 +47,7 @@ public static class CampaignCatalog
                 new RepeatingWave(90, 240, "enemy:kobold_spearman", 5400),
             },
             BaseGoldReward: 80,
+            UnlockConduitId: "aurum_vault",
             Blurb: "The eastern span went quiet a year ago. Vask's kindle-spears are why. "
                 + "Walk the lane, raise a warband, and remind the Marches who holds this spire."),
 
@@ -65,6 +66,7 @@ public static class CampaignCatalog
                 new RepeatingWave(120, 300, "enemy:kobold_spearman", 5400),
             },
             BaseGoldReward: 90,
+            UnlockConduitId: "breath_coil",
             Blurb: "A Marches proverb: the tide teaches drowning. Vask sends whelps over "
                 + "the chaff line — keep your dragon's breath aimed at the sky."),
 
@@ -81,6 +83,7 @@ public static class CampaignCatalog
                 new RepeatingWave(2400, 600, "enemy:dune_marksman", 6600),
             },
             BaseGoldReward: 100,
+            UnlockConduitId: "swift_banner",
             Blurb: "The Broker attends your duels now. The Court is watching, which means "
                 + "the Court is wagering. Seal your first pact wisely."),
 
@@ -97,6 +100,7 @@ public static class CampaignCatalog
                 new RepeatingWave(2000, 480, "enemy:storm_monk", 7200),
             },
             BaseGoldReward: 110,
+            UnlockConduitId: "skyward_flak",
             Blurb: "Vask's columns answer whatever wall you raise. Sell what stands, graft "
                 + "what's needed — a spire's strength is what it builds next."),
 
@@ -131,6 +135,7 @@ public static class CampaignCatalog
             },
             BaseGoldReward: 150,
             BondedDragonId: "pyraxis",
+            UnlockConduitId: "siege_mortar",
             Blurb: "Vask broke Court law: Pyraxis fights in chains at his spire. Break the "
                 + "chains and the Marchfire chooses his own lord. Beat the dragon, bond the dragon."),
     };

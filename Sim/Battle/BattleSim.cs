@@ -99,6 +99,7 @@ public sealed class BattleSim
         ProcessLastStand(state);
         TickEconomy(state);
         ProcessCombat(state);
+        ProcessTurrets(state);
         ProcessEdicts(state);
         ProcessAscension(state);
         ProcessParleys(state);
@@ -147,6 +148,9 @@ public sealed class BattleSim
                 case SimCommandKind.AttuneUnit:
                     TryAttuneUnit(state, command.Side, command.TargetId, (Element)command.Amount);
                     break;
+                case SimCommandKind.BuySocket:
+                    TryBuySocket(state, command.Side);
+                    break;
             }
         }
     }
@@ -154,6 +158,12 @@ public sealed class BattleSim
     private void TryFireBreath(BattleState state, PlayerSide side, float x)
     {
         var player = state.Player(side);
+        // A mounted armament holds the Crownmount — the dragon's breath is silent
+        // until the turret is sold.
+        if (player.MountedArmamentId is not null)
+        {
+            return;
+        }
         var drainPerTick = 1f / _config.TickRate;
         if (player.BreathEnergySeconds < drainPerTick)
         {
@@ -386,8 +396,19 @@ public sealed class BattleSim
             return;
         }
         var player = state.Player(side);
-        if (player.Conduits.ContainsKey(conduitId)
-            || player.Conduits.Count >= _config.ConduitSockets)
+        if (player.Conduits.ContainsKey(conduitId))
+        {
+            return;
+        }
+        if (def.IsArmament)
+        {
+            // The spire bears one crown: a second armament never mounts.
+            if (player.MountedArmamentId is not null)
+            {
+                return;
+            }
+        }
+        else if (UtilityConduitCount(player) >= _config.ConduitSockets + player.BonusSockets)
         {
             return;
         }
@@ -402,7 +423,25 @@ public sealed class BattleSim
         player.ConduitSpent[conduitId] = cost;
         player.SpireShield += def.SpireShieldPerTier;
         player.ConduitGrafts++;
+        if (def.IsArmament)
+        {
+            player.MountedArmamentId = conduitId;
+            player.TurretCooldownTicks = def.TurretCadenceTicks;
+        }
         RecomputeBuffs(player);
+    }
+
+    private int UtilityConduitCount(PlayerState player)
+    {
+        var count = 0;
+        foreach (var conduitId in player.Conduits.Keys)
+        {
+            if (!_conduits[conduitId].IsArmament)
+            {
+                count++;
+            }
+        }
+        return count;
     }
 
     private void TryUpgradeConduit(BattleState state, PlayerSide side, string conduitId)
@@ -441,6 +480,12 @@ public sealed class BattleSim
         var refund = player.ConduitSpent.GetValueOrDefault(conduitId) * 0.5f;
         player.Conduits.Remove(conduitId);
         player.ConduitSpent.Remove(conduitId);
+        if (player.MountedArmamentId == conduitId)
+        {
+            // The crown reverts to the dragon: breath is live again next tick.
+            player.MountedArmamentId = null;
+            player.TurretCooldownTicks = 0;
+        }
         RecomputeBuffs(player);
         AddMana(player, refund);
     }
@@ -450,6 +495,7 @@ public sealed class BattleSim
         float drip = 0f, cap = 0f, bounty = 0f, damage = 0f, speed = 0f, slow = 0f, breath = 0f;
         float breathDmg = 0f, deployCd = 0f, trickle = 0f, summon = 0f, wrath = 0f;
         float dripPrice = 0f;
+        var cadence = 0f;
         foreach (var (conduitId, tier) in player.Conduits)
         {
             var def = _conduits[conduitId];
@@ -460,6 +506,7 @@ public sealed class BattleSim
             speed += def.SpeedPctPerTier * tier;
             slow += def.SlowAuraPctPerTier * tier;
             breath += def.BreathRegenPctPerTier * tier;
+            cadence += def.TurretCadencePctPerTier * tier;
         }
         foreach (var pactId in player.SealedPacts)
         {
@@ -492,7 +539,107 @@ public sealed class BattleSim
             SummonCostPct = summon,
             WrathCooldownPct = wrath,
             DripPricePerSecond = dripPrice,
+            TurretCadencePct = cadence,
         };
+    }
+
+    private void TryBuySocket(BattleState state, PlayerSide side)
+    {
+        var player = state.Player(side);
+        if (player.BonusSockets >= 1
+            || player.AscensionTier < _config.SocketPurchaseTierGate
+            || player.Mana < _config.SocketPurchaseCost)
+        {
+            return;
+        }
+        player.Mana -= _config.SocketPurchaseCost;
+        player.BonusSockets++;
+    }
+
+    /// <summary>The mounted armament's deterministic auto-fire: cadence-gated target
+    /// selection by lane distance from the firing spire with the InstanceId tiebreak
+    /// (same contract as unit targeting — replay/PvP-safe, no per-frame micro).</summary>
+    private void ProcessTurrets(BattleState state)
+    {
+        foreach (var side in Sides)
+        {
+            var player = state.Player(side);
+            if (player.MountedArmamentId is null
+                || !player.Conduits.TryGetValue(player.MountedArmamentId, out var tier))
+            {
+                continue;
+            }
+            var def = _conduits[player.MountedArmamentId];
+            if (--player.TurretCooldownTicks > 0)
+            {
+                continue;
+            }
+            player.TurretCooldownTicks = Math.Max(
+                6, (int)(def.TurretCadenceTicks * (1f - player.Buffs.TurretCadencePct)));
+
+            var spireX = side == PlayerSide.Left ? 0f : _config.LaneLength;
+            SimUnit? primary = null;
+            var primaryDistance = float.MaxValue;
+            foreach (var unit in state.Units)
+            {
+                if (unit.Side == side || !unit.IsAlive)
+                {
+                    continue;
+                }
+                var strataOk = unit.Stratum == Stratum.Air ? def.TargetsAir : def.TargetsGround;
+                if (!strataOk)
+                {
+                    continue;
+                }
+                var distance = MathF.Abs(unit.X - spireX);
+                if (distance < def.TurretRangeMin || distance > def.TurretRange)
+                {
+                    continue;
+                }
+                if (distance < primaryDistance
+                    || (distance == primaryDistance
+                        && unit.InstanceId < (primary?.InstanceId ?? int.MaxValue)))
+                {
+                    primary = unit;
+                    primaryDistance = distance;
+                }
+            }
+            if (primary is null)
+            {
+                continue;
+            }
+
+            var damage = def.TurretDamagePerTier * tier;
+            if (def.TurretAoeRadius > 0f)
+            {
+                var impactX = primary.X;
+                foreach (var unit in state.Units.ToList())
+                {
+                    if (unit.Side == side || !unit.IsAlive
+                        || (unit.Stratum == Stratum.Air ? !def.TargetsAir : !def.TargetsGround)
+                        || MathF.Abs(unit.X - impactX) > def.TurretAoeRadius)
+                    {
+                        continue;
+                    }
+                    HitWithTurret(state, side, unit, damage, def);
+                }
+            }
+            else
+            {
+                HitWithTurret(state, side, primary, damage, def);
+            }
+        }
+    }
+
+    private void HitWithTurret(
+        BattleState state, PlayerSide side, SimUnit target, int damage, ConduitDef def)
+    {
+        ApplyDirectDamage(state, side, target, damage);
+        if (def.OnHitSlowPct > 0f && target.IsAlive)
+        {
+            target.SlowPct = MathF.Max(target.SlowPct, def.OnHitSlowPct);
+            target.SlowTicks = Math.Max(target.SlowTicks, def.OnHitSlowTicks);
+        }
     }
 
     /// <summary>Tier-ups queue parleys; one opens per side as soon as no parley is

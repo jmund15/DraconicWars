@@ -30,5 +30,8 @@ public sealed class PlayerBuffs
     /// <summary>Ongoing Wyrm-pact mana tithe; income floors at DripFloorPerSecond.</summary>
     public float DripPricePerSecond { get; init; }
 
+    /// <summary>Armament Coil: fraction shaved off the mounted turret's cadence.</summary>
+    public float TurretCadencePct { get; init; }
+
     public static readonly PlayerBuffs None = new();
 }

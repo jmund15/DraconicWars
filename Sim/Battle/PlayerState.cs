@@ -64,6 +64,15 @@ public sealed class PlayerState
     /// A company re-swears ONCE per duel; future deploys spawn attuned.</summary>
     public Dictionary<string, Element> AttunedThisBattle { get; } = new();
 
+    /// <summary>The Crownmount: the armament conduit currently mounted, or null when
+    /// the innate Dragon's Breath holds the crown. One spire, one weapon.</summary>
+    public string? MountedArmamentId { get; set; }
+
+    public int TurretCooldownTicks { get; set; }
+
+    /// <summary>Utility sockets bought mid-battle (Tier-3-gated, once per battle).</summary>
+    public int BonusSockets { get; set; }
+
     // Edict counters (cumulative; EdictProgress reads them).
 
     public Dictionary<Element, float> ManaDeployedByElement { get; } = new();

@@ -23,6 +23,8 @@ public partial class BattleHud : CanvasLayer
 
     public event Action<string> ConduitSellRequested = delegate { };
 
+    public event Action SocketPurchaseRequested = delegate { };
+
     [Export, RequiredExport] public Label ManaLabel { get; set; } = null!;
 
     [Export, RequiredExport] public Label ClockLabel { get; set; } = null!;
@@ -51,6 +53,7 @@ public partial class BattleHud : CanvasLayer
 
     private readonly List<UnitCard> _cards = new();
     private readonly Dictionary<string, Button> _conduitButtons = new();
+    private Button _socketButton = null!;
     private readonly Dictionary<string, UnitDef> _loadoutDefs = new();
     private BattleRunner _runner = null!;
     private PlayerSide _side;
@@ -105,6 +108,14 @@ public partial class BattleHud : CanvasLayer
             _conduitButtons[conduitId] = button;
         }
 
+        _socketButton = new Button
+        {
+            CustomMinimumSize = new Vector2(54, 20),
+            Visible = false,
+        };
+        _socketButton.Pressed += () => SocketPurchaseRequested();
+        ConduitRow.AddChild(_socketButton);
+
         _runner.TickAdvanced += Refresh;
         Refresh();
     }
@@ -145,6 +156,20 @@ public partial class BattleHud : CanvasLayer
         }
 
         BreathBar.Value = 100.0 * player.BreathEnergySeconds / config.BreathMaxSeconds;
+        // A mounted armament silences breath — dim the bar so the trade is legible.
+        BreathBar.Modulate = player.MountedArmamentId is null
+            ? Colors.White
+            : new Color(0.45f, 0.45f, 0.5f);
+
+        _socketButton.Visible = player.BonusSockets == 0
+            && player.AscensionTier >= config.SocketPurchaseTierGate;
+        if (_socketButton.Visible)
+        {
+            _socketButton.Text = $"+Socket\n{(int)config.SocketPurchaseCost}";
+            _socketButton.Disabled = player.Mana < config.SocketPurchaseCost;
+            _socketButton.TooltipText =
+                "Graft a 4th utility socket onto the spire (once per battle)";
+        }
         SummonBar.Value = 100.0 * player.SummoningProgress / config.SummoningCost;
         SummonBar.Visible = tier >= 4;
 

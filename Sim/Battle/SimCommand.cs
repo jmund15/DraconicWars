@@ -15,6 +15,7 @@ public enum SimCommandKind
     SealPact,
     PayTithe,
     AttuneUnit,
+    BuySocket,
 }
 
 public readonly record struct SimCommand(
@@ -74,5 +75,10 @@ public readonly record struct SimCommand(
     public static SimCommand SellConduit(PlayerSide side, string conduitId)
     {
         return new SimCommand(SimCommandKind.SellConduit, side, conduitId);
+    }
+
+    public static SimCommand BuySocket(PlayerSide side)
+    {
+        return new SimCommand(SimCommandKind.BuySocket, side, string.Empty);
     }
 }
