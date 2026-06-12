@@ -100,3 +100,4 @@
 ## DraconicWars (project-local)
 - [tscn C# node exports need node_paths](gotcha_tscn_csharp_node_exports_need_node_paths.md) — hand-authored scenes: node_paths=PackedStringArray(...) or exports stay null.
 - [SimulateFrames is process frames](gotcha_gdunit4_simulateframes_is_process_frames.md) — accumulators in _Process; pin deltas via SimulateFrames(n, 16).
+- [Design workflows: Opus generators, Sonnet red-team](feedback_design_workflow_model_mix.md) — never Sonnet generators; generation quality bounds the exploration.
