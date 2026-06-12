@@ -58,6 +58,7 @@ public static class EffectText
         AddPct(parts, def.AscensionTricklePct, "+{0}% ascension");
         AddPct(parts, def.SummonCostPct, "-{0}% summon cost");
         AddPct(parts, def.WrathCooldownPct, "-{0}% wrath cd");
+        AddPct(parts, def.ConduitRefundBonusPct, "+{0}% conduit refund");
         return string.Join(", ", parts);
     }
 

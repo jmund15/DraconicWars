@@ -48,5 +48,6 @@ public sealed record PactDef(
     float AscensionTricklePct = 0f,
     float SummonCostPct = 0f,
     float WrathCooldownPct = 0f,
+    float ConduitRefundBonusPct = 0f,
     float PriceSpireHpPct = 0f,
     float PriceDripPerSecond = 0f);

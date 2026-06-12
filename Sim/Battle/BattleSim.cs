@@ -477,7 +477,8 @@ public sealed class BattleSim
             return;
         }
 
-        var refund = player.ConduitSpent.GetValueOrDefault(conduitId) * 0.5f;
+        var refund = player.ConduitSpent.GetValueOrDefault(conduitId)
+            * (0.5f + player.Buffs.ConduitRefundBonusPct);
         player.Conduits.Remove(conduitId);
         player.ConduitSpent.Remove(conduitId);
         if (player.MountedArmamentId == conduitId)
@@ -496,6 +497,7 @@ public sealed class BattleSim
         float breathDmg = 0f, deployCd = 0f, trickle = 0f, summon = 0f, wrath = 0f;
         float dripPrice = 0f;
         var cadence = 0f;
+        var refund = 0f;
         foreach (var (conduitId, tier) in player.Conduits)
         {
             var def = _conduits[conduitId];
@@ -522,6 +524,7 @@ public sealed class BattleSim
             trickle += def.AscensionTricklePct;
             summon += def.SummonCostPct;
             wrath += def.WrathCooldownPct;
+            refund += def.ConduitRefundBonusPct;
             dripPrice += def.PriceDripPerSecond;
         }
         player.Buffs = new PlayerBuffs
@@ -540,6 +543,7 @@ public sealed class BattleSim
             WrathCooldownPct = wrath,
             DripPricePerSecond = dripPrice,
             TurretCadencePct = cadence,
+            ConduitRefundBonusPct = refund,
         };
     }
 

@@ -33,5 +33,8 @@ public sealed class PlayerBuffs
     /// <summary>Armament Coil: fraction shaved off the mounted turret's cadence.</summary>
     public float TurretCadencePct { get; init; }
 
+    /// <summary>Salvage Charter: added to the 50% base conduit sell refund.</summary>
+    public float ConduitRefundBonusPct { get; init; }
+
     public static readonly PlayerBuffs None = new();
 }

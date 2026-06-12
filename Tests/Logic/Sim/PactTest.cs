@@ -294,6 +294,31 @@ public class PactTest
     }
 
     [TestCase]
+    public void SalvageCharterRaisesConduitRefundToThreeQuarters()
+    {
+        var (sim, state) = CreateBattle();
+        ReachNextTier(sim, state, PlayerSide.Left);
+        state.Left.PendingOffers.Clear();
+        state.Left.PendingOffers.Add("salvage_charter");
+        sim.Advance(state, new List<SimCommand>
+        {
+            SimCommand.SealPact(PlayerSide.Left, "salvage_charter"),
+            SimCommand.BuildConduit(PlayerSide.Left, "war_horn"),
+        });
+        var spent = state.Left.ConduitSpent["war_horn"];
+        var manaBefore = state.Left.Mana;
+
+        sim.Advance(state, new List<SimCommand>
+        {
+            SimCommand.SellConduit(PlayerSide.Left, "war_horn"),
+        });
+
+        var expectedRefund = spent * 0.75f;
+        AssertThat(state.Left.Mana >= manaBefore + expectedRefund - 1f).IsTrue();
+        AssertThat(state.Left.Mana <= manaBefore + expectedRefund + 2f).IsTrue();
+    }
+
+    [TestCase]
     public void EveryWyrmPactCarriesAPrice_AndLowerTiersAreFree()
     {
         foreach (var def in PactCatalog.All)

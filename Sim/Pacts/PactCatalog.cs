@@ -86,6 +86,9 @@ public static class PactCatalog
         new PactDef("glacial_patience", "Glacial Patience", PactTier.Drake, PactCategory.Economy,
             Lore: "The glacier also wanted things, once.",
             RelevantElement: Element.Frost, DripBonusPerSecond: 4f, WalletCapBonus: 100f),
+        new PactDef("salvage_charter", "Salvage Charter", PactTier.Drake, PactCategory.Economy,
+            Lore: "The Court honors honest demolition: three parts back in four.",
+            ConduitRefundBonusPct: 0.25f),
 
         // Wyrm — mythic terms; the Broker always names a Price
         new PactDef("avatar_of_war", "Avatar of War", PactTier.Wyrm, PactCategory.Combat,
