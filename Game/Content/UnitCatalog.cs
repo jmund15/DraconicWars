@@ -93,4 +93,119 @@ public static class UnitCatalog
 
     /// <summary>The rental dragon every loadout fields until a real dragon is bonded.</summary>
     public const string RentalDragonId = "elder_drake";
+
+    /// <summary>
+    /// V1 roster expansion (Full Roster Batch): 13 units lifting every element to 4+
+    /// distinct types so both Resonance thresholds are reachable for all five Breaths.
+    /// Distributed across the campaign by the unlock schedule (Campaign Full) — not
+    /// part of the first-playable loadout.
+    /// </summary>
+    public static readonly IReadOnlyList<UnitDef> RosterExpansion = new[]
+    {
+        // Fire — 4 total with the kobold (5 with the ogre).
+        new UnitDef(
+            Id: "cinder_acolyte", DisplayName: "Cinder Acolyte", Tier: 1,
+            TypeClass: TypeClass.Ranged, Element: Element.Fire,
+            MaxHp: 80, Damage: 12, ForeswingTicks: 8, BackswingTicks: 12,
+            Range: 5.5f, RangeMin: 0f, IsArea: false, MoveSpeed: 1.7f,
+            KnockbackCount: 2, DeployCost: 70, DeployCooldownTicks: 90,
+            Stratum: Stratum.Ground, CanTargetGround: true, CanTargetAir: true),
+        new UnitDef(
+            Id: "ash_revenant", DisplayName: "Ash Revenant", Tier: 2,
+            TypeClass: TypeClass.Melee, Element: Element.Fire,
+            MaxHp: 240, Damage: 22, ForeswingTicks: 5, BackswingTicks: 7,
+            Range: 0.9f, RangeMin: 0f, IsArea: false, MoveSpeed: 2.6f,
+            KnockbackCount: 2, DeployCost: 150, DeployCooldownTicks: 150,
+            Stratum: Stratum.Ground, CanTargetGround: true, CanTargetAir: false),
+        new UnitDef(
+            Id: "cinder_wyrmling", DisplayName: "Cinder Wyrmling", Tier: 2,
+            TypeClass: TypeClass.Aerial, Element: Element.Fire,
+            MaxHp: 220, Damage: 20, ForeswingTicks: 8, BackswingTicks: 10,
+            Range: 1.3f, RangeMin: 0f, IsArea: false, MoveSpeed: 2.4f,
+            KnockbackCount: 3, DeployCost: 190, DeployCooldownTicks: 260,
+            Stratum: Stratum.Air, CanTargetGround: true, CanTargetAir: true),
+        new UnitDef(
+            Id: "pyre_ogre", DisplayName: "Pyre Ogre", Tier: 3,
+            TypeClass: TypeClass.Melee, Element: Element.Fire,
+            MaxHp: 700, Damage: 45, ForeswingTicks: 14, BackswingTicks: 20,
+            Range: 1.4f, RangeMin: 0f, IsArea: true, MoveSpeed: 1.1f,
+            KnockbackCount: 4, DeployCost: 320, DeployCooldownTicks: 300,
+            Stratum: Stratum.Ground, CanTargetGround: true, CanTargetAir: false),
+
+        // Frost — 4 total with the whelp.
+        new UnitDef(
+            Id: "rime_sentry", DisplayName: "Rime Sentry", Tier: 1,
+            TypeClass: TypeClass.Melee, Element: Element.Frost,
+            MaxHp: 95, Damage: 9, ForeswingTicks: 7, BackswingTicks: 13,
+            Range: 0.8f, RangeMin: 0f, IsArea: false, MoveSpeed: 2.0f,
+            KnockbackCount: 3, DeployCost: 45, DeployCooldownTicks: 70,
+            Stratum: Stratum.Ground, CanTargetGround: true, CanTargetAir: false),
+        new UnitDef(
+            Id: "glacier_adept", DisplayName: "Glacier Adept", Tier: 2,
+            TypeClass: TypeClass.Ranged, Element: Element.Frost,
+            MaxHp: 150, Damage: 16, ForeswingTicks: 10, BackswingTicks: 16,
+            Range: 6f, RangeMin: 0f, IsArea: true, MoveSpeed: 1.6f,
+            KnockbackCount: 2, DeployCost: 160, DeployCooldownTicks: 240,
+            Stratum: Stratum.Ground, CanTargetGround: true, CanTargetAir: true),
+        new UnitDef(
+            Id: "boreal_colossus", DisplayName: "Boreal Colossus", Tier: 3,
+            TypeClass: TypeClass.Melee, Element: Element.Frost,
+            MaxHp: 950, Damage: 30, ForeswingTicks: 12, BackswingTicks: 18,
+            Range: 1.2f, RangeMin: 0f, IsArea: false, MoveSpeed: 0.9f,
+            KnockbackCount: 5, DeployCost: 380, DeployCooldownTicks: 360,
+            Stratum: Stratum.Ground, CanTargetGround: true, CanTargetAir: false),
+
+        // Venom — 4 total with the archer and chanter.
+        new UnitDef(
+            Id: "bog_stalker", DisplayName: "Bog Stalker", Tier: 1,
+            TypeClass: TypeClass.Melee, Element: Element.Venom,
+            MaxHp: 85, Damage: 11, ForeswingTicks: 5, BackswingTicks: 9,
+            Range: 0.9f, RangeMin: 0f, IsArea: false, MoveSpeed: 2.8f,
+            KnockbackCount: 2, DeployCost: 55, DeployCooldownTicks: 80,
+            Stratum: Stratum.Ground, CanTargetGround: true, CanTargetAir: false),
+        new UnitDef(
+            Id: "plague_bell", DisplayName: "Plague Bell", Tier: 3,
+            TypeClass: TypeClass.Siege, Element: Element.Venom,
+            MaxHp: 300, Damage: 28, ForeswingTicks: 12, BackswingTicks: 22,
+            Range: 7f, RangeMin: 2f, IsArea: true, MoveSpeed: 1.0f,
+            KnockbackCount: 3, DeployCost: 340, DeployCooldownTicks: 330,
+            Stratum: Stratum.Ground, CanTargetGround: true, CanTargetAir: true),
+
+        // Stone — 4 total with the warden and ram.
+        new UnitDef(
+            Id: "quarry_slinger", DisplayName: "Quarry Slinger", Tier: 2,
+            TypeClass: TypeClass.Sniper, Element: Element.Stone,
+            MaxHp: 130, Damage: 34, ForeswingTicks: 13, BackswingTicks: 20,
+            Range: 8.5f, RangeMin: 2.5f, IsArea: false, MoveSpeed: 1.5f,
+            KnockbackCount: 2, DeployCost: 170, DeployCooldownTicks: 240,
+            Stratum: Stratum.Ground, CanTargetGround: true, CanTargetAir: true),
+        new UnitDef(
+            Id: "deepway_bulwark", DisplayName: "Deepway Bulwark", Tier: 2,
+            TypeClass: TypeClass.Melee, Element: Element.Stone,
+            MaxHp: 420, Damage: 12, ForeswingTicks: 10, BackswingTicks: 16,
+            Range: 0.9f, RangeMin: 0f, IsArea: false, MoveSpeed: 1.2f,
+            KnockbackCount: 4, DeployCost: 200, DeployCooldownTicks: 280,
+            Stratum: Stratum.Ground, CanTargetGround: true, CanTargetAir: false),
+
+        // Storm — 5 total with the monk, marksman, and gryphon.
+        new UnitDef(
+            Id: "spark_courier", DisplayName: "Spark Courier", Tier: 1,
+            TypeClass: TypeClass.Melee, Element: Element.Storm,
+            MaxHp: 75, Damage: 10, ForeswingTicks: 4, BackswingTicks: 8,
+            Range: 0.8f, RangeMin: 0f, IsArea: false, MoveSpeed: 3.0f,
+            KnockbackCount: 2, DeployCost: 50, DeployCooldownTicks: 75,
+            Stratum: Stratum.Ground, CanTargetGround: true, CanTargetAir: false),
+        new UnitDef(
+            Id: "gale_harrier", DisplayName: "Gale Harrier", Tier: 2,
+            TypeClass: TypeClass.Aerial, Element: Element.Storm,
+            MaxHp: 200, Damage: 18, ForeswingTicks: 7, BackswingTicks: 9,
+            Range: 1.3f, RangeMin: 0f, IsArea: false, MoveSpeed: 2.9f,
+            KnockbackCount: 3, DeployCost: 180, DeployCooldownTicks: 240,
+            Stratum: Stratum.Air, CanTargetGround: true, CanTargetAir: true),
+    };
+
+    /// <summary>FirstPlayable + the expansion — the complete v1 muster roll.</summary>
+    public static readonly IReadOnlyList<UnitDef> FullRoster =
+        System.Linq.Enumerable.ToList(
+            System.Linq.Enumerable.Concat(FirstPlayable, RosterExpansion));
 }

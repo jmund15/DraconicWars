@@ -46,6 +46,45 @@ public static class UnitLore
         ["pyraxis"] = new(
             "Pyraxis, the Marchfire",
             "He remembers being worshipped. He prefers being feared. He is learning to be free."),
+        ["cinder_acolyte"] = new(
+            "Acolyte of the First Flame",
+            "She lobs prayers. The prayers are on fire."),
+        ["ash_revenant"] = new(
+            "Revenant of the Ashmark",
+            "Burned once already. Now he runs toward it."),
+        ["cinder_wyrmling"] = new(
+            "Wyrmling of the Marchfire's Brood",
+            "Small enough to pity. Briefly."),
+        ["pyre_ogre"] = new(
+            "Ogre of the Pyre Roads",
+            "He carries the bonfire with him. He IS most of the bonfire."),
+        ["rime_sentry"] = new(
+            "Sentry of the Still Word",
+            "He has stood one watch for nine years. The watch is not over."),
+        ["glacier_adept"] = new(
+            "Adept of the Slow Catastrophe",
+            "Her spells arrive late and stay forever."),
+        ["boreal_colossus"] = new(
+            "Colossus of the Boreal Vault",
+            "The avalanche, taught to walk uphill."),
+        ["bog_stalker"] = new(
+            "Stalker of the Drowned Tithe",
+            "You owe the bog. He collects."),
+        ["plague_bell"] = new(
+            "The Plague Bell",
+            "It tolls once per debt. It has never stopped tolling."),
+        ["quarry_slinger"] = new(
+            "Slinger of the Quarried Oath",
+            "Every stone she throws was somebody's wall."),
+        ["deepway_bulwark"] = new(
+            "Bulwark of the Deepways",
+            "The mountain sent its opinion. The opinion holds the line."),
+        ["spark_courier"] = new(
+            "Courier of the Loosed Sky",
+            "Delivers exactly one message: too slow."),
+        ["gale_harrier"] = new(
+            "Harrier of the High Reaches",
+            "She has never landed where she was aimed. Neither have her talons."),
     };
 
     public static Entry For(string unitId)
