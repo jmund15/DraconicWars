@@ -60,6 +60,10 @@ public sealed class PlayerState
     /// <summary>Tick at which the open parley auto-seals its first offer.</summary>
     public int ParleyDeadlineTick { get; set; }
 
+    /// <summary>Rebreathing: companies re-sworn this battle (unit id → new element).
+    /// A company re-swears ONCE per duel; future deploys spawn attuned.</summary>
+    public Dictionary<string, Element> AttunedThisBattle { get; } = new();
+
     // Edict counters (cumulative; EdictProgress reads them).
 
     public Dictionary<Element, float> ManaDeployedByElement { get; } = new();

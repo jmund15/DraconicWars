@@ -21,6 +21,10 @@ public sealed class PlayerProfile
     /// <summary>Unlocked units: unit id → current level. Presence = unlocked.</summary>
     public Dictionary<string, int> UnitLevels { get; set; } = new();
 
+    /// <summary>Rebreathing options owned, keyed "unitId:Element". Permanent
+    /// horizontal unlocks — never respecced.</summary>
+    public HashSet<string> AttunementsOwned { get; set; } = new();
+
     public int LevelsPurchased { get; set; }
 
     public List<string> ClearedLevelIds { get; set; } = new();

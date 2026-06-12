@@ -23,4 +23,9 @@ public sealed record UnitDef(
     int DeployCooldownTicks,
     Stratum Stratum,
     bool CanTargetGround,
-    bool CanTargetAir);
+    bool CanTargetAir)
+{
+    /// <summary>Set when this def is an in-battle Rebreathing variant: the element the
+    /// company was originally sworn to. Null means fighting under its native Breath.</summary>
+    public Element? NativeElement { get; init; }
+}

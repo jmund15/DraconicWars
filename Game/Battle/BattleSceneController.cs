@@ -1,6 +1,7 @@
 namespace DraconicWars.Game.Battle;
 
 using System.Collections.Generic;
+using System.Linq;
 using DraconicWars.Game.Battle.Hud;
 using DraconicWars.Game.Campaign;
 using DraconicWars.Game.Content;
@@ -45,6 +46,7 @@ public partial class BattleSceneController : Node2D
     private int _lastAscensionTier = 1;
     private PanelContainer? _draftPanel;
     private Label? _parleyCountdown;
+    private bool _breathHintShown;
 
     public override void _Ready()
     {
@@ -87,6 +89,7 @@ public partial class BattleSceneController : Node2D
             Runner, _localSide, playerLoadout, ConduitDefs.All,
             GameSession.Profile.UnitLevels);
         Hud.DeployRequested += id => Runner.EnqueueCommand(SimCommand.Deploy(_localSide, id));
+        Hud.AttuneRequested += OnAttuneRequested;
         Hud.ConduitBuildRequested += OnConduitBuildRequested;
         Hud.ConduitSellRequested += id => Runner.EnqueueCommand(SimCommand.SellConduit(_localSide, id));
 
@@ -145,6 +148,55 @@ public partial class BattleSceneController : Node2D
         {
             ApplyResultAndShowOutcome(won: false, retreated: true);
         }
+    }
+
+    /// <summary>Rebreathing menu: lists the profile-OWNED attunements for the company
+    /// (the sim doesn't know the meta — ownership is enforced here at the source).</summary>
+    private void OnAttuneRequested(string defId)
+    {
+        var player = Runner.State.Player(_localSide);
+        if (player.AttunedThisBattle.ContainsKey(defId))
+        {
+            ShowToast("That company has already re-sworn its Breath this battle",
+                new Color(0.8f, 0.8f, 0.8f));
+            return;
+        }
+        var baseDef = UnitCatalog.FirstPlayable.FirstOrDefault(d => d.Id == defId);
+        if (baseDef is null || baseDef.Tier >= 4)
+        {
+            return;
+        }
+        var cost = (int)(baseDef.DeployCost * Runner.State.Config.RebreathCostFactor);
+        var options = new List<Sim.Units.Element>();
+        foreach (var key in GameSession.Profile.AttunementsOwned)
+        {
+            if (key.StartsWith(defId + ":")
+                && System.Enum.TryParse<Sim.Units.Element>(
+                    key[(defId.Length + 1)..], out var element)
+                && element != baseDef.Element)
+            {
+                options.Add(element);
+            }
+        }
+        if (options.Count == 0)
+        {
+            ShowToast($"No attunements unlocked for {baseDef.DisplayName} — see the Warband screen",
+                new Color(0.8f, 0.8f, 0.8f));
+            return;
+        }
+
+        var menu = new PopupMenu();
+        for (var i = 0; i < options.Count; i++)
+        {
+            menu.AddItem($"Re-swear to {options[i]}  ({cost} mana, once per battle)", i);
+        }
+        var captured = options;
+        menu.IdPressed += id => Runner.EnqueueCommand(
+            SimCommand.AttuneUnit(_localSide, defId, captured[(int)id]));
+        menu.PopupHide += menu.QueueFree;
+        Hud.AddChild(menu);
+        menu.Position = (Vector2I)GetViewport().GetMousePosition();
+        menu.Popup();
     }
 
     private void OnConduitBuildRequested(string conduitId)
@@ -391,6 +443,19 @@ public partial class BattleSceneController : Node2D
         UnitLayer.AddChild(view);
         view.Bind(unit, frames);
         _views[unit.InstanceId] = view;
+
+        // Breath onboarding: most ground units cannot strike the air lane — the
+        // first hostile flyer teaches the verb (full tank = breath never fired).
+        if (!_breathHintShown
+            && unit.Side != _localSide
+            && unit.Def.Stratum == Sim.Units.Stratum.Air
+            && Runner.State.Player(_localSide).BreathEnergySeconds
+                >= Runner.State.Config.BreathMaxSeconds - 0.01f)
+        {
+            _breathHintShown = true;
+            ShowToast("Aerial raiders! Hold RIGHT-CLICK to aim your dragon's breath",
+                new Color(0.62f, 0.86f, 1f));
+        }
     }
 
     private static string StripEnemyPrefix(string defId)

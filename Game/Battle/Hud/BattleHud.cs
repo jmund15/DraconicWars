@@ -17,6 +17,8 @@ public partial class BattleHud : CanvasLayer
 {
     public event Action<string> DeployRequested = delegate { };
 
+    public event Action<string> AttuneRequested = delegate { };
+
     public event Action<string> ConduitBuildRequested = delegate { };
 
     public event Action<string> ConduitSellRequested = delegate { };
@@ -79,6 +81,7 @@ public partial class BattleHud : CanvasLayer
             DeployBar.AddChild(card);
             card.Bind(def, unitLevels?.GetValueOrDefault(def.Id) ?? 0);
             card.DeployRequested += id => DeployRequested(id);
+            card.AttuneRequested += id => AttuneRequested(id);
             _cards.Add(card);
         }
 
@@ -171,6 +174,10 @@ public partial class BattleHud : CanvasLayer
                 player.Mana, cooldownLeft,
                 def?.DeployCooldownTicks ?? 0,
                 def is not null && def.Tier > tier);
+            if (player.AttunedThisBattle.TryGetValue(defId, out var attunedElement))
+            {
+                card.ShowAttuned(attunedElement);
+            }
         }
 
         foreach (var (conduitId, button) in _conduitButtons)

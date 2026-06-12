@@ -1,6 +1,7 @@
 namespace DraconicWars.Game.Battle.Hud;
 
 using System;
+using System.Collections.Generic;
 using DraconicWars.Sim.Units;
 using Godot;
 using Jmodot.Core.Shared.Attributes;
@@ -12,6 +13,9 @@ using Jmodot.Core.Shared.Attributes;
 public partial class UnitCard : Button
 {
     public event Action<string> DeployRequested = delegate { };
+
+    /// <summary>Right-click: open the Rebreathing menu for this company.</summary>
+    public event Action<string> AttuneRequested = delegate { };
 
     [Export, RequiredExport] public Label NameLabel { get; set; } = null!;
 
@@ -27,6 +31,36 @@ public partial class UnitCard : Button
     {
         this.ValidateRequiredExports();
         Pressed += () => DeployRequested(UnitDefId);
+        GuiInput += @event =>
+        {
+            if (@event is InputEventMouseButton { ButtonIndex: MouseButton.Right, Pressed: true })
+            {
+                AttuneRequested(UnitDefId);
+            }
+        };
+    }
+
+    private static readonly System.Collections.Generic.Dictionary<Element, Color> ElementTints = new()
+    {
+        [Element.Fire] = Color.FromHtml("f9a875"),
+        [Element.Storm] = Color.FromHtml("d3fc7e"),
+        [Element.Venom] = Color.FromHtml("99e65f"),
+        [Element.Stone] = Color.FromHtml("d1b187"),
+        [Element.Frost] = Color.FromHtml("8fd3ff"),
+    };
+
+    private bool _attunedShown;
+
+    /// <summary>Marks the card once its company has re-sworn this battle.</summary>
+    public void ShowAttuned(Element element)
+    {
+        if (_attunedShown)
+        {
+            return;
+        }
+        _attunedShown = true;
+        NameLabel.Modulate = ElementTints.GetValueOrDefault(element, Colors.White);
+        TooltipText += $"\nRe-sworn to {element} this battle";
     }
 
     public void Bind(UnitDef def, int level = 0)

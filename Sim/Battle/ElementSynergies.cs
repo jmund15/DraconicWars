@@ -21,21 +21,36 @@ public static class ElementSynergies
     public const int FrostSlowTicks = 30;
     public const float VenomExecuteHpThreshold = 0.5f;
 
+    /// <summary>Re-sworn (attuned) companies count toward Resonance, but at most this
+    /// many per element — the published rule closing mono-element Rebreathing spam.
+    /// Element EFFECTS still apply to every unit of the element.</summary>
+    public const int AttunedSynergyCap = 2;
+
     /// <summary>0 = inactive, 1 = threshold 2 reached, 2 = threshold 4 reached.</summary>
     public static int TierFor(BattleState state, PlayerSide side, Element element)
     {
-        var distinct = new HashSet<string>();
+        var native = new HashSet<string>();
+        var attuned = new HashSet<string>();
         foreach (var unit in state.Units)
         {
-            if (unit.Side == side && unit.IsAlive && unit.Def.Element == element)
+            if (unit.Side != side || !unit.IsAlive || unit.Def.Element != element)
             {
-                distinct.Add(unit.Def.Id);
+                continue;
+            }
+            if (unit.Def.NativeElement is { } sworn && sworn != unit.Def.Element)
+            {
+                attuned.Add(unit.Def.Id);
+            }
+            else
+            {
+                native.Add(unit.Def.Id);
             }
         }
-        if (distinct.Count >= ThresholdTierTwo)
+        var tally = native.Count + System.Math.Min(AttunedSynergyCap, attuned.Count);
+        if (tally >= ThresholdTierTwo)
         {
             return 2;
         }
-        return distinct.Count >= ThresholdTierOne ? 1 : 0;
+        return tally >= ThresholdTierOne ? 1 : 0;
     }
 }

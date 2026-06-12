@@ -47,6 +47,7 @@ public static class MetaProgression
     {
         return profile.LevelsPurchased
             + profile.UnitLevels.Count
+            + profile.AttunementsOwned.Count
             + profile.CampaignFirstClears * 2
             + profile.HeatRungClears
             + profile.AchievementsEarned;
@@ -120,6 +121,43 @@ public static class MetaProgression
         profile.GoldSpentOnLevels += cost;
         profile.UnitLevels[unitId] = nextLevel;
         profile.LevelsPurchased++;
+        return true;
+    }
+
+    public static string AttunementKey(string unitId, DraconicWars.Sim.Units.Element element)
+    {
+        return $"{unitId}:{element}";
+    }
+
+    /// <summary>Gold cost of unlocking one Rebreathing element for a unit —
+    /// 2x the unit's first level-up on the shared table (100/400/3200 by tier).</summary>
+    public static int AttunementCost(int unitTier)
+    {
+        return 2 * CostForLevel(EntryLevel(unitTier) + 1);
+    }
+
+    public static bool TryBuyAttunement(
+        PlayerProfile profile,
+        string unitId,
+        DraconicWars.Sim.Units.Element element,
+        int unitTier,
+        DraconicWars.Sim.Units.Element nativeElement)
+    {
+        var key = AttunementKey(unitId, element);
+        if (element == nativeElement
+            || unitTier >= 4
+            || profile.AttunementsOwned.Contains(key)
+            || !profile.UnitLevels.ContainsKey(unitId))
+        {
+            return false;
+        }
+        var cost = AttunementCost(unitTier);
+        if (profile.Gold < cost)
+        {
+            return false;
+        }
+        profile.Gold -= cost;
+        profile.AttunementsOwned.Add(key);
         return true;
     }
 

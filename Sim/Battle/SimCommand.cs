@@ -14,6 +14,7 @@ public enum SimCommandKind
     CastWrath,
     SealPact,
     PayTithe,
+    AttuneUnit,
 }
 
 public readonly record struct SimCommand(
@@ -43,6 +44,14 @@ public readonly record struct SimCommand(
     public static SimCommand PayTithe(PlayerSide side)
     {
         return new SimCommand(SimCommandKind.PayTithe, side, string.Empty);
+    }
+
+    /// <summary>Rebreathing: re-swear a company's Breath for the rest of the duel.
+    /// Element rides in Amount (the command payload stays a flat value struct).</summary>
+    public static SimCommand AttuneUnit(
+        PlayerSide side, string unitDefId, DraconicWars.Sim.Units.Element element)
+    {
+        return new SimCommand(SimCommandKind.AttuneUnit, side, unitDefId, (int)element);
     }
 
     public static readonly IReadOnlyList<SimCommand> None = Array.Empty<SimCommand>();

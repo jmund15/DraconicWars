@@ -73,6 +73,9 @@ public sealed record BattleConfig(
     /// <summary>Runner-up's share of the surge (anti-snowball: the race stays live).</summary>
     public float EdictRunnerUpPct { get; init; } = 0.5f;
 
+    /// <summary>Rebreathing cost as a multiple of the unit's deploy cost.</summary>
+    public float RebreathCostFactor { get; init; } = 1.0f;
+
     public static readonly BattleConfig Default = new(
         TickRate: 30,
         LaneLength: 38f,

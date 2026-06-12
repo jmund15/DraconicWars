@@ -144,6 +144,9 @@ public sealed class BattleSim
                 case SimCommandKind.PayTithe:
                     TryPayTithe(state, command.Side);
                     break;
+                case SimCommandKind.AttuneUnit:
+                    TryAttuneUnit(state, command.Side, command.TargetId, (Element)command.Amount);
+                    break;
             }
         }
     }
@@ -252,6 +255,29 @@ public sealed class BattleSim
         return false;
     }
 
+    /// <summary>Rebreathing (design directive): once per duel a company re-swears its
+    /// Breath for mana; FUTURE deploys spawn attuned, fielded units keep their oath.
+    /// Ownership of attunement options is a meta concern enforced at the command
+    /// source (UI/AI) — the sim enforces only the in-battle rules.</summary>
+    private void TryAttuneUnit(BattleState state, PlayerSide side, string unitDefId, Element element)
+    {
+        if (!_defs.TryGetValue(unitDefId, out var def))
+        {
+            return;
+        }
+        var player = state.Player(side);
+        var cost = def.DeployCost * _config.RebreathCostFactor;
+        if (player.AttunedThisBattle.ContainsKey(unitDefId)
+            || element == def.Element
+            || def.Tier >= 4
+            || player.Mana < cost)
+        {
+            return;
+        }
+        player.Mana -= cost;
+        player.AttunedThisBattle[unitDefId] = element;
+    }
+
     private void TryDeploy(BattleState state, PlayerSide side, string unitDefId)
     {
         if (!_defs.TryGetValue(unitDefId, out var def))
@@ -259,6 +285,10 @@ public sealed class BattleSim
             return;
         }
         var player = state.Player(side);
+        if (player.AttunedThisBattle.TryGetValue(unitDefId, out var attunedElement))
+        {
+            def = def with { Element = attunedElement, NativeElement = def.Element };
+        }
         if (def.Tier > player.AscensionTier)
         {
             return;

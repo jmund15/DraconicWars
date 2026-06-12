@@ -99,6 +99,7 @@ public partial class LevelSelect : Control
             var buy = new Button { CustomMinimumSize = new Vector2(80, 0) };
             row.AddChild(label);
             row.AddChild(buy);
+            BuildAttunementRunes(row, def, profile);
             UpgradeList.AddChild(row);
 
             var defId = def.Id;
@@ -149,6 +150,54 @@ public partial class LevelSelect : Control
     private static int ScaledStat(int baseStat, int level, int tier)
     {
         return (int)System.MathF.Round(baseStat * MetaProgression.StatMultiplier(level, tier));
+    }
+
+    private static readonly (DraconicWars.Sim.Units.Element Element, string Rune)[] Runes =
+    {
+        (DraconicWars.Sim.Units.Element.Fire, "Fi"),
+        (DraconicWars.Sim.Units.Element.Storm, "St"),
+        (DraconicWars.Sim.Units.Element.Venom, "Ve"),
+        (DraconicWars.Sim.Units.Element.Stone, "So"),
+        (DraconicWars.Sim.Units.Element.Frost, "Fr"),
+    };
+
+    /// <summary>One rune button per non-native element: buys the Rebreathing unlock
+    /// (in-battle re-swears live on the deploy card's right-click).</summary>
+    private void BuildAttunementRunes(
+        HBoxContainer row, DraconicWars.Sim.Units.UnitDef def, PlayerProfile profile)
+    {
+        foreach (var (element, rune) in Runes)
+        {
+            if (element == def.Element)
+            {
+                continue;
+            }
+            var runeButton = new Button { CustomMinimumSize = new Vector2(24, 0) };
+            var cost = MetaProgression.AttunementCost(def.Tier);
+            void RefreshRune()
+            {
+                var owned = profile.AttunementsOwned.Contains(
+                    MetaProgression.AttunementKey(def.Id, element));
+                runeButton.Text = owned ? $"·{rune}" : rune;
+                runeButton.Disabled = owned || profile.Gold < cost;
+                runeButton.TooltipText = owned
+                    ? $"{element} attunement owned — re-swear in battle (right-click the card)"
+                    : $"Unlock {element} attunement for {def.DisplayName} — {cost}g";
+            }
+            runeButton.Pressed += () =>
+            {
+                if (MetaProgression.TryBuyAttunement(
+                    profile, def.Id, element, def.Tier, def.Element))
+                {
+                    GameSession.SaveProfile();
+                    RefreshHeader();
+                    RefreshAllRows();
+                }
+            };
+            _rowRefreshers.Add(RefreshRune);
+            RefreshRune();
+            row.AddChild(runeButton);
+        }
     }
 
     private readonly System.Collections.Generic.List<System.Action> _rowRefreshers = new();
