@@ -1,0 +1,9 @@
+[gd_resource type="Resource" script_class="SignatureVfxProfile" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://Game/Battle/Vfx/SignatureVfxProfile.cs" id="1"]
+
+[resource]
+script = ExtResource("1")
+Aura = 4
+EmissiveColors = PackedColorArray(0.902, 0.5647, 0.3059, 1, 0.9843, 0.7255, 0.3294, 1)
+LightColor = Color(0.8196, 0.6941, 0.5294, 1)

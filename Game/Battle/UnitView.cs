@@ -1,6 +1,8 @@
 namespace DraconicWars.Game.Battle;
 
 using DraconicWars.Sim.Battle;
+using DraconicWars.Sim.Units;
+using DraconicWars.Game.Battle.Vfx;
 using Godot;
 
 /// <summary>
@@ -39,6 +41,7 @@ public partial class UnitView : Node2D
         _sprite.Modulate = Colors.White.Lerp(
             ElementColors.Of(unit.Def.Element), attuned ? 0.55f : 0.35f);
         AddChild(_sprite);
+        ApplySignatureVfx(unit.Def.Element, unit.Def.Tier);
         _moveAnim = frames.HasAnimation(FlyAnim) ? FlyAnim : WalkAnim;
         _lastX = unit.X;
         Position = LaneGeometry.ToWorld(unit.X, unit.Stratum);
@@ -97,6 +100,87 @@ public partial class UnitView : Node2D
         {
             QueueFree();
         }
+    }
+
+    private static Shader? _emissiveShader;
+    private static Texture2D? _dotTexture;
+
+    /// <summary>Attaches the element + tier-scaled signature look: an emissive-bloom shader
+    /// on the sprite (separate lane from the modulate tint), an element particle aura, and —
+    /// for the highest tiers — an additive light halo. View-only; reads sim def, never mutates.</summary>
+    private void ApplySignatureVfx(Element element, int tier)
+    {
+        var profile = SignatureVfxProfiles.For(element);
+        if (profile is null)
+        {
+            return;
+        }
+        var resolved = SignatureVfxResolver.Resolve(tier, profile.ToResolverConfig());
+
+        if (profile.EmissiveColors.Length > 0)
+        {
+            _emissiveShader ??= GD.Load<Shader>("res://assets/shaders/emissive_bloom.gdshader");
+            var mat = new ShaderMaterial { Shader = _emissiveShader };
+            mat.SetShaderParameter("emissive_a", profile.EmissiveColors[0]);
+            mat.SetShaderParameter("emissive_b", profile.EmissiveColors[profile.EmissiveColors.Length > 1 ? 1 : 0]);
+            mat.SetShaderParameter("boost", resolved.EmissiveBoost);
+            _sprite.Material = mat;
+        }
+
+        var aura = new CpuParticles2D
+        {
+            Texture = DotTexture(),
+            Amount = Mathf.Clamp((int)resolved.AuraDensity, 1, 32),
+            Lifetime = 1.3f,
+            Direction = Vector2.Up,
+            Spread = 35f,
+            Gravity = new Vector2(0f, -8f),
+            InitialVelocityMin = 4f,
+            InitialVelocityMax = 10f,
+            ScaleAmountMin = 0.5f,
+            ScaleAmountMax = 1.2f,
+            Modulate = profile.LightColor,
+            ZIndex = -1,
+            Emitting = true,
+        };
+        AddChild(aura);
+
+        if (resolved.SpawnLight)
+        {
+            var light = new PointLight2D
+            {
+                Texture = DotTexture(),
+                Color = profile.LightColor,
+                Energy = resolved.LightEnergy,
+                TextureScale = 6f,
+                BlendMode = Light2D.BlendModeEnum.Add,
+                ZIndex = -1,
+            };
+            AddChild(light);
+        }
+    }
+
+    private static Texture2D DotTexture()
+    {
+        if (_dotTexture is not null)
+        {
+            return _dotTexture;
+        }
+        var gradient = new Gradient
+        {
+            Offsets = new[] { 0f, 1f },
+            Colors = new[] { Colors.White, new Color(1f, 1f, 1f, 0f) },
+        };
+        _dotTexture = new GradientTexture2D
+        {
+            Gradient = gradient,
+            Fill = GradientTexture2D.FillEnum.Radial,
+            FillFrom = new Vector2(0.5f, 0.5f),
+            FillTo = new Vector2(1f, 0.5f),
+            Width = 8,
+            Height = 8,
+        };
+        return _dotTexture;
     }
 
     private void PlayIfAvailable(StringName animation)

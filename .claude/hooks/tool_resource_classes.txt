@@ -185,6 +185,7 @@ RecentHitCondition
 RecoilAirborneStrategy2D
 ReleaseVerb
 ResourceCollection
+SignatureVfxProfile
 SimpleSelfDamageDefinition
 SlidePhysicsStrategy
 SlotConstraint

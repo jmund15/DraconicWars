@@ -1,4 +1,4 @@
-[gd_scene load_steps=11 format=3]
+[gd_scene load_steps=12 format=3]
 
 [ext_resource type="Script" path="res://Game/Battle/BattleSceneController.cs" id="1"]
 [ext_resource type="Script" path="res://Game/Battle/BattleRunner.cs" id="2"]
@@ -11,6 +11,14 @@
 [ext_resource type="Texture2D" path="res://art_pipeline/output/backgrounds/cinderfell_ground.png" id="8"]
 [ext_resource type="Texture2D" path="res://art_pipeline/output/spires/spire_sheet.png" id="10"]
 
+[sub_resource type="Environment" id="Environment_glow"]
+background_mode = 4
+glow_enabled = true
+glow_intensity = 0.4
+glow_strength = 1.0
+glow_blend_mode = 2
+glow_hdr_threshold = 0.9
+
 [node name="BattleScene" type="Node2D" node_paths=PackedStringArray("Runner", "UnitLayer", "Hud", "OutcomePanel", "OutcomeLabel", "ContinueButton", "LeftSpire", "RightSpire")]
 script = ExtResource("1")
 Runner = NodePath("Runner")
@@ -21,6 +29,9 @@ Hud = NodePath("Hud")
 OutcomePanel = NodePath("Hud/OutcomeCenter/OutcomePanel")
 OutcomeLabel = NodePath("Hud/OutcomeCenter/OutcomePanel/VBox/OutcomeLabel")
 ContinueButton = NodePath("Hud/OutcomeCenter/OutcomePanel/VBox/Continue")
+
+[node name="WorldEnv" type="WorldEnvironment" parent="."]
+environment = SubResource("Environment_glow")
 
 [node name="Background" type="Node2D" parent="."]
 
