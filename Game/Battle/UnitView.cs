@@ -32,9 +32,9 @@ public partial class UnitView : Node2D
         _sprite = new AnimatedSprite2D
         {
             SpriteFrames = frames,
-            Centered = true,
             FlipH = unit.Side == PlayerSide.Right,
         };
+        AnchorFeetToOrigin(_sprite, frames);
         // Element identity is always-on (playtest: tints only on re-sworn units made
         // both elements and Rebreathing illegible). Re-sworn companies read louder.
         var attuned = unit.Def.NativeElement is { } native && native != unit.Def.Element;
@@ -183,6 +183,32 @@ public partial class UnitView : Node2D
         return _dotTexture;
     }
 
+    // Feet-anchor: node origin = bottom-center of the frame, so units of any height share
+    // the lane baseline. Center-anchoring sinks taller units half-a-height below the line.
+    private static void AnchorFeetToOrigin(AnimatedSprite2D sprite, SpriteFrames frames)
+    {
+        var frame = FirstFrameTexture(frames);
+        if (frame is null)
+        {
+            sprite.Centered = true;
+            return;
+        }
+        sprite.Centered = false;
+        sprite.Offset = new Vector2(-frame.GetWidth() / 2f, -frame.GetHeight());
+    }
+
+    private static Texture2D? FirstFrameTexture(SpriteFrames frames)
+    {
+        foreach (var anim in frames.GetAnimationNames())
+        {
+            if (frames.GetFrameCount(anim) > 0)
+            {
+                return frames.GetFrameTexture(anim, 0);
+            }
+        }
+        return null;
+    }
+
     private void PlayIfAvailable(StringName animation)
     {
         if (_sprite.Animation == animation)
@@ -194,4 +220,10 @@ public partial class UnitView : Node2D
             _sprite.Play(animation);
         }
     }
+
+    #region Test Helpers
+#if TOOLS
+    internal AnimatedSprite2D _TestSprite => _sprite;
+#endif
+    #endregion
 }
