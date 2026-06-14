@@ -1,7 +1,7 @@
 {
   "baseline_repo": "https://github.com/jmund15/GodotDev_HarnessBaseline.git",
   "baseline_ref": "main",
-  "synced_commit": "d51d09733669104042f43bf95d59018af0017d78",
+  "synced_commit": "73bc589a4485c66ab401a8a53e771f022c4734eb",
   "substitutions": {
     "{{PROJECT_NAME}}": "DraconicWars",
     "{{VAULT_ROOT}}": "C:\\Users\\jmund\\OneDrive\\Documents\\ObsidianVault\\DevProjects\\DraconicWars",
@@ -778,7 +778,7 @@
     },
     ".claude/hooks/pattern_enforcer.py": {
       "status": "tracked",
-      "hash": "c28e28d5b76f202281c73a99cc0409c38e519bc23b0e808cf109dd439d5fc95f",
+      "hash": "86f46b7d82e6e9e45d66d2d21d0ba5bd002fe8ab312d74ef075a75734e9020ed",
       "layer": "godot"
     },
     ".claude/hooks/plan_memory_reminder.py": {
