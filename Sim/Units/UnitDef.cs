@@ -29,6 +29,12 @@ public sealed record UnitDef(
     /// company was originally sworn to. Null means fighting under its native Breath.</summary>
     public Element? NativeElement { get; init; }
 
+    /// <summary>Attack visual archetype: class (Physical|Magic) x pose x form. Defaults
+    /// to physical-swing; the catalog overrides casters to Magic. The sim ignores this
+    /// (hitscan); the view reads it to spawn a cosmetic element form. See
+    /// arch-attack-archetypes.md §3.</summary>
+    public AttackArchetype Attack { get; init; } = AttackArchetype.MeleePhysical;
+
     // Signature kits (Full Roster Batch): ONE data-driven mechanic per unit, all
     // defaulting off. The sim reads these; no per-unit code exists anywhere.
 

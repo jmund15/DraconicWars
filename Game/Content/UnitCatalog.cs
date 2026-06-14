@@ -53,7 +53,10 @@ public static class UnitCatalog
             MaxHp: 90, Damage: 8, ForeswingTicks: 10, BackswingTicks: 20,
             Range: 5.0f, RangeMin: 0f, IsArea: true, MoveSpeed: 1.6f,
             KnockbackCount: 2, DeployCost: 130, DeployCooldownTicks: 180,
-            Stratum: Stratum.Ground, CanTargetGround: true, CanTargetAir: true),
+            Stratum: Stratum.Ground, CanTargetGround: true, CanTargetAir: true)
+        {
+            Attack = new AttackArchetype(AttackClass.Magic, AttackPose.Channel, AttackForm.Ball),
+        },
         new UnitDef(
             Id: "dune_marksman", DisplayName: "Dune Marksman", Tier: 2,
             TypeClass: TypeClass.Sniper, Element: Element.Storm,
@@ -112,6 +115,7 @@ public static class UnitCatalog
             Stratum: Stratum.Ground, CanTargetGround: true, CanTargetAir: true)
         {
             PrefersFarthestTarget = true,
+            Attack = new AttackArchetype(AttackClass.Magic, AttackPose.Cast, AttackForm.Ball),
         },
         new UnitDef(
             Id: "ash_revenant", DisplayName: "Ash Revenant", Tier: 2,
@@ -170,6 +174,7 @@ public static class UnitCatalog
             ZoneSlowPct = 0.4f,
             ZoneDurationTicks = 150,
             ZoneDamagePerTick = 1,
+            Attack = new AttackArchetype(AttackClass.Magic, AttackPose.Cast, AttackForm.Shard),
         },
         new UnitDef(
             Id: "boreal_colossus", DisplayName: "Boreal Colossus", Tier: 3,
@@ -181,6 +186,7 @@ public static class UnitCatalog
         {
             ShoveDistance = 2.5f,
             ShoveRadius = 2f,
+            Attack = new AttackArchetype(AttackClass.Magic, AttackPose.Cast, AttackForm.Shard),
         },
 
         // Venom — 4 total with the archer and chanter.
