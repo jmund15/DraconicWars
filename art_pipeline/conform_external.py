@@ -28,8 +28,13 @@ Mapping dict / JSON (the per-source spec):
       "levels": 4,                     # posterize value levels
       "materials": [                   # 1 entry -> whole body on one ramp;
         {"ramp": "fire"}               # >1 -> nearest-hue assignment per pixel
-        # {"ramp": "tan", "hue": 30}, {"ramp": "frost", "hue": 210}
+        # {"ramp": "tan", "hue": 30}, {"ramp": "frost", "hue": 210},
+        # {"ramp": "mauve_grey", "neutral": true}  # desaturated px -> here
       ],
+      "neutral_sat_max": 0.18,         # optional; sat below this -> neutral mat
+      "body_fill": 0.85,               # optional; body height as fraction of the
+                                       # canvas (decouples hero size from class)
+      "body_height": 52,              # optional; absolute px, wins over body_fill
       "source_sheet": "external/sources/wizard.png",  # path (CLI only)
       "source_grid": {"frame_w": 64, "frame_h": 64},  # source cell size
       "rows": [                        # source row -> target animation
@@ -130,12 +135,21 @@ def _level_to_index(level: int, levels: int, ramp_len: int) -> int:
     return max(0, min(ramp_len - 1, idx))
 
 
-def _material_for(rgb, materials: list[dict]) -> dict:
-    """Single material -> that ramp; else nearest by circular hue distance."""
+def _material_for(rgb, materials: list[dict], neutral: dict | None = None,
+                  neutral_sat_max: float = 0.18) -> dict:
+    """Pick the ramp for one source pixel.
+
+    A desaturated pixel (near-white/grey: book pages, beard, highlights) has no
+    meaningful hue, so hue-matching it against chromatic materials misfiles it
+    onto whatever anchor is nearest 0deg (skin) -- which fused the wizard's book
+    into his face. When a ``neutral`` material is declared, pixels below
+    ``neutral_sat_max`` saturation route there instead. Otherwise: single
+    material -> that ramp; else nearest chromatic material by circular hue."""
+    if neutral is not None and colorsys.rgb_to_hsv(*(c / 255 for c in rgb))[1] < neutral_sat_max:
+        return neutral
     if len(materials) == 1:
         return materials[0]
-    r, g, b = (c / 255 for c in rgb)
-    hue = colorsys.rgb_to_hsv(r, g, b)[0] * 360
+    hue = colorsys.rgb_to_hsv(*(c / 255 for c in rgb))[0] * 360
     best, bestd = materials[0], 1e9
     for m in materials:
         if "hue" not in m:
@@ -146,17 +160,28 @@ def _material_for(rgb, materials: list[dict]) -> dict:
     return best
 
 
-def _target_body_height(typeclass: str, ground_y: int, airborne: bool) -> int:
-    """Scale target: mid of the typeclass body-height band, clamped to the
-    vertical space available above the (possibly airborne) anchor line."""
-    rules = CLASS_BODY_RULES.get(typeclass, {})
+def _target_body_height(typeclass: str, ground_y: int, airborne: bool,
+                        override_h: int | None = None,
+                        fill: float | None = None) -> int:
+    """Visual body-height target, clamped to the space above the anchor line.
+
+    Precedence: explicit ``body_height`` px > ``body_fill`` (fraction of the
+    available height) > the typeclass band mid. The two override knobs decouple
+    hero fidelity from the gameplay typeclass -- a hero can fill a tall canvas
+    without being pinned to the small-unit band."""
     avail = ground_y + 1 - (AIRBORNE_MARGIN if airborne else 0)
-    if "min_h" in rules and "max_h" in rules:
-        th = (rules["min_h"] + rules["max_h"]) // 2
-    elif "min_h" in rules:
-        th = rules["min_h"] + 2
+    if override_h is not None:
+        th = int(override_h)
+    elif fill is not None:
+        th = round(float(fill) * avail)
     else:
-        th = avail
+        rules = CLASS_BODY_RULES.get(typeclass, {})
+        if "min_h" in rules and "max_h" in rules:
+            th = (rules["min_h"] + rules["max_h"]) // 2
+        elif "min_h" in rules:
+            th = rules["min_h"] + 2
+        else:
+            th = avail
     return max(1, min(th, avail))
 
 
@@ -218,7 +243,8 @@ def _denoise_orphans(cell: Image.Image, min_cluster: int = MIN_CLUSTER) -> Image
 
 def _conform_cell(src: Image.Image, sx: int, sy: int, cw: int, ch: int,
                   centers, materials, levels, pal, ramps_used,
-                  W, H, ground_y, airborne, typeclass):
+                  W, H, ground_y, airborne, typeclass,
+                  neutral=None, neutral_sat_max=0.18, override_h=None, fill=None):
     """Posterize+ramp-map+threshold+scale+anchor ONE source cell -> a W x H
     RGBA cell image. Returns (cell_img, (body_w, body_h)). Raises on empty."""
     cell = src.crop((sx, sy, sx + cw, sy + ch)).convert("RGBA")
@@ -231,7 +257,7 @@ def _conform_cell(src: Image.Image, sx: int, sy: int, cw: int, ch: int,
             if a < ALPHA_THRESHOLD:
                 continue
             level = _level_of(_luma((r, g, b)), centers)
-            mat = _material_for((r, g, b), materials)
+            mat = _material_for((r, g, b), materials, neutral, neutral_sat_max)
             ramp = mat["ramp"]
             idx = _level_to_index(level, levels, pal.ramp_len(ramp))
             ramps_used.add(ramp)
@@ -251,8 +277,8 @@ def _conform_cell(src: Image.Image, sx: int, sy: int, cw: int, ch: int,
     for (cx, cy, rgb) in pts:
         crpx[cx - minx, cy - miny] = (*rgb, 255)
 
-    # fit-scale to the body-height band, width-bounded by the canvas
-    th = _target_body_height(typeclass, ground_y, airborne)
+    # fit-scale to the body-height target, width-bounded by the canvas
+    th = _target_body_height(typeclass, ground_y, airborne, override_h, fill)
     scale = th / sh
     if sw * scale > W:
         scale = W / sw
@@ -292,6 +318,11 @@ def conform_external(mapping: dict, src_sheet: str | Path,
     W, H = parse_canvas(mapping.get("canvas", "32x32"))
     levels = int(mapping.get("levels", 4))
     materials = mapping["materials"]
+    neutral = next((m for m in materials if m.get("neutral")), None)
+    chromatic = [m for m in materials if not m.get("neutral")] or materials
+    neutral_sat_max = float(mapping.get("neutral_sat_max", 0.18))
+    body_h = mapping.get("body_height")
+    body_fill = mapping.get("body_fill")
     grid = mapping["source_grid"]
     cw, ch = int(grid["frame_w"]), int(grid["frame_h"])
     rows = mapping["rows"]
@@ -321,8 +352,9 @@ def conform_external(mapping: dict, src_sheet: str | Path,
         for col in range(int(r["frames"])):
             sx, sy = col * cw, src_row * ch
             cell_img, (bw, bh) = _conform_cell(
-                src, sx, sy, cw, ch, centers, materials, levels, pal,
-                ramps_used, W, H, gy, airborne, typeclass)
+                src, sx, sy, cw, ch, centers, chromatic, levels, pal,
+                ramps_used, W, H, gy, airborne, typeclass,
+                neutral, neutral_sat_max, body_h, body_fill)
             body_sizes.setdefault(anim, []).append((bw, bh))
             sheet.alpha_composite(cell_img, (col * W, out_row * H))
 

@@ -163,6 +163,32 @@ class ConformExternalTest(unittest.TestCase):
                             f"{orphan['offenders'][:3]}")
             self.assertTrue(report["passed"])
 
+    def test_desaturated_pixel_routes_to_neutral(self):
+        """Saturation guard: a near-white pixel (book pages, beard, highlights)
+        has no meaningful hue and must NOT land on a chromatic skin ramp. With a
+        neutral material declared, low-sat pixels route there; saturated skin
+        still hue-matches. Without this the book fused into the face."""
+        neutral = {"ramp": "mauve_grey", "neutral": True}
+        chromatic = [{"ramp": "peach", "hue": 15}]
+        self.assertIs(conform_external._material_for((230, 228, 227),
+                                                     chromatic, neutral), neutral)
+        self.assertIsNot(conform_external._material_for((187, 143, 130),
+                                                        chromatic, neutral), neutral)
+
+    def test_body_fill_override_beats_typeclass_band(self):
+        """Resolution headroom: body_fill decouples the visual size target from
+        the gameplay typeclass band, so a hero can fill a tall canvas instead of
+        being crushed to the small-unit ~26px band."""
+        with tempfile.TemporaryDirectory() as d:
+            src = str(Path(d) / "source.png")
+            _build_source(src)
+            m = _mapping()
+            m["canvas"] = "48x64"
+            m["body_fill"] = 0.85
+            data = conform_external.conform_external(m, src, outdir=d)["data"]
+            self.assertGreater(data["body_size"]["height"], 40)   # not the ~26 band
+            self.assertLessEqual(data["body_size"]["height"], data["ground_y"] + 1)
+
     def test_conform_is_deterministic(self):
         """Identical source + mapping => identical bytes (pipeline invariant)."""
         with tempfile.TemporaryDirectory() as d:
