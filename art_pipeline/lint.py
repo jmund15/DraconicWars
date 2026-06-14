@@ -86,8 +86,26 @@ HEAD_BANDS = {
     "support_robed": (0.16, 0.42),
     "sniper_biped": (0.14, 0.36),
     "aerial_flyer": (0.10, 0.42),
+    "ogre": (0.10, 0.34),   # small head sunk low in a big body
 }
-NO_HEAD_CLASSES = {"siege_machine"}  # no head mass -> head_to_body skips it (typed)
+NO_HEAD_CLASSES = {"siege_machine", "slime"}  # no head mass -> head_to_body skips it (typed)
+
+# A cross-FORM body-mask pair AT OR ABOVE this IoU reads as the same creature
+# shape wearing two names -- the defect this Part exists to kill. Set BELOW the
+# same-form 0.77 bar: two genuinely-different creature forms (a humanoid vs an
+# ogre/slime) must overlap notably LESS than two humanoids do. Calibrated from
+# the observed S1 forms (disclosed in the commit), never inflated to pass.
+CROSS_FORM_IOU_MAX = 0.55
+# typeclass -> creature FORM class. Same-form pairs are gated by IOU_MAX (rig
+# recolor); cross-form pairs by CROSS_FORM_IOU_MAX (different creatures). The 4
+# humanoid typeclasses share one form by design (people DO share a body plan).
+FORM_CLASS = {
+    "melee_biped": "humanoid", "ranged_biped": "humanoid",
+    "sniper_biped": "humanoid", "support_robed": "humanoid",
+    "ogre": "ogre", "construct": "construct", "revenant": "revenant",
+    "slime": "slime", "spider": "spider",
+    "aerial_flyer": "aerial", "siege_machine": "siege",
+}
 
 # body-mass floors per template class (art fix 4 / lint upgrade c).
 # "min" keys fail the check; "max" keys only produce warnings.
@@ -100,6 +118,10 @@ CLASS_BODY_RULES = {
     "aerial_flyer": {"min_h": 14, "max_h": 20, "min_wingspan": 24},
     # round 3: a siege engine must outweigh infantry
     "siege_machine": {"min_h": 20, "min_w": 26},
+    # a hulking ogre: broader + bulkier than infantry, on the 32px canvas
+    "ogre": {"min_h": 18, "max_h": 30, "min_w": 16, "max_w": 26},
+    # a spread blob: wide + squat, on the 40px canvas
+    "slime": {"min_h": 12, "max_h": 24, "min_w": 18, "max_w": 36},
 }
 
 
@@ -429,11 +451,13 @@ def align_bottom_center(mask: set) -> frozenset:
 
 def roster_distinctness(units: list[dict], iou_max: float = IOU_MAX,
                         scale_gap_min: float = SCALE_GAP_MIN,
-                        head_bands: dict | None = None) -> dict:
+                        head_bands: dict | None = None,
+                        cross_form_iou_max: float = CROSS_FORM_IOU_MAX) -> dict:
     """Roster-level distinctness report. ``units`` = list of dicts with keys
     ``name``, ``typeclass``, ``mask`` (set of body-pixel coords), ``body_size``
     ({width, height, head_w, head_h}). ``passed`` = every NON-skipped check
-    passes; a skipped check (e.g. scale_gap with no dragon) is NEUTRAL."""
+    passes; a skipped check (e.g. scale_gap with no dragon, or cross_form with a
+    single form present) is NEUTRAL."""
     head_bands = HEAD_BANDS if head_bands is None else head_bands
     checks: dict[str, dict] = {}
 
@@ -454,6 +478,34 @@ def roster_distinctness(units: list[dict], iou_max: float = IOU_MAX,
         "passed": not iou_offenders, "iou_max": iou_max,
         "offenders": iou_offenders, "matrix": matrix,
     }
+
+    # (m) cross-form distinctness: different creature FORMS must not share a
+    # silhouette (an 'ogre'/'slime' reading as a recolored humanoid is the
+    # defect). Reuses the pairwise IoU matrix; only cross-form pairs are judged,
+    # against the stricter cross_form_iou_max. <2 forms present -> NEUTRAL skip.
+    forms = [FORM_CLASS.get(u.get("typeclass", "")) for u in units]
+    cross_offenders = []
+    cross_pairs = 0
+    for i in range(len(aligned)):
+        for k in range(i + 1, len(aligned)):
+            fi, fk = forms[i], forms[k]
+            if fi is None or fk is None or fi == fk:
+                continue
+            cross_pairs += 1
+            v = matrix[f"{aligned[i][0]}|{aligned[k][0]}"]
+            if v >= cross_form_iou_max:
+                cross_offenders.append({"pair": [aligned[i][0], aligned[k][0]],
+                                        "forms": [fi, fk], "iou": v})
+    if cross_pairs == 0:
+        checks["cross_form_distinctness"] = {
+            "passed": True, "skipped": "fewer than two creature forms present"}
+    else:
+        cross_offenders.sort(key=lambda o: -o["iou"])
+        checks["cross_form_distinctness"] = {
+            "passed": not cross_offenders,
+            "cross_form_iou_max": cross_form_iou_max,
+            "offenders": cross_offenders,
+        }
 
     # (k) dragon-to-infantry area gap (typed dragon signal ONLY) ---------------
     areas = {u["name"]: len(u["mask"]) for u in units}

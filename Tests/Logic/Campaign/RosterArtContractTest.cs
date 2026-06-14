@@ -76,20 +76,43 @@ public class RosterArtContractTest
         using var doc = JsonDocument.Parse(File.ReadAllText(reportPath));
         var root = doc.RootElement;
 
-        // surface the offending pairs in the failure message so a regression is
-        // diagnosable without re-running the pipeline.
-        var sil = root.GetProperty("checks").GetProperty("silhouette_distinctness");
+        // surface offenders from EVERY failing check (silhouette_distinctness,
+        // cross_form_distinctness, head_to_body, ...) so any regression is
+        // diagnosable from the gate output without re-running the pipeline. The
+        // top-level `passed` is the AND over checks; enumerating only one check's
+        // offenders would print a blank list for a different check's failure.
         var offenders = new System.Text.StringBuilder();
-        foreach (var off in sil.GetProperty("offenders").EnumerateArray())
+        foreach (var check in root.GetProperty("checks").EnumerateObject())
         {
-            var pair = off.GetProperty("pair");
-            offenders.Append($"\n  {pair[0].GetString()} ~ {pair[1].GetString()} "
-                             + $"iou={off.GetProperty("iou").GetDouble()}");
+            if (check.Value.GetProperty("passed").GetBoolean())
+            {
+                continue;
+            }
+            offenders.Append($"\n[{check.Name}]");
+            if (!check.Value.TryGetProperty("offenders", out var offArr))
+            {
+                continue;
+            }
+            foreach (var off in offArr.EnumerateArray())
+            {
+                if (off.TryGetProperty("pair", out var pair))
+                {
+                    offenders.Append($"\n  {pair[0].GetString()} ~ {pair[1].GetString()}");
+                    if (off.TryGetProperty("iou", out var iouEl))
+                    {
+                        offenders.Append($" iou={iouEl.GetDouble()}");
+                    }
+                }
+                else if (off.TryGetProperty("name", out var nm))
+                {
+                    offenders.Append($"\n  {nm.GetString()}");
+                }
+            }
         }
 
         AssertThat(root.GetProperty("passed").GetBoolean())
             .OverrideFailureMessage(
-                "roster silhouettes not distinct (same rig recolored). Too-similar pairs:"
+                "roster distinctness failed (same shape, two names). Offending checks/pairs:"
                 + offenders)
             .IsTrue();
     }

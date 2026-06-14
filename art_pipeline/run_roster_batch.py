@@ -73,9 +73,8 @@ BATCH: list[tuple[dict, str]] = [
     }, "always"),
     ({
         "name": "pyre_ogre",
-        "build": "sturdy", "seed": 2,
-        "proportions": {"torso_w": 16, "torso_h": 13, "leg_h": 9, "head_w": 7, "head_h": 6},
-        "typeclass": "melee_biped",
+        "seed": 2,
+        "typeclass": "ogre",      # hulking biped-variant (OGRE_CONFIG governs mass)
         "element": "fire",
         "canvas": "32x32",
         "size_class": "small",
@@ -138,7 +137,7 @@ BATCH: list[tuple[dict, str]] = [
     }, "always"),
     ({
         "name": "plague_bell",
-        "typeclass": "siege_machine",
+        "typeclass": "slime",      # re-themed: a venom plague-slime, not a bell-cart
         "element": "venom",
         "canvas": "40x32",
         "size_class": "medium",

@@ -130,6 +130,35 @@ def test_head_band():
           rep3["checks"]["head_to_body"]["passed"] is True)
 
 
+def test_cross_form_distinctness():
+    # different creature FORMS that share a silhouette must FAIL (the whole point
+    # of the Part: an 'ogre' that's just a recolored humanoid is the defect).
+    humanoid = _unit("h", "melee_biped", _rect_mask(0, 0, 14, 24), 9, 9)
+    fake_ogre = _unit("o", "ogre", set(_rect_mask(0, 0, 14, 24)), 9, 9)  # same body
+    rep = roster_distinctness([humanoid, fake_ogre], iou_max=0.70,
+                              cross_form_iou_max=0.55)
+    check("same-body different-form pair -> cross_form FAILS",
+          rep["checks"]["cross_form_distinctness"]["passed"] is False)
+    check("cross_form offender names the cross-form pair",
+          any(set(o["pair"]) == {"h", "o"} for o in
+              rep["checks"]["cross_form_distinctness"]["offenders"]))
+
+    # genuinely different forms (humanoid vs wide low blob) -> low IoU -> PASS
+    blob = _unit("s", "slime", _rect_mask(0, 12, 28, 24), 0, 0)  # wide, low, no overlap up top
+    rep2 = roster_distinctness([humanoid, blob], iou_max=0.70,
+                               cross_form_iou_max=0.55)
+    check("distinct forms (humanoid vs slime) -> cross_form PASSES",
+          rep2["checks"]["cross_form_distinctness"]["passed"] is True)
+
+    # a single form present -> no cross-form pairs -> SKIPPED (neutral, not a crash)
+    a = _unit("a", "melee_biped", _rect_mask(0, 0, 8, 26), 8, 8)
+    b = _unit("b", "melee_biped", _rect_mask(0, 0, 18, 12), 6, 5)
+    rep3 = roster_distinctness([a, b], iou_max=0.70, cross_form_iou_max=0.55)
+    cf = rep3["checks"]["cross_form_distinctness"]
+    check("single form -> cross_form skipped", cf.get("skipped") is not None)
+    check("skipped cross_form is neutral (passed True)", cf["passed"] is True)
+
+
 def test_silhouette_mask():
     img = Image.new("RGBA", (4, 4), (0, 0, 0, 0))
     img.putpixel((1, 2), (0, 0, 0, 255))
@@ -143,7 +172,8 @@ def test_silhouette_mask():
 def main():
     print("test_distinctness.py")
     for fn in (test_iou, test_align_bottom_center, test_distinctness_iou_pairwise,
-               test_scale_gap, test_head_band, test_silhouette_mask):
+               test_scale_gap, test_head_band, test_cross_form_distinctness,
+               test_silhouette_mask):
         print(f"{fn.__name__}:")
         fn()
     print(f"\n{'PASS' if not check.failed else f'FAIL ({check.failed})'}")

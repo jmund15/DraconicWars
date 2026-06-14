@@ -22,6 +22,7 @@ prop anchor), so units are template INSTANCES, not bespoke drawings.
 from __future__ import annotations
 
 from dataclasses import dataclass, replace
+from typing import Protocol, runtime_checkable
 
 import props as props_mod
 from palette import Palette
@@ -34,6 +35,27 @@ INK = ("ink", 0)           # near-black #2e222f -- reserved for outline / eyes
 def ground_row(canvas_h: int) -> int:
     """Last opaque row for a grounded unit (feet line)."""
     return canvas_h - GROUND_MARGIN - 1
+
+
+@runtime_checkable
+class BodyPlanTemplate(Protocol):
+    """The structural contract every creature body-plan template satisfies -- the
+    exact surface generate_unit consumes (``canvas``, ``ROLE_DEFAULTS``,
+    ``animations()``, ``poses()``, ``draw_pose()``). Runtime-inert: the incumbent
+    templates conform by duck-typing and need NOT inherit it (subclassing a
+    structural Protocol is the strictly-safer byte-identity path). A new form is
+    checked against this contract by test_templates.py BEFORE generate_unit can
+    build it -- the 'determined upfront, expand as needed' guarantee for the
+    template family."""
+
+    ROLE_DEFAULTS: dict
+    canvas: tuple[int, int]
+
+    def animations(self) -> list: ...
+
+    def poses(self, anim: str, contact_idx: int) -> list[dict]: ...
+
+    def draw_pose(self, buf, pose: dict, unit: dict, pal) -> None: ...
 
 
 # ===========================================================================
@@ -783,6 +805,89 @@ class BipedTemplate:
 
 
 # ===========================================================================
+# Ogre (biped-variant: hulking hunched mass, small sunken tusked head)
+# ===========================================================================
+
+# A broad, top-heavy body on the 32px canvas -- wider torso + shorter legs than
+# any infantry biped so the silhouette reads "not a person" before color.
+OGRE_CONFIG = BipedConfig(
+    "ogre", (32, 32), head_w=8, head_h=6, torso_w=20, torso_h=15, leg_h=6,
+    head_style="snout", attack_style="thrust", build="sturdy")
+
+
+class OgreTemplate(BipedTemplate):
+    """Hulking biped-variant. Subclasses BipedTemplate and overrides only the
+    part helpers (DR3 helper-override seam) -- draw_pose's pose/geometry sequence
+    is reused unchanged, so the 17 shipped humanoids are untouched. The mass +
+    forward hunch + sunken tusked head drop its cross-form IoU vs the humanoids
+    below the gate (it must read as a different creature, not a fat human)."""
+
+    ROLE_DEFAULTS = BipedTemplate.ROLE_DEFAULTS
+    WHITELIST_ROLES = BipedTemplate.WHITELIST_ROLES
+
+    def __init__(self, cfg: BipedConfig | None = None):
+        super().__init__(cfg or OGRE_CONFIG)
+
+    def _draw_torso(self, buf, bld, asym, tx0, ty0, tx1, ty1, cloth):
+        # broad hunched slab: upper back/shoulders proud (the hunch), tapering to
+        # a heavy low gut -- much wider than the biped block.
+        cr, ci = cloth
+        rows = ty1 - ty0
+        for i in range(rows + 1):
+            y = ty0 + i
+            t = i / max(rows, 1)
+            bulge = round((1 - t) * 3)      # shoulders/upper-back proud (hunch)
+            gut = round(t * 1)              # belly proud of the front, low
+            buf.fill_rect(tx0 - bulge, y, tx1 + gut, y, cr, ci, part="torso")
+        # neck hump rising behind the shoulders (one side raised per seed)
+        up = asym["shoulder_up"]
+        buf.fill_rect(tx0 - 2, ty0 - 1 + up, tx0 + 2, ty0, cr, ci, part="torso")
+
+    def _draw_head(self, buf, hx0, hy0, hx1, hy1, skin, cloth, colors, pal,
+                   eye_offset=(0, 0)):
+        # small head sunk LOW between the shoulders (the hunch read) + heavy brow
+        # and two up-jutting tusks.
+        dy = 3
+        hy0 += dy
+        hy1 += dy
+        rx = (hx1 - hx0) / 2
+        ry = (hy1 - hy0) / 2
+        cx = (hx0 + hx1) / 2
+        cy = (hy0 + hy1) / 2
+        buf.fill_ellipse(cx, cy, rx, ry, skin[0], skin[1], part="head")
+        # heavy brow ridge (one step down, reads as a scowl shadow). Kept narrow
+        # (<=6 px) so it does not form a banding-length successive-step band.
+        buf.fill_rect(hx0 + 2, hy0, hx1 - 2, hy0, skin[0], max(skin[1] - 1, 0), part="brow")
+        # two tusks jutting up past the jawline (>=3 px so cleanup keeps them)
+        d = max(skin[1] - 1, 0)
+        buf.fill_triangle((hx0 + 1, hy1), (hx0, hy1 - 3), (hx0 + 2, hy1 - 1),
+                          skin[0], d, part="face")
+        buf.fill_triangle((hx1 - 1, hy1), (hx1, hy1 - 3), (hx1 - 2, hy1 - 1),
+                          skin[0], d, part="face")
+        eye_x = hx1 - 2
+        eye_y = hy0 + (hy1 - hy0) // 3 + 1
+        self._draw_eye(buf, eye_x, eye_y, colors, eye_offset)
+
+    def _draw_legs(self, buf, kind, phase, tx0, tx1, hip_y, GY, skin):
+        # short thick stumps (the base draws thin limbs) -- planted ogre stance.
+        if kind == "kneel":
+            super()._draw_legs(buf, kind, phase, tx0, tx1, hip_y, GY, skin)
+            return
+        back = tx0 + 2
+        front = tx1 - 4
+        dx = 0
+        if kind == "lunge":
+            back -= 2
+            front += 2
+        elif kind == "walk":
+            dx = WALK_LEGS[phase % 4][0]
+        buf.fill_rect(back - 1 + dx, hip_y, back + 2 + dx, GY, skin[0],
+                      max(skin[1] - 1, 0), part="back_leg")
+        buf.fill_rect(front - 1, hip_y, front + 3, GY, skin[0], skin[1],
+                      part="front_leg")
+
+
+# ===========================================================================
 # Aerial flyer
 # ===========================================================================
 
@@ -1433,6 +1538,88 @@ class SiegeMachineTemplate:
 
 
 # ===========================================================================
+# Slime (novel morphology: a limbless blob -- no skeleton)
+# ===========================================================================
+
+class SlimeTemplate:
+    """A wobbling limbless dome. Implements the BodyPlanTemplate contract
+    directly (no biped skeleton) -- the proof that the family admits a genuinely
+    different morphology, not just reproportioned humanoids. Wobbles in place
+    (squash/stretch) so every grounded frame keeps its base on the floor line;
+    the attack lunges the mass forward."""
+
+    ROLE_DEFAULTS = {
+        "body": ("@primary", 1),
+        "belly": ("@secondary", 2),
+        "accent": ("@primary", "@accent"),
+        "eye": ("mauve_grey", 4),
+    }
+    WHITELIST_ROLES = ("accent", "eye")
+
+    # 40px wide to match the venom siege slot it re-themes (plague_bell): the
+    # spread blob + the forward attack lunge need the room over a 32px canvas.
+    canvas = (40, 32)
+
+    def __init__(self, cfg=None):
+        pass
+
+    def animations(self):
+        return FP_BIPED_ANIMS  # idle 2 / move 4 / attack 4 / death 3
+
+    def poses(self, anim: str, contact_idx: int) -> list[dict]:
+        if anim == "idle":
+            return [{"squash": 0}, {"squash": 1}]
+        if anim == "walk":
+            # wobble in place (a hop would lift the base off the ground line and
+            # fail the grounded-frame lint); lateral motion is engine translation.
+            return [{"squash": s} for s in (0, 1, 0, 2)]
+        if anim == "attack":
+            table = {
+                "windup": {"squash": 2},
+                "windup2": {"squash": 3},
+                "contact": {"lunge": 6, "squash": -2, "burst": True},
+                "recover": {"lunge": 2},
+                "settle": {"squash": 0},
+            }
+            return [dict(table[k]) for k in attack_pose_keys(contact_idx)]
+        if anim == "death":
+            return [{"squash": 3}, {"melt": 1}, {"melt": 2}]
+        raise KeyError(anim)
+
+    def draw_pose(self, buf: PixelBuffer, pose: dict, unit: dict, pal: Palette) -> None:
+        colors = unit["colors"]
+        body, belly, acc = colors["body"], colors["belly"], colors["accent"]
+        W, H = self.canvas
+        GY = ground_row(H)
+        cx = W // 2 - 1 + pose.get("lunge", 0)
+
+        melt = pose.get("melt", 0)
+        if melt:
+            ry = max(2, 5 - 2 * melt)
+            buf.fill_ellipse(cx, GY - ry, 16, ry, body[0], body[1], part="body")
+            return
+
+        squash = pose.get("squash", 0)
+        # wide + FLAT (a puddle, not a round dome): the low aspect ratio is what
+        # separates the slime's silhouette from vertical bodies (ogre/robe mass).
+        rx = 16 + squash       # squash widens + flattens, stretch (lunge) narrows
+        ry = 7 - squash
+        cy = GY - ry           # base sits exactly on the ground line
+        buf.fill_ellipse(cx, cy, rx, ry, body[0], body[1], part="body")
+        # lighter belly band in the lower dome
+        buf.fill_ellipse(cx, GY - max(2, ry // 2), rx - 3, max(2, ry // 2),
+                         belly[0], belly[1], part="belly")
+        # 2px crown gloss (whitelisted accent -- kept small to stay under the cap)
+        buf.fill_rect(cx - 1, cy - ry + 1, cx, cy - ry + 1, acc[0], acc[1],
+                      part="emblem", no_outline=True)
+        # two bright eye pixels near the crown
+        buf.set_px(cx + 3, cy - 1, *colors["eye"], part="eye", no_outline=True)
+        buf.set_px(cx - 3, cy - 1, *colors["eye"], part="eye", no_outline=True)
+        if pose.get("burst"):
+            buf.set_px(cx + rx + 1, GY - 2, *colors["eye"], part="burst", no_outline=True)
+
+
+# ===========================================================================
 # Registry
 # ===========================================================================
 
@@ -1467,13 +1654,9 @@ def flyer_config_from_spec(spec: dict | None) -> FlyerConfig:
     )
 
 
-def biped_config_from_spec(typeclass: str, spec: dict | None) -> BipedConfig:
-    """Overlay per-unit shape-language onto the base typeclass config (mirrors
-    ``flyer_config_from_spec``). Spec keys: ``build`` (neutral|agile|sturdy|
-    dangerous), ``seed`` (deterministic int), optional ``proportions`` dict
-    overriding head_w/head_h/torso_w/torso_h/leg_h/head_fwd. Absent keys -> the
-    base config unchanged (byte-identical to the pre-Part-B rig)."""
-    base = BIPED_CONFIGS[typeclass]
+def _overlay_biped_config(base: BipedConfig, spec: dict | None) -> BipedConfig:
+    """Overlay per-unit shape-language (build / seed / proportions) onto a base
+    BipedConfig. Absent keys -> the base unchanged (byte-identical)."""
     if not spec:
         return base
     over: dict = {}
@@ -1488,17 +1671,34 @@ def biped_config_from_spec(typeclass: str, spec: dict | None) -> BipedConfig:
     return replace(base, **over) if over else base
 
 
+def biped_config_from_spec(typeclass: str, spec: dict | None) -> BipedConfig:
+    """Overlay per-unit shape-language onto the base typeclass config (mirrors
+    ``flyer_config_from_spec``). Spec keys: ``build`` (neutral|agile|sturdy|
+    dangerous), ``seed`` (deterministic int), optional ``proportions`` dict
+    overriding head_w/head_h/torso_w/torso_h/leg_h/head_fwd. Absent keys -> the
+    base config unchanged (byte-identical to the pre-Part-B rig)."""
+    return _overlay_biped_config(BIPED_CONFIGS[typeclass], spec)
+
+
+def ogre_config_from_spec(spec: dict | None) -> BipedConfig:
+    """OGRE_CONFIG with the same optional per-unit overlay as the bipeds (seed
+    asymmetry, proportion tuning)."""
+    return _overlay_biped_config(OGRE_CONFIG, spec)
+
+
 def make_template(typeclass: str, spec: dict | None = None):
     if typeclass in BIPED_CONFIGS:
         return BipedTemplate(biped_config_from_spec(typeclass, spec))
+    if typeclass == "ogre":
+        return OgreTemplate(ogre_config_from_spec(spec))
     if typeclass == "aerial_flyer":
         return AerialFlyerTemplate(flyer_config_from_spec(spec))
     if typeclass == "siege_machine":
         return SiegeMachineTemplate()
-    raise KeyError(
-        f"unknown typeclass '{typeclass}'; available: "
-        f"{sorted(BIPED_CONFIGS) + ['aerial_flyer', 'siege_machine']}"
-    )
+    if typeclass == "slime":
+        return SlimeTemplate()
+    raise KeyError(f"unknown typeclass '{typeclass}'; available: {TEMPLATE_NAMES}")
 
 
-TEMPLATE_NAMES = sorted(BIPED_CONFIGS) + ["aerial_flyer", "siege_machine"]
+TEMPLATE_NAMES = (sorted(BIPED_CONFIGS)
+                  + ["ogre", "aerial_flyer", "siege_machine", "slime"])
