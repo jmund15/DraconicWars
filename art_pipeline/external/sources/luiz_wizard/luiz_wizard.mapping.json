@@ -1,15 +1,18 @@
 {
   "name": "luiz_wizard",
-  "typeclass": "melee_biped",
+  "typeclass": "support_robed",
   "element": "shadow",
-  "canvas": "32x32",
+  "canvas": "48x64",
+  "body_fill": 0.85,
   "levels": 4,
+  "neutral_sat_max": 0.18,
   "materials": [
     { "ramp": "shadow",     "hue": 250 },
     { "ramp": "rose",       "hue": 300 },
     { "ramp": "peach",      "hue": 15 },
     { "ramp": "radiant",    "hue": 40 },
-    { "ramp": "frost_teal", "hue": 191 }
+    { "ramp": "frost_teal", "hue": 191 },
+    { "ramp": "mauve_grey", "neutral": true }
   ],
   "source_sheet": "wizard_source.png",
   "source_grid": { "frame_w": 231, "frame_h": 190 },

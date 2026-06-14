@@ -1,11 +1,11 @@
 {
   "name": "luiz_wizard",
-  "typeclass": "melee_biped",
+  "typeclass": "support_robed",
   "element": "shadow",
   "size_class": "medium",
   "source": "external",
-  "frame_w": 32,
-  "frame_h": 32,
+  "frame_w": 48,
+  "frame_h": 64,
   "animations": [
     {
       "name": "idle",
@@ -41,17 +41,18 @@
   "backswing_ticks": 12,
   "ramps_used": [
     "frost_teal",
+    "mauve_grey",
     "peach",
     "radiant",
     "rose",
     "shadow"
   ],
   "pivot": "bottom_center",
-  "ground_y": 29,
+  "ground_y": 61,
   "facing": "right",
   "body_size": {
-    "width": 27,
-    "height": 26
+    "width": 48,
+    "height": 53
   },
   "lint": {
     "whitelist_colors": [],
