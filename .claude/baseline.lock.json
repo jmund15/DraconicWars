@@ -1,7 +1,7 @@
 {
   "baseline_repo": "https://github.com/jmund15/GodotDev_HarnessBaseline.git",
   "baseline_ref": "main",
-  "synced_commit": "b272ce524706f449d1af4494421c23433e37c218",
+  "synced_commit": "d51d09733669104042f43bf95d59018af0017d78",
   "substitutions": {
     "{{PROJECT_NAME}}": "DraconicWars",
     "{{VAULT_ROOT}}": "C:\\Users\\jmund\\OneDrive\\Documents\\ObsidianVault\\DevProjects\\DraconicWars",
@@ -18,8 +18,7 @@
       "layer": "jmodot"
     },
     ".claude/auto-memory/MEMORY.md": {
-      "status": "tracked",
-      "hash": "f8ac5b7a338a1acda318dc2376b3f45d8778ef81edca31c58478299e0b34d8ef",
+      "status": "forked",
       "layer": "universal"
     },
     ".claude/auto-memory/arch_rule_atomic_rename_tmp_is_durable.md": {
@@ -592,17 +591,17 @@
     },
     ".claude/commands/part_execute.md": {
       "status": "tracked",
-      "hash": "444cdc81110bc21c5ceb3feb2676c276062defa94e4a0cb7649779bc93faeedc",
+      "hash": "e6ce39072b8291763e333fc08ceb10152a4cabc84ed736d90469b9c0add26b15",
       "layer": "universal"
     },
     ".claude/commands/plan_check.md": {
       "status": "tracked",
-      "hash": "ec64e7cf6cc18513ac741ee9365491e22694e916d8e69b64b5ab2a61fb071eae",
+      "hash": "bb30faf07ec81e2835ce7772d6ec0c97b7ee8a552d29b7029a142154618ee331",
       "layer": "universal"
     },
     ".claude/commands/plan_drive.md": {
       "status": "tracked",
-      "hash": "a5a9d4773f9677d4bc456439253c983018b07710ca9b12101c9ce28a1811f7b4",
+      "hash": "87f1bb0d8fcb199dd62b2ee936bfb592612a790c69e9830fe07f7c575ea6adbd",
       "layer": "universal"
     },
     ".claude/commands/plan_handoff.md": {
@@ -658,7 +657,7 @@
     },
     ".claude/commands/rule_consistency.md": {
       "status": "tracked",
-      "hash": "b66e957c8fc19cfaf8a375def30b85c8e463eb49f4fa154b851d1d2bd6145eea",
+      "hash": "d2d2eff92fa82ac98e057206919859a1c4bee2cbc67dc9c3a526ad3a8dcf8d6e",
       "layer": "universal"
     },
     ".claude/commands/self_evaluate.md": {
@@ -673,7 +672,7 @@
     },
     ".claude/commands/session_end.md": {
       "status": "tracked",
-      "hash": "1a4bacf9a00a2c2af31212f966aa1522340e2bef9b6c751bf4891d7f75f80c97",
+      "hash": "1c6a563db0db544cf1772c00bf620f89031e69a5e3c775d2054797c8cee8b7bf",
       "layer": "universal"
     },
     ".claude/commands/session_refresh.md": {
@@ -968,7 +967,7 @@
     },
     ".claude/skills/idea_brainstorm/SKILL.md": {
       "status": "tracked",
-      "hash": "34c16756e75d1e20f68001fefadc2bf0fe96821062e485eaa81a2f20999ea6ad",
+      "hash": "5be64f5ec4638d4f931fb7fff1b3686fd80ab7a3981f1a27d2bdec5700f8e62e",
       "layer": "universal"
     },
     ".claude/skills/instruction_quality/SKILL.md": {
@@ -1030,7 +1029,7 @@
     },
     ".claude/skills/parallel_agents/SKILL.md": {
       "status": "tracked",
-      "hash": "5066da3beb155f926a011549d6fb0b3e74679cb6609bfe803e8116bd151e1d70",
+      "hash": "4b0ec09b800e83803e2ecbb3b416e848f2561ca7894558c0c5fb8261898d3d4f",
       "layer": "universal"
     },
     ".claude/skills/project_subsystems/SKILL.md": {
@@ -1110,12 +1109,12 @@
     },
     ".claude/workflows/doc_architecture_audit.js": {
       "status": "tracked",
-      "hash": "15901f13d7ad53e03cb8b461ed1ad6467cf7f9aa56414c9659ca6bd59823f68e",
+      "hash": "82de64a20e61f5e624ea21a660a913cd21fce8cd0f49fbf25255a77ce7167962",
       "layer": "universal"
     },
     ".claude/workflows/review_fanout.js": {
       "status": "tracked",
-      "hash": "fb3f5e548fd99ac5161294436d0663eb2fd3cee8fea25b1b1638375fa82acc99",
+      "hash": "9f89ca93f42c753e20bbaadf54052cb6124e06e73cc087e761bdb4adefaa0b0f",
       "layer": "universal"
     },
     ".claude/workflows/test_agents_fixtures.js": {
