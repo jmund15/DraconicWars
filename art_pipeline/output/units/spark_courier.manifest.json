@@ -3,8 +3,8 @@
   "typeclass": "melee_biped",
   "element": "storm",
   "size_class": "small",
-  "frame_w": 32,
-  "frame_h": 32,
+  "frame_w": 28,
+  "frame_h": 28,
   "animations": [
     {
       "name": "idle",
@@ -45,13 +45,13 @@
     "storm"
   ],
   "pivot": "bottom_center",
-  "ground_y": 29,
+  "ground_y": 25,
   "facing": "right",
   "body_size": {
-    "width": 16,
-    "height": 26,
-    "head_w": 11,
-    "head_h": 8
+    "width": 15,
+    "height": 22,
+    "head_w": 10,
+    "head_h": 7
   },
   "lint": {
     "whitelist_colors": [

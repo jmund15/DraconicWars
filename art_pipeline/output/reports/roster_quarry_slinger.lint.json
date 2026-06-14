@@ -39,7 +39,7 @@
     },
     "banding": {
       "passed": true,
-      "max_run": 6,
+      "max_run": 12,
       "offenders": [],
       "severity": "error"
     },

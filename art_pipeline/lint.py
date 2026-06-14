@@ -124,6 +124,16 @@ CLASS_BODY_RULES = {
     "slime": {"min_h": 12, "max_h": 24, "min_w": 18, "max_w": 36},
 }
 
+# The canvas height each class's body rules are calibrated for. A unit rendered
+# on a taller frame (size tier) scales its floors by frame_h / base_h so the
+# body-mass gate tracks the tier instead of a fixed 32px floor. sniper_biped is
+# natively 64px (rules already tuned to it -> never double-counts); siege_machine
+# is deliberately absent (fixed-size engines are never floor-scaled).
+CLASS_BASE_H = {
+    "melee_biped": 32, "ranged_biped": 32, "support_robed": 32,
+    "sniper_biped": 64, "aerial_flyer": 32, "ogre": 32, "slime": 32,
+}
+
 
 def _find_manifest(sheet_path: Path) -> Path | None:
     stem = sheet_path.stem
@@ -288,6 +298,13 @@ def lint_sheet(sheet_path: str | Path, manifest_path: str | Path | None = None) 
         for i in range(len(steps) - 1):
             adjacent_steps.add(frozenset((steps[i], steps[i + 1])))
 
+    # Band tolerance scales with the canvas: a clean larger fill carries
+    # proportionally longer flat runs, so the 32px-tuned 6px floor would
+    # false-fail big-tier units. The internal-form detail (rim-light / shading)
+    # that breaks these runs on large units is owned by the Sprite Detail Passes
+    # Part, not this size pass.
+    band_limit = round(MAX_BAND_RUN * (manifest.get("frame_h", 32) / 32)) if manifest else MAX_BAND_RUN
+
     def _band_runs(primary_axis_len, cross_axis_len, at):
         """Yield (start, cross, length) runs of 1px/1px successive-step bands."""
         for c in range(cross_axis_len - 1):
@@ -305,10 +322,10 @@ def lint_sheet(sheet_path: str | Path, manifest_path: str | Path | None = None) 
                         start = p
                     run += 1
                 else:
-                    if run > MAX_BAND_RUN:
+                    if run > band_limit:
                         yield (start, c, run)
                     run = 0
-            if run > MAX_BAND_RUN:
+            if run > band_limit:
                 yield (start, c, run)
 
     band_offenders = []
@@ -317,7 +334,7 @@ def lint_sheet(sheet_path: str | Path, manifest_path: str | Path | None = None) 
     for start, xx, length in _band_runs(h, w, lambda p, c: (c, p)):
         band_offenders.append({"orientation": "vertical", "at": [xx, start], "length": length})
     checks["banding"] = {"passed": not band_offenders,
-                         "max_run": MAX_BAND_RUN,
+                         "max_run": band_limit,
                          "offenders": band_offenders[:MAX_SAMPLES]}
 
     # (g) manifest contract: contact frame + sim tick echo -------------------
@@ -344,11 +361,13 @@ def lint_sheet(sheet_path: str | Path, manifest_path: str | Path | None = None) 
     size_warnings = []
     body = (manifest or {}).get("body_size")
     rules = CLASS_BODY_RULES.get((manifest or {}).get("typeclass", ""))
-    # aerial floors scale with the canvas (FP batch: 48/64/96 flyers scale
-    # body-part proportions, never pixel-double) -- base rules are per-32px.
-    if rules and manifest and manifest.get("typeclass") in ("aerial_flyer", "ogre"):
-        k = max(1.0, manifest.get("frame_h", 32) / 32)
-        if k > 1.0:
+    # Body floors scale with the size tier (taller canvas -> bigger body), per
+    # the class's calibrated base height. Flyers/ogres/scaled bipeds scale up;
+    # sniper (base 64) and siege (absent) never double-count.
+    base_h = CLASS_BASE_H.get((manifest or {}).get("typeclass", ""))
+    if rules and manifest and base_h:
+        k = manifest.get("frame_h", base_h) / base_h
+        if k != 1.0:
             rules = {key: round(v * k) for key, v in rules.items()}
     if not manifest:
         size_errors.append("manifest missing")

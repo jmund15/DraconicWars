@@ -39,7 +39,7 @@
     },
     "banding": {
       "passed": true,
-      "max_run": 6,
+      "max_run": 5,
       "offenders": [],
       "severity": "error"
     },
@@ -53,16 +53,16 @@
       "errors": [],
       "warnings": [],
       "measured": {
-        "width": 17,
-        "height": 24,
-        "head_w": 10,
-        "head_h": 8
+        "width": 15,
+        "height": 21,
+        "head_w": 8,
+        "head_h": 7
       },
       "rules": {
-        "min_h": 24,
-        "max_h": 28,
-        "min_w": 14,
-        "max_w": 18
+        "min_h": 21,
+        "max_h": 24,
+        "min_w": 12,
+        "max_w": 16
       },
       "severity": "error"
     },

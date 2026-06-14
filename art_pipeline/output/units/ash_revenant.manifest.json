@@ -2,9 +2,9 @@
   "name": "ash_revenant",
   "typeclass": "melee_biped",
   "element": "fire",
-  "size_class": "small",
-  "frame_w": 32,
-  "frame_h": 32,
+  "size_class": "large",
+  "frame_w": 48,
+  "frame_h": 48,
   "animations": [
     {
       "name": "idle",
@@ -46,13 +46,13 @@
     "mauve_grey"
   ],
   "pivot": "bottom_center",
-  "ground_y": 29,
+  "ground_y": 45,
   "facing": "right",
   "body_size": {
-    "width": 20,
-    "height": 28,
-    "head_w": 11,
-    "head_h": 7
+    "width": 29,
+    "height": 42,
+    "head_w": 15,
+    "head_h": 10
   },
   "lint": {
     "whitelist_colors": [

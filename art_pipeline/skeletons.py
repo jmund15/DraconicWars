@@ -443,6 +443,7 @@ class BipedConfig:
     # silhouette so different-named units stop being one body recolored.
     build: str = "neutral"   # neutral | agile (circle) | sturdy (square) | dangerous (wedge)
     seed: int = 0            # per-unit asymmetry seed (deterministic int; NEVER hash())
+    scale: float = 1.0       # size-tier factor (canvas_h / base_canvas_h); 1.0 == byte-identical
 
 
 # Round-2 calibration bodies: small ground units target a 24-28 px tall x
@@ -657,12 +658,12 @@ class BipedTemplate:
 
         # --- off-hand prop (shield carried proud of the torso front-low) ----
         for p in offhand:
-            props_mod.draw_offhand(buf, pal, p, (tx1 + 1, ty1 - 2), colors)
+            props_mod.draw_offhand(buf, pal, p, (tx1 + 1, ty1 - 2), colors, cfg.scale)
 
         # --- weapon + front arm (arm last so the hand grips the shaft) ------
         arm_key = pose.get("arm", "idle")
         adx, ady = ARM_POSES[cfg.attack_style][arm_key]
-        hand = (tx1 + adx, ty0 + ady)
+        hand = (tx1 + round(adx * cfg.scale), ty0 + round(ady * cfg.scale))
         self._draw_props(buf, unit, pal, pose, hand, GY, head_rect=(hx0, hy0, hx1, hy1))
         shoulder = (tx1 - 1, ty0 + 2)
         self._draw_arm(buf, shoulder, hand, skin)
@@ -725,10 +726,13 @@ class BipedTemplate:
         cr, ci = cloth
         if bld == "sturdy":
             # top-heavy block: broad pauldron shoulders proud of the body,
-            # one raised per seed (asymmetry).
-            buf.fill_round_rect(tx0, ty0 + 2, tx1, ty1, cr, ci, part="torso")
+            # one raised per seed (asymmetry). Pauldron mass scales with tier.
+            s = self.cfg.scale
+            pad = round(2 * s)
+            ext = round(1 * s)
+            buf.fill_round_rect(tx0, ty0 + pad, tx1, ty1, cr, ci, part="torso")
             up = asym["shoulder_up"]
-            buf.fill_rect(tx0 - 1, ty0 + up, tx1 + 1, ty0 + 2, cr, ci, part="torso")
+            buf.fill_rect(tx0 - ext, ty0 + up, tx1 + ext, ty0 + pad, cr, ci, part="torso")
             return
         if bld == "agile":
             # hunched: the torso top leans forward (skew), narrowing to a lithe
@@ -754,14 +758,17 @@ class BipedTemplate:
 
     def _draw_danger_features(self, buf, asym, tx0, tx1, ty0, hx1, hy0, skin):
         """Wedge-build menace cues: a swept head horn + asymmetric shoulder
-        spikes (skin-colored body protrusions, >=3 px so they survive cleanup)."""
+        spikes (skin-colored body protrusions, >=3 px so they survive cleanup).
+        Protrusion reach scales with the size tier so spikes stay legible on a
+        large body."""
         d = max(skin[1] - 1, 0)
         sp = asym["spike_dx"]
-        buf.fill_triangle((hx1 - 1, hy0 + 1), (hx1 + 3 + sp, hy0 - 3),
+        s = self.cfg.scale
+        buf.fill_triangle((hx1 - 1, hy0 + 1), (hx1 + round(3 * s) + sp, hy0 - round(3 * s)),
                           (hx1 + 1, hy0 + 2), skin[0], d, part="horn")
-        buf.fill_triangle((tx1 - 1, ty0), (tx1 + 3, ty0 - 4 - asym["shoulder_up"]),
+        buf.fill_triangle((tx1 - 1, ty0), (tx1 + round(3 * s), ty0 - round(4 * s) - asym["shoulder_up"]),
                           (tx1 + 1, ty0 + 1), skin[0], d, part="spike")
-        buf.fill_triangle((tx0 + 1, ty0), (tx0 - 2, ty0 - 3),
+        buf.fill_triangle((tx0 + 1, ty0), (tx0 - round(2 * s), ty0 - round(3 * s)),
                           (tx0 - 1, ty0 + 1), skin[0], d, part="spike")
 
     def _draw_eye(self, buf, eye_x, eye_y, colors, eye_offset):
@@ -820,7 +827,7 @@ class BipedTemplate:
                 continue
             if hand is not None or prop_pose == "dropped":
                 props_mod.draw_weapon(buf, pal, p, prop_pose, hand, colors,
-                                      ground_y, self.cfg.canvas)
+                                      ground_y, self.cfg.canvas, self.cfg.scale)
 
 
 # ===========================================================================
@@ -1738,18 +1745,31 @@ def flyer_config_from_spec(spec: dict | None) -> FlyerConfig:
 
 def _overlay_biped_config(base: BipedConfig, spec: dict | None) -> BipedConfig:
     """Overlay per-unit shape-language (build / seed / proportions) onto a base
-    BipedConfig. Absent keys -> the base unchanged (byte-identical)."""
+    BipedConfig, scaling the silhouette to the size tier the spec's canvas
+    implies. A larger ``canvas`` than the base's drives ``s = canvas_h /
+    base_h``; every body proportion (base, or a per-unit override) scales by s
+    so a unit's Part-B distinct shape is preserved at any tier. A same-size
+    canvas with no overrides -> the base unchanged (byte-identical)."""
     if not spec:
         return base
+    target = parse_canvas(spec["canvas"]) if spec.get("canvas") else base.canvas
+    s = target[1] / base.canvas[1]
     over: dict = {}
     if spec.get("build"):
         over["build"] = spec["build"]
     if "seed" in spec:
         over["seed"] = int(spec["seed"])
     prop = spec.get("proportions") or {}
-    for k in ("head_w", "head_h", "torso_w", "torso_h", "leg_h", "head_fwd"):
-        if k in prop:
-            over[k] = int(prop[k])
+    for k in ("head_w", "head_h", "torso_w", "torso_h", "leg_h"):
+        src = prop[k] if k in prop else getattr(base, k)
+        scaled = max(1, round(src * s))
+        if k in prop or scaled != getattr(base, k):
+            over[k] = scaled
+    if "head_fwd" in prop:
+        over["head_fwd"] = int(prop["head_fwd"])
+    if s != 1.0:
+        over["canvas"] = target
+        over["scale"] = s
     return replace(base, **over) if over else base
 
 
