@@ -21,6 +21,7 @@
 - [Skill vs command frontmatter convention](feedback_skill_vs_command_frontmatter_convention.md) — skills `description: >-` multi-line; commands single-line.
 - [Memory file refs — bare code-styled](feedback_memory_file_refs_no_markdown_links.md) — cite as bare `` `name.md` `` not `[link]` (except this index's links).
 - [Precedent is evidence, not authority](precedent_is_evidence_not_authority.md) — verify code precedent against skills/rules/CLAUDE.md before matching; guideline wins.
+- [Cross-project memory-index auto-load](gotcha_cross_project_memory_index_autoload.md) — passive MEMORY.md may be a baseline-sibling project's; verify recalled repo-specific facts first-party.
 
 ## Planning, brainstorm & handoff discipline
 - [Resolve plan questions at plan-time](feedback_resolve_questions_in_plan_not_execution.md) — deferred decisions stall the executor or ship as guesses; Verify > ASK.

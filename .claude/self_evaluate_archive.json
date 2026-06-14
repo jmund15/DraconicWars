@@ -1,0 +1,91 @@
+{
+  "Self_Evaluate_Themes": {
+    "description": "Per-session self-evaluation archive. One entry per session_id (composite PK: session_id, or (title,date) fallback). Read by /eval_dashboard.",
+    "patterns": {
+      "A": "Premature / unverified conclusion — declared something impossible, done, or correct without actually attempting or measuring it (e.g. 'can't be done', 'lint passes so it's right').",
+      "B": "Over-deferral — punted work that was immediately addressable, or under-delivered vs the stated goal.",
+      "C": "Clean — no user corrections.",
+      "D": "Tool-routing / process misstep — wrong tool, skipped gate, or convention violation.",
+      "E": "Failure cascade — critical failure, data loss, or repeated user frustration."
+    }
+  },
+  "structured_entries": [
+    {
+      "session_id": "42ebc499-f794-4db5-8707-37fe39f33648",
+      "id": 1,
+      "title": "External-conform real-asset download + hero-fidelity fixes",
+      "date": "2026-06-14",
+      "outcome": "correction",
+      "pattern": "A",
+      "domains": [
+        "art-pipeline",
+        "tooling",
+        "testing",
+        "meta",
+        "roadmap"
+      ],
+      "corrections": [
+        "Prior-session verdict 'itch.io download is JS-gated / unautomatable' was wrong — user pushed back ('I thought that was within your capabilities'); a 4-hop CSRF curl flow downloaded the binary in minutes.",
+        "Conformed wizard shipped a visual defect (book fused into the face) that PASSED lint — user caught it by eye. Root cause: _material_for hue-matched desaturated pixels onto the skin ramp; lint validates palette/orphans/contract, not recognizability.",
+        "Conform crushed premium external art to ~26px (small-unit band), undermining Track 2's 'artist-quality' purpose — user questioned the fidelity reduction and whether art instructions were stale."
+      ],
+      "skills_used": [
+        "session_end",
+        "session_audit",
+        "autolearn",
+        "self_evaluate",
+        "update_roadmap"
+      ],
+      "memory_searches": 3,
+      "memory_hits": [
+        "feedback_deferred_feature_stays_tracked_as_part"
+      ],
+      "tests": {
+        "written": 3,
+        "total_passing": 13,
+        "tdd_followed": true
+      },
+      "key_takeaway": "An inherited 'X is impossible' verdict is a hypothesis, not a fact — re-attempt before accepting it (the 'JS-gated' download was trivially scriptable). // An automated gate passing (lint) is not proof of correctness when it cannot measure the actual goal (recognizability); semantic/visual regressions need the human gate, and a synthetic fixture built to pass the checks structurally hides what real input triggers.",
+      "notes": "First entry; archive + pattern legend created this session. Post-compaction (2 events). All corrections originated from inherited prior-session work (Part D external conform) that the user re-opened; fixes shipped this session (denoise + saturation guard + body-fidelity knobs, all TDD'd). Per-animation scaling artifact deferred to Hero A/B/C Bake-off as an explicit roadmap GATING item per user. Lessons captured in auto-memory (gotcha_itch_io_free_download_scriptable, gotcha_synthetic_fixture_hides_real_input_failure); no CLAUDE.md/Skill/hook change proposed (would bloat always-loaded surface for once-fired lessons)."
+    },
+    {
+      "session_id": "c40d2288-8834-4d90-8ccb-f0ea86d97b39",
+      "id": 2,
+      "title": "UI Art System architecture brainstorm (--red-team)",
+      "date": "2026-06-14",
+      "outcome": "clean",
+      "pattern": null,
+      "domains": [
+        "brainstorm",
+        "UI",
+        "art-pipeline",
+        "meta"
+      ],
+      "corrections": [],
+      "skills_used": [
+        "architecture_brainstorm",
+        "architecture_brainstorm_redteam",
+        "update_roadmap",
+        "session_audit",
+        "autolearn",
+        "self_evaluate"
+      ],
+      "memory_searches": 2,
+      "memory_hits": [
+        "feedback_inspect_existing_abstractions_first",
+        "feedback_verify_explore_agent_empirical_claims",
+        "red_team_must_be_independent_dispatch",
+        "arch_rule_autoload_line_earns_its_place",
+        "feedback_honor_execution_directive",
+        "feedback_no_unilateral_condensation"
+      ],
+      "tests": {
+        "written": 0,
+        "total_passing": 194,
+        "tdd_followed": true
+      },
+      "key_takeaway": "A --red-team capstone's first-party code-read caught a cross-project memory false-positive (PushinPotions 'Global autoload' from the passively-loaded sibling MEMORY.md was shaping a DraconicWars ThemeService design; DW has zero autoloads). Recalled passive-memory facts naming repo-specific artifacts must be verified first-party. The multi-agent red-team passes earned their cost: they also caught a TextureFilter-on-Texture2D API error and a non-hermetic test plan that Socratic alone would have missed.",
+      "notes": "Architecture brainstorm for the UI Art System Part; --red-team ran 3 passes (Step-2 + Step-4 Mode B, Step-7 Mode A), ~12 critic agents total. Output entirely in the Obsidian vault (ui-art-system.md design doc + roadmap.md: UI Art System -> plan-pending, +3 arch-pending siblings) plus 2 .claude/auto-memory files; ZERO .cs changes (regression gate exempt). Surfaced a harness misconfig: this DW session passively auto-loaded PushinPotions' MEMORY.md (native memory-dir config, not the project hook). No CLAUDE.md/skill/hook edit proposed — the learning is a gotcha (auto-memory, saved via autolearn) + a harness-config recommendation, not an instruction-adherence gap."
+    }
+  ]
+}

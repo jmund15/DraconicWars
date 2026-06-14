@@ -11,6 +11,7 @@ Format: `<category> · <class> · <scope> · <title>` (with optional ` [after: <
 Active [ ] items only.
 -->
 
-Last synced: (never — run /worklog show after creating the Obsidian worklog doc)
+Last synced: 2026-06-14
 
 ## Active
+- chore · refactor · 2 · Localize baseline-synced .claude/ files for DraconicWars
