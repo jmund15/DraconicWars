@@ -14,4 +14,5 @@ Active [ ] items only.
 Last synced: 2026-06-14
 
 ## Active
+- meta · chore · 2 · Populate project_subsystems registry (seed-state) [after: concurrent art_pipeline work settles]
 - chore · refactor · 2 · Localize baseline-synced .claude/ files for DraconicWars
