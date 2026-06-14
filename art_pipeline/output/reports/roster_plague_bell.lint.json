@@ -1,16 +1,19 @@
 {
   "sheet": "C:\\Users\\jmund\\Game_Dev\\Godot_Projects\\DraconicWars\\art_pipeline\\output\\units\\plague_bell_sheet.png",
   "manifest": "C:\\Users\\jmund\\Game_Dev\\Godot_Projects\\DraconicWars\\art_pipeline\\output\\units\\plague_bell.manifest.json",
-  "passed": true,
+  "profile": "strict",
+  "passed": false,
   "checks": {
     "on_palette": {
       "passed": true,
-      "off_palette_colors": {}
+      "off_palette_colors": {},
+      "severity": "error"
     },
     "no_aa": {
       "passed": true,
       "semi_transparent_pixels": 0,
-      "samples": []
+      "samples": [],
+      "severity": "error"
     },
     "orphan_pixels": {
       "passed": true,
@@ -19,46 +22,74 @@
       "whitelist": [
         "1ebc73",
         "ffffff"
-      ]
+      ],
+      "severity": "error"
     },
     "outline_1px": {
       "passed": true,
       "boundary_dark_coverage": 1.0,
       "light_boundary_samples": [],
-      "ink_2x2_blocks": []
+      "ink_2x2_blocks": [],
+      "severity": "error"
     },
     "frames": {
       "passed": true,
-      "failures": []
+      "failures": [],
+      "severity": "error"
     },
     "banding": {
-      "passed": true,
+      "passed": false,
       "max_run": 6,
-      "offenders": []
+      "offenders": [
+        {
+          "orientation": "horizontal",
+          "at": [
+            134,
+            57
+          ],
+          "length": 11
+        },
+        {
+          "orientation": "horizontal",
+          "at": [
+            14,
+            89
+          ],
+          "length": 11
+        }
+      ],
+      "severity": "error"
     },
     "manifest_contract": {
       "passed": true,
-      "errors": []
+      "errors": [],
+      "severity": "error"
     },
     "body_size": {
       "passed": true,
       "errors": [],
-      "warnings": [],
+      "warnings": [
+        "body width 37 over target 36"
+      ],
       "measured": {
-        "width": 26,
-        "height": 21,
+        "width": 37,
+        "height": 15,
         "head_w": 0,
         "head_h": 0
       },
       "rules": {
-        "min_h": 20,
-        "min_w": 26
-      }
+        "min_h": 12,
+        "max_h": 24,
+        "min_w": 18,
+        "max_w": 36
+      },
+      "severity": "error"
     },
     "whitelist_cap": {
       "passed": true,
       "cap": 6,
-      "offenders": []
+      "offenders": [],
+      "severity": "error"
     }
   }
 }

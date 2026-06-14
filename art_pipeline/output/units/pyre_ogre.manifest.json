@@ -1,6 +1,6 @@
 {
   "name": "pyre_ogre",
-  "typeclass": "melee_biped",
+  "typeclass": "ogre",
   "element": "fire",
   "size_class": "small",
   "frame_w": 32,
@@ -49,10 +49,10 @@
   "ground_y": 29,
   "facing": "right",
   "body_size": {
-    "width": 20,
-    "height": 24,
-    "head_w": 10,
-    "head_h": 7
+    "width": 26,
+    "height": 20,
+    "head_w": 8,
+    "head_h": 5
   },
   "lint": {
     "whitelist_colors": [
