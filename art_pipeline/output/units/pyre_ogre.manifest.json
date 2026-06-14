@@ -38,6 +38,7 @@
   ],
   "foreswing_ticks": 14,
   "backswing_ticks": 20,
+  "attack_pose": "brawl",
   "ramps_used": [
     "fire",
     "ink",

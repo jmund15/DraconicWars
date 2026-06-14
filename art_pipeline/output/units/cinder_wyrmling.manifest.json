@@ -38,6 +38,7 @@
   ],
   "foreswing_ticks": 8,
   "backswing_ticks": 10,
+  "attack_pose": "aerial_flyer",
   "ramps_used": [
     "fire",
     "fire_dark",

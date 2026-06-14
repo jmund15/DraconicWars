@@ -38,6 +38,7 @@
   ],
   "foreswing_ticks": 12,
   "backswing_ticks": 22,
+  "attack_pose": "slime",
   "ramps_used": [
     "ink",
     "mauve_grey",

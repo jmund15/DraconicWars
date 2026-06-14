@@ -38,6 +38,7 @@
   ],
   "foreswing_ticks": 5,
   "backswing_ticks": 7,
+  "attack_pose": "thrust",
   "ramps_used": [
     "fire",
     "fire_dark",

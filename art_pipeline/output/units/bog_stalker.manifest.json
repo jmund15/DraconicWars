@@ -38,6 +38,7 @@
   ],
   "foreswing_ticks": 5,
   "backswing_ticks": 9,
+  "attack_pose": "thrust",
   "ramps_used": [
     "ink",
     "leather",

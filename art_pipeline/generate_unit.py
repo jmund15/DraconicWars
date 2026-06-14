@@ -231,6 +231,12 @@ def generate_unit(spec: dict, outdir: str | Path | None = None,
         ],
         "foreswing_ticks": fore,
         "backswing_ticks": back,
+        # which attack pose was baked (informational contract — the view reads the
+        # archetype from UnitDef, not here). Biped family: the effective attack_style
+        # (incl. a magic-pose override); other forms: the typeclass.
+        "attack_pose": (spec.get("attack_pose")
+                        or getattr(getattr(template, "cfg", None), "attack_style", None)
+                        or spec["typeclass"]),
         "ramps_used": sorted(ramps_used),
         "pivot": "bottom_center",
         "ground_y": skeletons.ground_row(H),

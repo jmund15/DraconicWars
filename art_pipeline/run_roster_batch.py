@@ -114,10 +114,11 @@ BATCH: list[tuple[dict, str]] = [
         "build": "sturdy", "seed": 6,
         "proportions": {"torso_w": 18, "torso_h": 14, "leg_h": 9, "head_w": 7, "head_h": 7},
         "typeclass": "construct", "construct_style": "crystalline",
+        "attack_pose": "cast",   # magic-user: conjures (no held weapon) — the cast gesture; form spawns at runtime
         "element": "frost",
         "canvas": "64x64",
         "size_class": "colossal",
-        "props": [],          # magic-user placeholder: stick dropped, attack gestures empty-handed pending the cast-form system
+        "props": [],          # magic-user: no held weapon
         "palette_overrides": {},
         "foreswing_ticks": 12,
         "backswing_ticks": 18,

@@ -38,6 +38,7 @@
   ],
   "foreswing_ticks": 7,
   "backswing_ticks": 9,
+  "attack_pose": "aerial_flyer",
   "ramps_used": [
     "ink",
     "leather",

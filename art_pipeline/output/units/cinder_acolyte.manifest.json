@@ -38,6 +38,7 @@
   ],
   "foreswing_ticks": 8,
   "backswing_ticks": 12,
+  "attack_pose": "staff",
   "ramps_used": [
     "fire",
     "fire_dark",

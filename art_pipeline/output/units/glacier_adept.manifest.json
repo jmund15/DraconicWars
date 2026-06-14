@@ -38,6 +38,7 @@
   ],
   "foreswing_ticks": 10,
   "backswing_ticks": 16,
+  "attack_pose": "staff",
   "ramps_used": [
     "frost",
     "frost_teal",

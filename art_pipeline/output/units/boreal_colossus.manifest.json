@@ -38,6 +38,7 @@
   ],
   "foreswing_ticks": 12,
   "backswing_ticks": 18,
+  "attack_pose": "cast",
   "ramps_used": [
     "frost",
     "frost_teal",

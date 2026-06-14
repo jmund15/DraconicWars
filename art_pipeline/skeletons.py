@@ -505,6 +505,27 @@ ARM_POSES = {
         "recover": (3, 9), "settle": (1, 12),
         "drop": (0, 14), "drop2": (-1, 15),
     },
+    # magic poses (Attack Archetype System): the body gestures, no weapon. cast =
+    # gather-then-thrust release; channel = steady arms-forward; body_strike =
+    # arms tucked while the body lunges (the contact-frame lunge stance carries it).
+    "cast": {
+        "idle": (2, 3), "idle_b": (2, 4), "walk": (1, 3),
+        "windup": (-1, -2), "windup2": (-2, -3), "contact": (5, -1),
+        "recover": (3, 1), "settle": (2, 3),
+        "drop": (0, 7), "drop2": (-1, 8),
+    },
+    "channel": {
+        "idle": (2, 4), "idle_b": (2, 5), "walk": (2, 4),
+        "windup": (3, 3), "windup2": (3, 2), "contact": (4, 2),
+        "recover": (3, 3), "settle": (2, 4),
+        "drop": (0, 7), "drop2": (-1, 8),
+    },
+    "body_strike": {
+        "idle": (1, 5), "idle_b": (1, 6), "walk": (1, 5),
+        "windup": (-1, 4), "windup2": (-2, 4), "contact": (2, 4),
+        "recover": (1, 5), "settle": (1, 5),
+        "drop": (0, 7), "drop2": (-1, 8),
+    },
 }
 
 # Walk cycle: (back_foot_dx, back_foot_lift, front_foot_dx, front_foot_lift, body_lift)
@@ -1938,6 +1959,10 @@ def _overlay_biped_config(base: BipedConfig, spec: dict | None) -> BipedConfig:
         over["head_fwd"] = int(prop["head_fwd"])
     if spec.get("construct_style"):
         over["construct_style"] = spec["construct_style"]
+    if spec.get("attack_pose"):
+        # the archetype magic pose (cast/channel/body_strike) drives the arm via
+        # ARM_POSES, overriding the typeclass's default weapon pose.
+        over["attack_style"] = spec["attack_pose"]
     if s != 1.0:
         over["canvas"] = target
         over["scale"] = s

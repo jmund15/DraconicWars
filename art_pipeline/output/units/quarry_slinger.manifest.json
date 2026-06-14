@@ -38,6 +38,7 @@
   ],
   "foreswing_ticks": 13,
   "backswing_ticks": 20,
+  "attack_pose": "crossbow",
   "ramps_used": [
     "ink",
     "leather",
