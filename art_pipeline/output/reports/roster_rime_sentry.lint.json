@@ -53,16 +53,16 @@
       "errors": [],
       "warnings": [],
       "measured": {
-        "width": 18,
-        "height": 27,
-        "head_w": 11,
-        "head_h": 8
+        "width": 27,
+        "height": 30,
+        "head_w": 8,
+        "head_h": 9
       },
       "rules": {
-        "min_h": 24,
-        "max_h": 28,
-        "min_w": 14,
-        "max_w": 18
+        "min_h": 14,
+        "max_h": 36,
+        "min_w": 12,
+        "max_w": 34
       },
       "severity": "error"
     },

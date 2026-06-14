@@ -38,6 +38,8 @@ CASES = [
     ("aerial_flyer", {"typeclass": "aerial_flyer", "canvas": "32x32"}),
     ("siege_machine", {"typeclass": "siege_machine", "canvas": "40x32"}),
     ("ogre", {"typeclass": "ogre", "canvas": "32x32"}),
+    ("construct", {"typeclass": "construct", "canvas": "48x48", "construct_style": "segmented"}),
+    ("construct", {"typeclass": "construct", "canvas": "64x64", "construct_style": "crystalline"}),
     ("slime", {"typeclass": "slime", "canvas": "40x32"}),
 ]
 

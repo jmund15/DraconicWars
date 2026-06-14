@@ -85,10 +85,10 @@
       "failed_checks": [],
       "warnings": [],
       "body_size": {
-        "width": 18,
-        "height": 27,
-        "head_w": 11,
-        "head_h": 8
+        "width": 27,
+        "height": 30,
+        "head_w": 8,
+        "head_h": 9
       },
       "contact_sheets": [
         "C:\\Users\\jmund\\Game_Dev\\Godot_Projects\\DraconicWars\\art_pipeline\\output\\contact_sheets\\rime_sentry_contact_1x.png",
@@ -117,16 +117,16 @@
       "name": "boreal_colossus",
       "regenerated": true,
       "reason": "forced",
-      "lint_pass": true,
-      "failed_checks": [],
-      "warnings": [
-        "body width 44 over target 36"
+      "lint_pass": false,
+      "failed_checks": [
+        "outline_1px"
       ],
+      "warnings": [],
       "body_size": {
-        "width": 44,
-        "height": 56,
-        "head_w": 17,
-        "head_h": 14
+        "width": 64,
+        "height": 62,
+        "head_w": 14,
+        "head_h": 15
       },
       "contact_sheets": [
         "C:\\Users\\jmund\\Game_Dev\\Godot_Projects\\DraconicWars\\art_pipeline\\output\\contact_sheets\\boreal_colossus_contact_1x.png",
@@ -195,13 +195,11 @@
       "reason": "forced",
       "lint_pass": true,
       "failed_checks": [],
-      "warnings": [
-        "body width 33 over target 27"
-      ],
+      "warnings": [],
       "body_size": {
         "width": 33,
         "height": 38,
-        "head_w": 15,
+        "head_w": 12,
         "head_h": 14
       },
       "contact_sheets": [
@@ -263,80 +261,80 @@
           "cinder_acolyte|ash_revenant": 0.1898,
           "cinder_acolyte|cinder_wyrmling": 0.3382,
           "cinder_acolyte|pyre_ogre": 0.197,
-          "cinder_acolyte|rime_sentry": 0.4828,
+          "cinder_acolyte|rime_sentry": 0.5378,
           "cinder_acolyte|glacier_adept": 0.6866,
-          "cinder_acolyte|boreal_colossus": 0.062,
+          "cinder_acolyte|boreal_colossus": 0.1319,
           "cinder_acolyte|bog_stalker": 0.5234,
           "cinder_acolyte|plague_bell": 0.3895,
           "cinder_acolyte|quarry_slinger": 0.2231,
-          "cinder_acolyte|deepway_bulwark": 0.2434,
+          "cinder_acolyte|deepway_bulwark": 0.1994,
           "cinder_acolyte|spark_courier": 0.4375,
           "cinder_acolyte|gale_harrier": 0.3221,
           "ash_revenant|cinder_wyrmling": 0.0389,
           "ash_revenant|pyre_ogre": 0.4515,
-          "ash_revenant|rime_sentry": 0.272,
+          "ash_revenant|rime_sentry": 0.2333,
           "ash_revenant|glacier_adept": 0.1537,
-          "ash_revenant|boreal_colossus": 0.2992,
+          "ash_revenant|boreal_colossus": 0.3304,
           "ash_revenant|bog_stalker": 0.1081,
           "ash_revenant|plague_bell": 0.1029,
           "ash_revenant|quarry_slinger": 0.4743,
-          "ash_revenant|deepway_bulwark": 0.5698,
+          "ash_revenant|deepway_bulwark": 0.4851,
           "ash_revenant|spark_courier": 0.1265,
           "ash_revenant|gale_harrier": 0.0287,
           "cinder_wyrmling|pyre_ogre": 0.0872,
-          "cinder_wyrmling|rime_sentry": 0.1386,
+          "cinder_wyrmling|rime_sentry": 0.1928,
           "cinder_wyrmling|glacier_adept": 0.3067,
-          "cinder_wyrmling|boreal_colossus": 0.0008,
+          "cinder_wyrmling|boreal_colossus": 0.0395,
           "cinder_wyrmling|bog_stalker": 0.3004,
           "cinder_wyrmling|plague_bell": 0.3055,
           "cinder_wyrmling|quarry_slinger": 0.0539,
-          "cinder_wyrmling|deepway_bulwark": 0.0713,
+          "cinder_wyrmling|deepway_bulwark": 0.0625,
           "cinder_wyrmling|spark_courier": 0.1619,
           "cinder_wyrmling|gale_harrier": 0.4038,
-          "pyre_ogre|rime_sentry": 0.2141,
+          "pyre_ogre|rime_sentry": 0.2046,
           "pyre_ogre|glacier_adept": 0.1518,
-          "pyre_ogre|boreal_colossus": 0.3603,
+          "pyre_ogre|boreal_colossus": 0.3005,
           "pyre_ogre|bog_stalker": 0.1331,
           "pyre_ogre|plague_bell": 0.2371,
           "pyre_ogre|quarry_slinger": 0.2875,
-          "pyre_ogre|deepway_bulwark": 0.5292,
+          "pyre_ogre|deepway_bulwark": 0.4361,
           "pyre_ogre|spark_courier": 0.1116,
           "pyre_ogre|gale_harrier": 0.065,
-          "rime_sentry|glacier_adept": 0.3479,
-          "rime_sentry|boreal_colossus": 0.098,
-          "rime_sentry|bog_stalker": 0.3291,
-          "rime_sentry|plague_bell": 0.1684,
-          "rime_sentry|quarry_slinger": 0.3078,
-          "rime_sentry|deepway_bulwark": 0.3157,
-          "rime_sentry|spark_courier": 0.3253,
-          "rime_sentry|gale_harrier": 0.1083,
-          "glacier_adept|boreal_colossus": 0.0519,
+          "rime_sentry|glacier_adept": 0.4765,
+          "rime_sentry|boreal_colossus": 0.1353,
+          "rime_sentry|bog_stalker": 0.5106,
+          "rime_sentry|plague_bell": 0.2159,
+          "rime_sentry|quarry_slinger": 0.1713,
+          "rime_sentry|deepway_bulwark": 0.2212,
+          "rime_sentry|spark_courier": 0.4384,
+          "rime_sentry|gale_harrier": 0.1393,
+          "glacier_adept|boreal_colossus": 0.0935,
           "glacier_adept|bog_stalker": 0.5235,
           "glacier_adept|plague_bell": 0.3208,
           "glacier_adept|quarry_slinger": 0.1623,
-          "glacier_adept|deepway_bulwark": 0.1968,
+          "glacier_adept|deepway_bulwark": 0.1581,
           "glacier_adept|spark_courier": 0.4036,
           "glacier_adept|gale_harrier": 0.2736,
-          "boreal_colossus|bog_stalker": 0.0233,
-          "boreal_colossus|plague_bell": 0.013,
-          "boreal_colossus|quarry_slinger": 0.2667,
-          "boreal_colossus|deepway_bulwark": 0.2884,
-          "boreal_colossus|spark_courier": 0.0285,
-          "boreal_colossus|gale_harrier": 0.0,
+          "boreal_colossus|bog_stalker": 0.0791,
+          "boreal_colossus|plague_bell": 0.0662,
+          "boreal_colossus|quarry_slinger": 0.3193,
+          "boreal_colossus|deepway_bulwark": 0.2431,
+          "boreal_colossus|spark_courier": 0.0863,
+          "boreal_colossus|gale_harrier": 0.0484,
           "bog_stalker|plague_bell": 0.2709,
           "bog_stalker|quarry_slinger": 0.0974,
-          "bog_stalker|deepway_bulwark": 0.1698,
+          "bog_stalker|deepway_bulwark": 0.1305,
           "bog_stalker|spark_courier": 0.585,
           "bog_stalker|gale_harrier": 0.2096,
           "plague_bell|quarry_slinger": 0.0789,
-          "plague_bell|deepway_bulwark": 0.1484,
+          "plague_bell|deepway_bulwark": 0.1813,
           "plague_bell|spark_courier": 0.1876,
           "plague_bell|gale_harrier": 0.3429,
-          "quarry_slinger|deepway_bulwark": 0.4133,
+          "quarry_slinger|deepway_bulwark": 0.3544,
           "quarry_slinger|spark_courier": 0.0923,
           "quarry_slinger|gale_harrier": 0.0623,
-          "deepway_bulwark|spark_courier": 0.1626,
-          "deepway_bulwark|gale_harrier": 0.0338,
+          "deepway_bulwark|spark_courier": 0.135,
+          "deepway_bulwark|gale_harrier": 0.0336,
           "spark_courier|gale_harrier": 0.1407
         }
       },
@@ -386,27 +384,11 @@
             ]
           },
           {
-            "name": "rime_sentry",
-            "ratio": 0.296,
-            "band": [
-              0.2,
-              0.46
-            ]
-          },
-          {
             "name": "glacier_adept",
             "ratio": 0.346,
             "band": [
               0.16,
               0.42
-            ]
-          },
-          {
-            "name": "boreal_colossus",
-            "ratio": 0.25,
-            "band": [
-              0.2,
-              0.46
             ]
           },
           {
@@ -423,14 +405,6 @@
             "band": [
               0.14,
               0.36
-            ]
-          },
-          {
-            "name": "deepway_bulwark",
-            "ratio": 0.368,
-            "band": [
-              0.2,
-              0.46
             ]
           },
           {

@@ -444,6 +444,7 @@ class BipedConfig:
     build: str = "neutral"   # neutral | agile (circle) | sturdy (square) | dangerous (wedge)
     seed: int = 0            # per-unit asymmetry seed (deterministic int; NEVER hash())
     scale: float = 1.0       # size-tier factor (canvas_h / base_canvas_h); 1.0 == byte-identical
+    construct_style: str = "segmented"  # ConstructTemplate only: segmented (block grid) | crystalline (facets)
 
 
 # Round-2 calibration bodies: small ground units target a 24-28 px tall x
@@ -950,6 +951,174 @@ class OgreTemplate(BipedTemplate):
             return
         buf.fill_rect(tx0 - 2, ty0 + 4, tx0 + 1, ty0 + 9, skin[0], d, part="back_arm")
         buf.fill_round_rect(tx0 - 4, ty0 + 8, tx0 + 1, ty0 + 13, skin[0], d, part="back_arm")
+
+
+# ===========================================================================
+# Construct (biped-variant: an assembled/material golem)
+# ===========================================================================
+
+# A bulky humanoid-skeleton golem. Proportions come from the per-unit spec
+# overlay (size tier scales them); the base is a stocky sturdy frame.
+CONSTRUCT_CONFIG = BipedConfig(
+    "construct", (32, 32), head_w=8, head_h=8, torso_w=16, torso_h=14, leg_h=8,
+    head_style="plain", attack_style="thrust", build="sturdy",
+    construct_style="segmented")
+
+
+class ConstructTemplate(BipedTemplate):
+    """An assembled/material golem. Reuses the biped pose+geometry sequence (the
+    DR3 helper-override seam) but swaps the organic round-rect body for one of two
+    material shape-languages, selected by ``cfg.construct_style``:
+
+      * ``segmented`` -- a wall of discrete carved blocks separated by 1px gaps.
+        Each block is kept under the canvas-scaled banding floor, so the seams
+        read as assembled masonry, not a directional-shading gradient. (Stone.)
+      * ``crystalline`` -- a faceted angular core (a cluster of diamonds) with
+        triangular shards erupting from the shoulders/back/crown. Every facet
+        edge is diagonal, sidestepping the axis-aligned banding lint the way the
+        ogre's tapered hunch does. (Ice / gem.)
+
+    Both drop cross-form IoU vs the humanoids well below the gate; the two styles
+    also stay distinct from each other (block grid vs shard cluster)."""
+
+    ROLE_DEFAULTS = BipedTemplate.ROLE_DEFAULTS
+    WHITELIST_ROLES = BipedTemplate.WHITELIST_ROLES
+
+    def __init__(self, cfg: BipedConfig | None = None):
+        super().__init__(cfg or CONSTRUCT_CONFIG)
+
+    # ----------------------------------------------------------- block grid
+    def _chunk(self) -> int:
+        """Max block edge that stays under the canvas-scaled banding floor. The
+        floor is round(MAX_BAND_RUN * frame_h/32); a block edge two below it
+        keeps every flat shaded run short, so masonry seams never read as a
+        directional-shading band at any tier."""
+        band_limit = round(6 * (self.cfg.canvas[1] / 32))
+        return max(3, band_limit - 2)
+
+    def _draw_block_grid(self, buf, x0, y0, x1, y1, cr, ci, part="torso", row_seed=0):
+        """Brick-staggered blocks (1px gaps) tiling a rect. Each block edge <
+        band_limit, so the auto directional-shading on a block stays a short
+        per-block run and the gaps (outlined by sel-out) read as mortar seams."""
+        cw = self._chunk()
+        step = cw + 1
+        row, y = 0, y0
+        while y <= y1:
+            bh = min(cw, y1 - y + 1)
+            off = -(cw // 2) if ((row + row_seed) % 2) else 0   # brick stagger
+            bx = x0 + off
+            while bx <= x1:
+                bx0, bx1 = max(bx, x0), min(bx + cw - 1, x1)
+                if bx1 >= bx0:
+                    buf.fill_rect(bx0, y, bx1, y + bh - 1, cr, ci, part=part)
+                bx += step
+            row += 1
+            y += bh + 1                                         # 1px gap between rows
+
+    # ----------------------------------------------------------- crystal facets
+    def _diamond(self, buf, cx, top, bot, halfw, cr, lit, shadow, part="torso"):
+        """A 4-point crystal split into a lit (left) and shadow (right) facet --
+        all-diagonal edges, so no axis-aligned shaded band forms."""
+        midy = (top + bot) // 2
+        apex, base = (cx, top), (cx, bot)
+        buf.fill_triangle(apex, (cx - halfw, midy), base, cr, lit, part=part)
+        buf.fill_triangle(apex, (cx + halfw, midy), base, cr, shadow, part=part)
+
+    def _draw_crystal_body(self, buf, asym, tx0, ty0, tx1, ty1, cr, ci):
+        d = max(ci - 1, 0)
+        cx = (tx0 + tx1) // 2
+        halfw = max(2, (tx1 - tx0) // 2)
+        sp = asym.get("spike_dx", 0)
+        up = asym.get("shoulder_up", 0)
+        # central crystal prism + two flanking shards (a cluster, asymmetric)
+        self._diamond(buf, cx, ty0, ty1 + 1, halfw, cr, ci, d)
+        self._diamond(buf, tx0 + halfw // 2 + sp, ty0 + 2, ty1 - 2, max(2, halfw // 2), cr, ci, d)
+        self._diamond(buf, tx1 - halfw // 2, ty0 + 4 - up, ty1, max(2, halfw // 2 - 1), cr, d, d)
+        # erupting shards (BOLD, asymmetric) -- the crystalline silhouette tell.
+        # A tall crown + long shoulder spikes reaching past the body width + a
+        # lower side pair make a spiky STAR, not a humanoid; this is what drops the
+        # cross-form IoU vs the bipeds (the chunky legs alone read too person-like).
+        sh = max(4, halfw + 1)
+        # tall crown shard
+        buf.fill_triangle((cx - 2, ty0 + 2), (cx + sp, ty0 - sh - 2), (cx + 3, ty0 + 2),
+                          cr, ci, part="shard")
+        # long upper shoulder spikes (reach well past the body edges)
+        buf.fill_triangle((tx1 - 2, ty0 + 3), (tx1 + sh, ty0 - sh + 1), (tx1, ty0 + 6),
+                          cr, d, part="shard")
+        buf.fill_triangle((tx0 + 2, ty0 + 3), (tx0 - sh + 1, ty0 - sh + 2), (tx0, ty0 + 6),
+                          cr, ci, part="shard")
+        # lower side shards (mid-body) -- spikier outline, asymmetric per seed
+        midy = (ty0 + ty1) // 2
+        buf.fill_triangle((tx1 - 1, midy), (tx1 + sh - 2, midy + 1 + sp), (tx1 - 1, midy + 4),
+                          cr, d, part="shard")
+        buf.fill_triangle((tx0 + 1, midy + 1), (tx0 - sh + 3, midy + 2), (tx0 + 1, midy + 5),
+                          cr, ci, part="shard")
+
+    # ----------------------------------------------------------- part helpers
+    def _draw_torso(self, buf, bld, asym, tx0, ty0, tx1, ty1, cloth):
+        cr, ci = cloth
+        if self.cfg.construct_style == "crystalline":
+            self._draw_crystal_body(buf, asym, tx0, ty0, tx1, ty1, cr, ci)
+            return
+        self._draw_block_grid(buf, tx0, ty0, tx1, ty1, cr, ci, row_seed=asym.get("spike_dx", 0))
+
+    def _draw_head(self, buf, hx0, hy0, hx1, hy1, skin, cloth, colors, pal, eye_offset=(0, 0)):
+        sr, si = skin
+        d = max(si - 1, 0)
+        cx = (hx0 + hx1) // 2
+        cy = (hy0 + hy1) // 2
+        if self.cfg.construct_style == "crystalline":
+            # a faceted gem head (up-pointing shard) with a glowing core glint
+            buf.fill_triangle((cx, hy0 - 1), (hx0, hy1), (cx, hy1), sr, si, part="head")
+            buf.fill_triangle((cx, hy0 - 1), (hx1, hy1), (cx, hy1), sr, d, part="head")
+            buf.set_px(cx, cy, *colors["accent"], part="emblem", no_outline=True)
+            buf.set_px(cx, cy + 1, *colors["accent"], part="emblem", no_outline=True)
+            return
+        # segmented: a cubic carved head + a dark eye-slit
+        self._draw_block_grid(buf, hx0, hy0, hx1, hy1, sr, si, part="head")
+        self._draw_eye(buf, hx1 - 2, cy, colors, eye_offset)
+
+    def _draw_legs(self, buf, kind, phase, tx0, tx1, hip_y, GY, skin):
+        if kind == "kneel":
+            super()._draw_legs(buf, kind, phase, tx0, tx1, hip_y, GY, skin)
+            return
+        sr, si = skin
+        if self.cfg.construct_style == "crystalline":
+            # thick (3px) WIDE-stance legs, rooted under the crystal's lower mass.
+            # A straight thick pillar bands (the idle frame has no foot offset to
+            # bend it), so a 2-row contrasting KNEE FACET splits every column into
+            # two sub-band_limit vertical segments -- it fractures the shading band
+            # regardless of stride AND reads as a faceted crystal joint.
+            cx = (tx0 + tx1) // 2
+            d = max(si - 1, 0)
+            if kind == "lunge":
+                stances = [(-2, 0), (3, 0)]
+            elif kind == "walk":
+                b = WALK_LEGS[phase % 4]
+                stances = [(b[0], b[1]), (b[2], b[3])]
+            else:
+                stances = [(0, 0), (1, 0)]
+            for (fdx, flift), hip, part, didx in zip(
+                    stances, (cx - 5, cx + 2), ("back_leg", "front_leg"), (d, si)):
+                foot = hip + fdx
+                base = GY - flift
+                mid = (hip_y + base) // 2
+                knee = max(didx - 1, 0)
+                buf.fill_rect(hip, hip_y, hip + 2, mid - 1, sr, didx, part=part)          # thigh 3px
+                buf.fill_rect(min(hip, foot), mid, max(hip, foot) + 2, mid + 1, sr, knee, part=part)  # knee facet
+                buf.fill_rect(foot, mid + 2, foot + 2, base, sr, didx, part=part)         # shin 3px
+            return
+        lw = max(2, self._chunk() // 2)          # segmented: stocky pillar legs, < band_limit wide
+        back = tx0 + 2
+        front = tx1 - 2 - lw
+        dx = 0
+        if kind == "lunge":
+            back -= 2
+            front += 2
+        elif kind == "walk":
+            dx = WALK_LEGS[phase % 4][0]
+        buf.fill_rect(back - lw + dx, hip_y, back + dx, GY, sr, max(si - 1, 0), part="back_leg")
+        buf.fill_rect(front, hip_y, front + lw, GY, sr, si, part="front_leg")
 
 
 # ===========================================================================
@@ -1767,6 +1936,8 @@ def _overlay_biped_config(base: BipedConfig, spec: dict | None) -> BipedConfig:
             over[k] = scaled
     if "head_fwd" in prop:
         over["head_fwd"] = int(prop["head_fwd"])
+    if spec.get("construct_style"):
+        over["construct_style"] = spec["construct_style"]
     if s != 1.0:
         over["canvas"] = target
         over["scale"] = s
@@ -1788,11 +1959,19 @@ def ogre_config_from_spec(spec: dict | None) -> BipedConfig:
     return _overlay_biped_config(OGRE_CONFIG, spec)
 
 
+def construct_config_from_spec(spec: dict | None) -> BipedConfig:
+    """CONSTRUCT_CONFIG with the per-unit overlay (build/seed/proportions/scale)
+    plus the ``construct_style`` selector (segmented | crystalline)."""
+    return _overlay_biped_config(CONSTRUCT_CONFIG, spec)
+
+
 def make_template(typeclass: str, spec: dict | None = None):
     if typeclass in BIPED_CONFIGS:
         return BipedTemplate(biped_config_from_spec(typeclass, spec))
     if typeclass == "ogre":
         return OgreTemplate(ogre_config_from_spec(spec))
+    if typeclass == "construct":
+        return ConstructTemplate(construct_config_from_spec(spec))
     if typeclass == "aerial_flyer":
         return AerialFlyerTemplate(flyer_config_from_spec(spec))
     if typeclass == "siege_machine":
@@ -1803,4 +1982,4 @@ def make_template(typeclass: str, spec: dict | None = None):
 
 
 TEMPLATE_NAMES = (sorted(BIPED_CONFIGS)
-                  + ["ogre", "aerial_flyer", "siege_machine", "slime"])
+                  + ["ogre", "construct", "aerial_flyer", "siege_machine", "slime"])

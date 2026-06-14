@@ -1,6 +1,6 @@
 {
   "name": "boreal_colossus",
-  "typeclass": "melee_biped",
+  "typeclass": "construct",
   "element": "frost",
   "size_class": "colossal",
   "frame_w": 64,
@@ -42,17 +42,16 @@
     "frost",
     "frost_teal",
     "ink",
-    "leather",
     "mauve_grey"
   ],
   "pivot": "bottom_center",
   "ground_y": 61,
   "facing": "right",
   "body_size": {
-    "width": 44,
-    "height": 56,
-    "head_w": 17,
-    "head_h": 14
+    "width": 64,
+    "height": 62,
+    "head_w": 14,
+    "head_h": 15
   },
   "lint": {
     "whitelist_colors": [

@@ -1,6 +1,6 @@
 {
   "name": "deepway_bulwark",
-  "typeclass": "melee_biped",
+  "typeclass": "construct",
   "element": "stone",
   "size_class": "large",
   "frame_w": 48,
@@ -50,7 +50,7 @@
   "body_size": {
     "width": 33,
     "height": 38,
-    "head_w": 15,
+    "head_w": 12,
     "head_h": 14
   },
   "lint": {

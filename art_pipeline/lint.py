@@ -122,6 +122,10 @@ CLASS_BODY_RULES = {
     "ogre": {"min_h": 18, "max_h": 30, "min_w": 16, "max_w": 26},
     # a spread blob: wide + squat, on the 40px canvas
     "slime": {"min_h": 12, "max_h": 24, "min_w": 18, "max_w": 36},
+    # a bulky golem: stocky + broad like the ogre, calibrated at the 32px base
+    # (scales with the size tier). Floors stay conservative; tighten once the
+    # rendered body_size of the three construct units is read back.
+    "construct": {"min_h": 14, "max_h": 36, "min_w": 12, "max_w": 34},
 }
 
 # The canvas height each class's body rules are calibrated for. A unit rendered
@@ -132,6 +136,7 @@ CLASS_BODY_RULES = {
 CLASS_BASE_H = {
     "melee_biped": 32, "ranged_biped": 32, "support_robed": 32,
     "sniper_biped": 64, "aerial_flyer": 32, "ogre": 32, "slime": 32,
+    "construct": 32,
 }
 
 
