@@ -494,6 +494,15 @@ ARM_POSES = {
         "recover": (2, 3), "settle": (1, 4),
         "drop": (0, 7), "drop2": (-1, 8),
     },
+    # unarmed brawler: arms hang at the sides at rest/walk, cock back on wind-up,
+    # drive forward on contact. OgreTemplate draws the thick arm + big fist; this
+    # table only positions the hand (relative to torso x1, y0).
+    "brawl": {
+        "idle": (1, 13), "idle_b": (1, 14), "walk": (0, 13),
+        "windup": (-3, 7), "windup2": (-4, 6), "contact": (9, 5),
+        "recover": (3, 9), "settle": (1, 12),
+        "drop": (0, 14), "drop2": (-1, 15),
+    },
 }
 
 # Walk cycle: (back_foot_dx, back_foot_lift, front_foot_dx, front_foot_lift, body_lift)
@@ -636,8 +645,7 @@ class BipedTemplate:
         # --- back arm (skip when an off-hand prop covers that side) --------
         offhand = [p for p in unit["props"] if p in ("shield", "small_shield")]
         if not offhand and not cfg.robe:
-            buf.fill_rect(tx0 - 1, ty0 + 2, tx0, ty0 + 5, skin[0],
-                          max(skin[1] - 1, 0), part="back_arm")
+            self._draw_back_arm(buf, pose, tx0, tx1, ty0, skin)
 
         # --- head -----------------------------------------------------------
         self._draw_head(buf, hx0, hy0, hx1, hy1, skin, cloth, colors, pal,
@@ -657,10 +665,21 @@ class BipedTemplate:
         hand = (tx1 + adx, ty0 + ady)
         self._draw_props(buf, unit, pal, pose, hand, GY, head_rect=(hx0, hy0, hx1, hy1))
         shoulder = (tx1 - 1, ty0 + 2)
+        self._draw_arm(buf, shoulder, hand, skin)
+
+    # ----------------------------------------------------------- part helpers
+
+    def _draw_arm(self, buf, shoulder, hand, skin):
+        """Default arm: a thin 2px limb to the hand (an armed unit's grip is the
+        weapon). Brawler forms override for a thick arm + a big clenched fist."""
         buf.limb(shoulder[0], shoulder[1], hand[0], hand[1], skin[0], skin[1],
                  part="arm", bend="horizontal")
 
-    # ----------------------------------------------------------- part helpers
+    def _draw_back_arm(self, buf, pose, tx0, tx1, ty0, skin):
+        """Default far arm: a thin stub behind the torso. Brawler forms override
+        for a thick hanging arm + fist that can throw the second punch."""
+        buf.fill_rect(tx0 - 1, ty0 + 2, tx0, ty0 + 5, skin[0],
+                      max(skin[1] - 1, 0), part="back_arm")
 
     def _draw_legs(self, buf, kind, phase, tx0, tx1, hip_y, GY, skin):
         back_hip = tx0 + 1
@@ -811,8 +830,8 @@ class BipedTemplate:
 # A broad, top-heavy body on the 32px canvas -- wider torso + shorter legs than
 # any infantry biped so the silhouette reads "not a person" before color.
 OGRE_CONFIG = BipedConfig(
-    "ogre", (32, 32), head_w=8, head_h=6, torso_w=20, torso_h=15, leg_h=6,
-    head_style="snout", attack_style="thrust", build="sturdy")
+    "ogre", (64, 48), head_w=14, head_h=10, torso_w=30, torso_h=22, leg_h=10,
+    head_style="snout", attack_style="brawl", build="sturdy")
 
 
 class OgreTemplate(BipedTemplate):
@@ -836,18 +855,19 @@ class OgreTemplate(BipedTemplate):
         for i in range(rows + 1):
             y = ty0 + i
             t = i / max(rows, 1)
-            bulge = round((1 - t) * 3)      # shoulders/upper-back proud (hunch)
-            gut = round(t * 1)              # belly proud of the front, low
+            bulge = round((1 - t) * 5)      # shoulders/upper-back proud (hunch)
+            gut = round(t * 2)              # belly proud of the front, low
             buf.fill_rect(tx0 - bulge, y, tx1 + gut, y, cr, ci, part="torso")
-        # neck hump rising behind the shoulders (one side raised per seed)
+        # a proud back hump cresting above the shoulder line (the hunch read,
+        # broken off the boxy top edge); side per seed.
         up = asym["shoulder_up"]
-        buf.fill_rect(tx0 - 2, ty0 - 1 + up, tx0 + 2, ty0, cr, ci, part="torso")
+        buf.fill_ellipse(tx0 - 2, ty0 + up, 4, 4, cr, ci, part="torso")
 
     def _draw_head(self, buf, hx0, hy0, hx1, hy1, skin, cloth, colors, pal,
                    eye_offset=(0, 0)):
-        # small head sunk LOW between the shoulders (the hunch read) + heavy brow
-        # and two up-jutting tusks.
-        dy = 3
+        # bestial head sunk LOW between the shoulders (the hunch read) + heavy
+        # brow and two up-jutting tusks.
+        dy = 4
         hy0 += dy
         hy1 += dy
         rx = (hx1 - hx0) / 2
@@ -855,16 +875,16 @@ class OgreTemplate(BipedTemplate):
         cx = (hx0 + hx1) / 2
         cy = (hy0 + hy1) / 2
         buf.fill_ellipse(cx, cy, rx, ry, skin[0], skin[1], part="head")
-        # heavy brow ridge (one step down, reads as a scowl shadow). Kept narrow
-        # (<=6 px) so it does not form a banding-length successive-step band.
-        buf.fill_rect(hx0 + 2, hy0, hx1 - 2, hy0, skin[0], max(skin[1] - 1, 0), part="brow")
-        # two tusks jutting up past the jawline (>=3 px so cleanup keeps them)
+        # heavy brow ridge (one step down, reads as a scowl shadow). Kept <=6 px
+        # so it does not form a banding-length successive-step band.
+        buf.fill_rect(hx0 + 4, hy0, hx1 - 4, hy0, skin[0], max(skin[1] - 1, 0), part="brow")
+        # two tusks jutting up past the jawline (bigger at the larger scale)
         d = max(skin[1] - 1, 0)
-        buf.fill_triangle((hx0 + 1, hy1), (hx0, hy1 - 3), (hx0 + 2, hy1 - 1),
+        buf.fill_triangle((hx0 + 1, hy1), (hx0 - 1, hy1 - 4), (hx0 + 3, hy1 - 1),
                           skin[0], d, part="face")
-        buf.fill_triangle((hx1 - 1, hy1), (hx1, hy1 - 3), (hx1 - 2, hy1 - 1),
+        buf.fill_triangle((hx1 - 1, hy1), (hx1 + 1, hy1 - 4), (hx1 - 3, hy1 - 1),
                           skin[0], d, part="face")
-        eye_x = hx1 - 2
+        eye_x = hx1 - 3
         eye_y = hy0 + (hy1 - hy0) // 3 + 1
         self._draw_eye(buf, eye_x, eye_y, colors, eye_offset)
 
@@ -873,18 +893,56 @@ class OgreTemplate(BipedTemplate):
         if kind == "kneel":
             super()._draw_legs(buf, kind, phase, tx0, tx1, hip_y, GY, skin)
             return
-        back = tx0 + 2
-        front = tx1 - 4
+        back = tx0 + 3
+        front = tx1 - 6
         dx = 0
         if kind == "lunge":
-            back -= 2
-            front += 2
+            back -= 3
+            front += 3
         elif kind == "walk":
             dx = WALK_LEGS[phase % 4][0]
-        buf.fill_rect(back - 1 + dx, hip_y, back + 2 + dx, GY, skin[0],
+        buf.fill_rect(back - 2 + dx, hip_y, back + 2 + dx, GY, skin[0],
                       max(skin[1] - 1, 0), part="back_leg")
-        buf.fill_rect(front - 1, hip_y, front + 3, GY, skin[0], skin[1],
+        buf.fill_rect(front - 2, hip_y, front + 3, GY, skin[0], skin[1],
                       part="front_leg")
+
+    def _draw_arm(self, buf, shoulder, hand, skin):
+        # the brute brawls (no weapon): a thick forearm + a BIG clenched fist.
+        # The base 2px limb + 32px-tuned offset read as spindly on a 48px body,
+        # so the forearm is a slab and the fist an ~8px knuckle mass. The
+        # windup->contact hand delta still drives the punch forward.
+        sx, sy = shoulder
+        hx, hy = hand
+        # thick arm along the shoulder->hand vector: vertical when the fist hangs
+        # at rest/walk, horizontal when it drives forward on the punch.
+        if abs(hx - sx) >= abs(hy - sy):
+            buf.fill_rect(min(sx, hx) - 1, min(sy, hy), max(sx, hx), max(sy, hy) + 3,
+                          skin[0], skin[1], part="arm")
+        else:
+            buf.fill_rect(min(sx, hx) - 1, min(sy, hy), max(sx, hx) + 2, max(sy, hy),
+                          skin[0], skin[1], part="arm")
+        # BIG clenched fist at the hand
+        buf.fill_round_rect(hx - 2, hy - 2, hx + 4, hy + 4, skin[0], skin[1], part="fist")
+        # knuckle ridges (darker step): read as fingers AND break the fist's flat
+        # shading into <7px runs.
+        d = max(skin[1] - 1, 0)
+        for ky in (hy - 1, hy + 2):
+            buf.fill_rect(hx, ky, hx + 3, ky, skin[0], d, part="fist", no_outline=True)
+
+    def _draw_back_arm(self, buf, pose, tx0, tx1, ty0, skin):
+        # the far arm. On the recover frame it throws the SECOND punch (the one-
+        # two: near fist lands on contact, far fist the frame after), otherwise it
+        # rests behind the body. back_* is pre-darkened + shading-exempt -> reads
+        # as depth and is immune to the banding lint.
+        d = max(skin[1] - 1, 0)
+        if pose.get("arm") == "recover":
+            by = ty0 + 1                # higher than the near arm so both fists read
+            reach = tx1 + 11
+            buf.fill_rect(tx1 - 2, by, reach, by + 3, skin[0], d, part="back_arm")
+            buf.fill_round_rect(reach, by - 2, reach + 6, by + 4, skin[0], d, part="back_arm")
+            return
+        buf.fill_rect(tx0 - 2, ty0 + 4, tx0 + 1, ty0 + 9, skin[0], d, part="back_arm")
+        buf.fill_round_rect(tx0 - 4, ty0 + 8, tx0 + 1, ty0 + 13, skin[0], d, part="back_arm")
 
 
 # ===========================================================================
@@ -1556,9 +1614,9 @@ class SlimeTemplate:
     }
     WHITELIST_ROLES = ("accent", "eye")
 
-    # 40px wide to match the venom siege slot it re-themes (plague_bell): the
-    # spread blob + the forward attack lunge need the room over a 32px canvas.
-    canvas = (40, 32)
+    # 48px wide: a settled ooze spreads a soft-body skirt well past its dome and
+    # the forward attack lunge needs the room -- a low wide blob, not a 32px ball.
+    canvas = (48, 32)
 
     def __init__(self, cfg=None):
         pass
@@ -1606,15 +1664,39 @@ class SlimeTemplate:
         ry = 7 - squash
         cy = GY - ry           # base sits exactly on the ground line
         buf.fill_ellipse(cx, cy, rx, ry, body[0], body[1], part="body")
+        # SOFT-BODY base: where the ooze meets the floor it spreads + flattens
+        # into a wide low skirt, conforming to the ground like settled jelly --
+        # this is what kills the 'bouncing ball' read. The skirt flares wider as
+        # the body squashes/settles and pulls in when it stretches up to lunge.
+        spread = rx + 5 + max(0, squash)
+        buf.fill_ellipse(cx, GY - 1, spread, 1, body[0], body[1], part="body")
+        buf.fill_ellipse(cx, GY - 3, spread - 4, 1, body[0], body[1], part="body")
+        # bumpy, lopsided outline -- an ooze, not a stamped circle. A left-heavy
+        # crown bulge + small rim blebs break the smooth ellipse; each is small so
+        # the puddle stays flat (distinct from the vertical ogre/robe mass) and no
+        # bleb lengthens a banding-run horizontal shading band.
+        buf.fill_ellipse(cx - rx // 3, cy - 1, rx // 4 + 2, max(2, ry - 2),
+                         body[0], body[1], part="body")
+        for bx, by, br in ((rx - 4, -1, 2), (-rx + 5, 1, 2), (rx // 3, -ry + 1, 2)):
+            buf.fill_ellipse(cx + bx, cy + by, br, br, body[0], body[1], part="body")
+        # a couple of thin drip nubs sliding to the floor at uneven x (wet bottom)
+        for dx in (-rx + 6, rx - 6):
+            buf.set_px(cx + dx, GY, body[0], body[1], part="body")
         # lighter belly band in the lower dome
         buf.fill_ellipse(cx, GY - max(2, ry // 2), rx - 3, max(2, ry // 2),
                          belly[0], belly[1], part="belly")
-        # 2px crown gloss (whitelisted accent -- kept small to stay under the cap)
-        buf.fill_rect(cx - 1, cy - ry + 1, cx, cy - ry + 1, acc[0], acc[1],
+        # froth specks (BODY ramp dropped into the belly's upper-shading row): a
+        # different ramp fragments the belly's wide flat @secondary shading band
+        # into <7px runs AND reads as bubbles welling up through the underbelly.
+        for bx in (-7, -2, 4, 9):
+            buf.set_px(cx + bx, GY - 4, body[0], body[1], part="body", no_outline=True)
+        # crown gloss + a short wet rivulet down the lean side (whitelisted accent)
+        buf.fill_rect(cx - rx // 3 - 1, cy - ry, cx - rx // 3, cy - ry, acc[0], acc[1],
                       part="emblem", no_outline=True)
-        # two bright eye pixels near the crown
+        buf.set_px(cx - rx // 3, cy - ry + 2, acc[0], acc[1], part="emblem", no_outline=True)
+        # asymmetric eyes (one a touch higher) near the crown
         buf.set_px(cx + 3, cy - 1, *colors["eye"], part="eye", no_outline=True)
-        buf.set_px(cx - 3, cy - 1, *colors["eye"], part="eye", no_outline=True)
+        buf.set_px(cx - 3, cy - 2, *colors["eye"], part="eye", no_outline=True)
         if pose.get("burst"):
             buf.set_px(cx + rx + 1, GY - 2, *colors["eye"], part="burst", no_outline=True)
 

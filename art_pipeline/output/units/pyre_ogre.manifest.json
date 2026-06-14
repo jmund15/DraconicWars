@@ -2,9 +2,9 @@
   "name": "pyre_ogre",
   "typeclass": "ogre",
   "element": "fire",
-  "size_class": "small",
-  "frame_w": 32,
-  "frame_h": 32,
+  "size_class": "large",
+  "frame_w": 64,
+  "frame_h": 48,
   "animations": [
     {
       "name": "idle",
@@ -41,18 +41,17 @@
   "ramps_used": [
     "fire",
     "ink",
-    "leather",
     "mauve_grey",
     "tan"
   ],
   "pivot": "bottom_center",
-  "ground_y": 29,
+  "ground_y": 45,
   "facing": "right",
   "body_size": {
-    "width": 26,
-    "height": 20,
-    "head_w": 8,
-    "head_h": 5
+    "width": 41,
+    "height": 34,
+    "head_w": 16,
+    "head_h": 10
   },
   "lint": {
     "whitelist_colors": [

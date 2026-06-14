@@ -2,7 +2,7 @@
   "sheet": "C:\\Users\\jmund\\Game_Dev\\Godot_Projects\\DraconicWars\\art_pipeline\\output\\units\\plague_bell_sheet.png",
   "manifest": "C:\\Users\\jmund\\Game_Dev\\Godot_Projects\\DraconicWars\\art_pipeline\\output\\units\\plague_bell.manifest.json",
   "profile": "strict",
-  "passed": false,
+  "passed": true,
   "checks": {
     "on_palette": {
       "passed": true,
@@ -38,26 +38,9 @@
       "severity": "error"
     },
     "banding": {
-      "passed": false,
+      "passed": true,
       "max_run": 6,
-      "offenders": [
-        {
-          "orientation": "horizontal",
-          "at": [
-            134,
-            57
-          ],
-          "length": 11
-        },
-        {
-          "orientation": "horizontal",
-          "at": [
-            14,
-            89
-          ],
-          "length": 11
-        }
-      ],
+      "offenders": [],
       "severity": "error"
     },
     "manifest_contract": {
@@ -69,11 +52,11 @@
       "passed": true,
       "errors": [],
       "warnings": [
-        "body width 37 over target 36"
+        "body width 48 over target 36"
       ],
       "measured": {
-        "width": 37,
-        "height": 15,
+        "width": 48,
+        "height": 16,
         "head_w": 0,
         "head_h": 0
       },

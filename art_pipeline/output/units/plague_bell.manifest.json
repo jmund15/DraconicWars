@@ -3,7 +3,7 @@
   "typeclass": "slime",
   "element": "venom",
   "size_class": "medium",
-  "frame_w": 40,
+  "frame_w": 48,
   "frame_h": 32,
   "animations": [
     {
@@ -48,8 +48,8 @@
   "ground_y": 29,
   "facing": "right",
   "body_size": {
-    "width": 37,
-    "height": 15,
+    "width": 48,
+    "height": 16,
     "head_w": 0,
     "head_h": 0
   },

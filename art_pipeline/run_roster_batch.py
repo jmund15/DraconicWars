@@ -76,9 +76,9 @@ BATCH: list[tuple[dict, str]] = [
         "seed": 2,
         "typeclass": "ogre",      # hulking biped-variant (OGRE_CONFIG governs mass)
         "element": "fire",
-        "canvas": "32x32",
-        "size_class": "small",
-        "props": ["quarterstaff"],
+        "canvas": "64x48",        # Large tier — width for the brawler's long-arm two-fist reach (OGRE_CONFIG.canvas is authoritative)
+        "size_class": "large",
+        "props": [],
         "palette_overrides": {"skin": ["tan", 1]},
         "foreswing_ticks": 14,
         "backswing_ticks": 20,
@@ -139,7 +139,7 @@ BATCH: list[tuple[dict, str]] = [
         "name": "plague_bell",
         "typeclass": "slime",      # re-themed: a venom plague-slime, not a bell-cart
         "element": "venom",
-        "canvas": "40x32",
+        "canvas": "48x32",         # SlimeTemplate.canvas is authoritative
         "size_class": "medium",
         "props": [],
         "palette_overrides": {},
