@@ -58,8 +58,10 @@
 - [GdUnit4 filter uses test class FQN](gotcha_gdunit4_filter_uses_test_class_name.md) — filter on `<TestClassName>.<method>`, not the production class under test.
 - [Cached BB-dependency defeats post-init injection](gotcha_component_caches_bb_dependency_post_init_injection_noop.md) — BB dep cached at Initialize → #if TOOLS setter for E2E inject.
 - [Schema bump breaks version-pinned tests](gotcha_schema_version_bump_breaks_version_tests.md) — Load migrates to current; grep tests for the old version literal; full suite catches.
+- [Synthetic fixture hides real-input failure](gotcha_synthetic_fixture_hides_real_input_failure.md) — fixture built to pass the checks can't reveal what real/adversarial input triggers; prove transforms on hostile input.
 
 ## Tool routing & workflow
+- [itch.io free downloads are scriptable](gotcha_itch_io_free_download_scriptable.md) — 4-hop CSRF curl flow (download_url → XHR interstitial → upload_id → file/{id} → R2 CDN); not a JS wall.
 - [semantic-search restrictToDir is posix](gotcha_semantic_search_restricttodir_posix.md) — repo-relative posix path; absolute silently returns 0. Verify absence unrestricted.
 - [Tool routing — specialized MCP > default](feedback_tool_routing_discipline.md) — ai-worker, LSP, semantic-search vs Read/Grep. Read/Grep is wrong by habit.
 - [LSP default for C# symbol queries](feedback_lsp_default_for_csharp.md) — grep only for .tscn/.tres/StringName/anchor discovery.
