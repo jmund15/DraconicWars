@@ -21,7 +21,7 @@ prop anchor), so units are template INSTANCES, not bespoke drawings.
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 
 import props as props_mod
 from palette import Palette
@@ -416,6 +416,11 @@ class BipedConfig:
     head_fwd: int = 1
     quiver: bool = False     # back-mounted quiver block (ranged silhouette cue)
     eye_px: int = 2          # bright eye pixels (art fix 3: 1-2 px, light step)
+    # --- per-unit shape-language (Part B). 'neutral' reproduces the pre-Part-B
+    # rig BYTE-IDENTICALLY (FP units carry no build); the others reshape the
+    # silhouette so different-named units stop being one body recolored.
+    build: str = "neutral"   # neutral | agile (circle) | sturdy (square) | dangerous (wedge)
+    seed: int = 0            # per-unit asymmetry seed (deterministic int; NEVER hash())
 
 
 # Round-2 calibration bodies: small ground units target a 24-28 px tall x
@@ -453,10 +458,12 @@ ARM_POSES = {
         "recover": (2, 4), "settle": (2, 4),
         "drop": (1, 8), "drop2": (0, 10),
     },
+    # braced forward aim (not a chest-centered T): the grip rides forward at
+    # chest height so the shouldered stock points downrange, arm angled down-fwd.
     "crossbow": {
-        "idle": (0, 5), "idle_b": (0, 6), "walk": (0, 5),
-        "windup": (0, 5), "windup2": (0, 5), "contact": (-2, 5),
-        "recover": (-1, 5), "settle": (0, 5),
+        "idle": (2, 4), "idle_b": (2, 5), "walk": (1, 4),
+        "windup": (1, 2), "windup2": (0, 2), "contact": (3, 2),
+        "recover": (2, 3), "settle": (2, 4),
         "drop": (0, 8), "drop2": (-1, 9),
     },
     "staff": {
@@ -469,6 +476,21 @@ ARM_POSES = {
 
 # Walk cycle: (back_foot_dx, back_foot_lift, front_foot_dx, front_foot_lift, body_lift)
 WALK_LEGS = [(-2, 0, 2, 0, 0), (1, 1, 0, 0, 1), (2, 0, -2, 0, 0), (0, 0, 1, 1, 1)]
+
+
+def _asym(seed: int) -> dict:
+    """Deterministic per-seed asymmetry offsets (art-direction rule 10 'break
+    symmetry' -- symmetry + uniform scaling is the default-asset tell). A fixed
+    function of an integer seed; NEVER Python hash() (salted per-process -> would
+    break the identical-spec-identical-bytes pipeline contract)."""
+    s = int(seed)
+    if s == 0:
+        return {"head_dx": 0, "spike_dx": 0, "shoulder_up": 0}  # default: no asymmetry (byte-stable)
+    return {
+        "head_dx": (s % 3) - 1,        # -1 | 0 | 1  head shifted off-center
+        "spike_dx": (s // 3) % 2,      # which side a horn/spike leans
+        "shoulder_up": (s // 2) % 2,   # raise one shoulder 1 px
+    }
 
 
 class BipedTemplate:
@@ -555,6 +577,21 @@ class BipedTemplate:
         hy1 = ty0 + hdy
         hy0 = hy1 - cfg.head_h + 1
 
+        # --- shape-language stance: hunch (agile) / sunk head (sturdy) + per-
+        # seed asymmetric head shift. 'neutral' leaves everything pre-Part-B.
+        bld = cfg.build
+        asym = _asym(cfg.seed)
+        if bld == "agile":
+            hx0 += 2
+            hx1 += 2
+            hy0 += 2
+            hy1 += 2
+        elif bld == "sturdy":
+            hy0 += 1
+            hy1 += 1
+        hx0 += asym["head_dx"]
+        hx1 += asym["head_dx"]
+
         skin = colors["skin"]
         cloth = colors["cloth"]
 
@@ -571,8 +608,8 @@ class BipedTemplate:
             buf.fill_rect(tx0 - 2, ty0 + 1, tx0 - 1, ty0 + 6, wood[0],
                           max(wood[1] - 1, 0), part="quiver")
 
-        # --- torso ---------------------------------------------------------
-        buf.fill_round_rect(tx0, ty0, tx1, ty1, cloth[0], cloth[1], part="torso")
+        # --- torso (build-shaped: block / hunch / wedge) -------------------
+        self._draw_torso(buf, bld, asym, tx0, ty0, tx1, ty1, cloth)
 
         # --- back arm (skip when an off-hand prop covers that side) --------
         offhand = [p for p in unit["props"] if p in ("shield", "small_shield")]
@@ -583,6 +620,10 @@ class BipedTemplate:
         # --- head -----------------------------------------------------------
         self._draw_head(buf, hx0, hy0, hx1, hy1, skin, cloth, colors, pal,
                         unit.get("eye_offset", (0, 0)))
+
+        # --- shape-language features: dangerous = head horn + shoulder spikes
+        if bld == "dangerous":
+            self._draw_danger_features(buf, asym, tx0, tx1, ty0, hx1, hy0, skin)
 
         # --- off-hand prop (shield carried proud of the torso front-low) ----
         for p in offhand:
@@ -636,6 +677,51 @@ class BipedTemplate:
             y = ty1 + i
             buf.fill_rect(cx - w // 2 + dx, y, cx - w // 2 + w - 1 + dx, y,
                           cloth[0], cloth[1], part="robe")
+
+    def _draw_torso(self, buf, bld, asym, tx0, ty0, tx1, ty1, cloth):
+        """Build-shaped torso. 'neutral' == the pre-Part-B round-rect exactly;
+        the others reshape the body silhouette (the distinctness lever)."""
+        cr, ci = cloth
+        if bld == "sturdy":
+            # top-heavy block: broad pauldron shoulders proud of the body,
+            # one raised per seed (asymmetry).
+            buf.fill_round_rect(tx0, ty0 + 2, tx1, ty1, cr, ci, part="torso")
+            up = asym["shoulder_up"]
+            buf.fill_rect(tx0 - 1, ty0 + up, tx1 + 1, ty0 + 2, cr, ci, part="torso")
+            return
+        if bld == "agile":
+            # hunched: the torso top leans forward (skew), narrowing to a lithe
+            # rounded form.
+            rows = ty1 - ty0
+            for i in range(rows + 1):
+                y = ty0 + i
+                skew = round((rows - i) / max(rows, 1) * 2)
+                x0, x1 = tx0 + skew, tx1 + skew
+                if i == 0:
+                    x0, x1 = x0 + 1, x1 - 1
+                buf.fill_rect(x0, y, x1, y, cr, ci, part="torso")
+            return
+        if bld == "dangerous":
+            # wedge: wide shoulders tapering to a narrow waist (trapezoid).
+            rows = ty1 - ty0
+            for i in range(rows + 1):
+                y = ty0 + i
+                inset = round(i / max(rows, 1) * 2)
+                buf.fill_rect(tx0 + inset, y, tx1 - inset, y, cr, ci, part="torso")
+            return
+        buf.fill_round_rect(tx0, ty0, tx1, ty1, cr, ci, part="torso")
+
+    def _draw_danger_features(self, buf, asym, tx0, tx1, ty0, hx1, hy0, skin):
+        """Wedge-build menace cues: a swept head horn + asymmetric shoulder
+        spikes (skin-colored body protrusions, >=3 px so they survive cleanup)."""
+        d = max(skin[1] - 1, 0)
+        sp = asym["spike_dx"]
+        buf.fill_triangle((hx1 - 1, hy0 + 1), (hx1 + 3 + sp, hy0 - 3),
+                          (hx1 + 1, hy0 + 2), skin[0], d, part="horn")
+        buf.fill_triangle((tx1 - 1, ty0), (tx1 + 3, ty0 - 4 - asym["shoulder_up"]),
+                          (tx1 + 1, ty0 + 1), skin[0], d, part="spike")
+        buf.fill_triangle((tx0 + 1, ty0), (tx0 - 2, ty0 - 3),
+                          (tx0 - 1, ty0 + 1), skin[0], d, part="spike")
 
     def _draw_eye(self, buf, eye_x, eye_y, colors, eye_offset):
         """1-2 bright eye pixels (art fix 3), position-adjustable per spec."""
@@ -814,6 +900,10 @@ class AerialFlyerTemplate:
         bx = W // 2 - 1 + self.cfg.body_dx + bdx
         by = H // 2 + 1 + self.cfg.body_dy + bdy
         wing_dy = pose.get("wing", -4)
+        # wing_mult + head_style differentiate same-canvas flyers (Part B); for
+        # the byte-stable frost_whelp these are 1.0 / 'wyvern' -> the verbatim path.
+        wm = self.cfg.wing_mult
+        hs = self.cfg.head_style
         fold = pose.get("fold", False)
 
         # far wing (behind body): pre-darkened, flat. Tips reach far enough
@@ -825,14 +915,18 @@ class AerialFlyerTemplate:
                               (root_far[0] - 1, root_far[1] + 3),
                               membrane[0], far_dark, part="back_wing")
         else:
-            buf.fill_triangle(root_far, (root_far[0] - 12, root_far[1] + wing_dy + 1),
+            buf.fill_triangle(root_far, (root_far[0] - round(12 * wm), root_far[1] + wing_dy + 1),
                               (root_far[0] - 2, root_far[1] + 3),
                               membrane[0], far_dark, part="back_wing")
 
-        # tail
-        buf.line(bx - 4, by + 1, bx - 9, by + 5, skin[0], max(skin[1] - 1, 0),
-                 part="tail", width=2)
-        buf.set_px(bx - 10, by + 6, skin[0], max(skin[1] - 1, 0), part="tail")
+        # tail: draconic whip (default) or a short raptor fan (beaked)
+        td = max(skin[1] - 1, 0)
+        if hs == "beaked":
+            buf.fill_triangle((bx - 3, by), (bx - 8, by - 2), (bx - 8, by + 4),
+                              skin[0], td, part="tail")
+        else:
+            buf.line(bx - 4, by + 1, bx - 9, by + 5, skin[0], td, part="tail", width=2)
+            buf.set_px(bx - 10, by + 6, skin[0], td, part="tail")
 
         # body + belly
         ry = 2 if pose.get("crumple") else 3
@@ -848,14 +942,26 @@ class AerialFlyerTemplate:
         hx, hy = bx + 6 + hdx, by - 5 + hdy
         buf.fill_rect(bx + 3, hy + 1, hx - 1, by - 1, skin[0], skin[1], part="neck")
         buf.fill_ellipse(hx, hy, 2.6, 2.4, skin[0], skin[1], part="head")
-        if pose.get("mouth_open"):
-            buf.fill_rect(hx + 2, hy - 1, hx + 4, hy - 1, skin[0], skin[1], part="head")
-            buf.fill_rect(hx + 2, hy + 1, hx + 4, hy + 1, skin[0], skin[1], part="head")
-        else:
-            buf.fill_rect(hx + 2, hy, hx + 4, hy + 1, skin[0], skin[1], part="head")
         acc = colors["accent"]
-        buf.set_px(hx - 1, hy - 3, acc[0], acc[1], part="horn", no_outline=True)
-        buf.set_px(hx, hy - 3, acc[0], acc[1], part="horn", no_outline=True)
+        if hs == "beaked":
+            # raptor: forward beak wedge + a single swept head crest, NO horns
+            buf.fill_triangle((hx + 2, hy - 1), (hx + 6, hy + 1), (hx + 2, hy + 2),
+                              skin[0], skin[1], part="head")
+            buf.fill_triangle((hx - 1, hy - 2), (hx - 4, hy - 5), (hx, hy - 1),
+                              skin[0], td, part="horn")
+        else:
+            if pose.get("mouth_open"):
+                buf.fill_rect(hx + 2, hy - 1, hx + 4, hy - 1, skin[0], skin[1], part="head")
+                buf.fill_rect(hx + 2, hy + 1, hx + 4, hy + 1, skin[0], skin[1], part="head")
+            else:
+                buf.fill_rect(hx + 2, hy, hx + 4, hy + 1, skin[0], skin[1], part="head")
+            if hs == "horned":
+                # draconic swept horns (a bigger >=3 px cluster than the whelp)
+                buf.fill_triangle((hx - 1, hy - 1), (hx - 5, hy - 5), (hx + 1, hy - 2),
+                                  skin[0], td, part="horn")
+            else:
+                buf.set_px(hx - 1, hy - 3, acc[0], acc[1], part="horn", no_outline=True)
+                buf.set_px(hx, hy - 3, acc[0], acc[1], part="horn", no_outline=True)
         eo = unit.get("eye_offset", (0, 0))
         buf.set_px(hx + 1 + eo[0], hy - 1 + eo[1], *colors["eye"], part="eye",
                    no_outline=True)
@@ -866,7 +972,7 @@ class AerialFlyerTemplate:
             buf.fill_triangle(root, (root[0] - 5, root[1] + 1), (root[0] - 1, root[1] + 3),
                               membrane[0], membrane[1], part="wing")
         else:
-            tip = (root[0] - 9, root[1] + wing_dy)
+            tip = (root[0] - round(9 * wm), root[1] + wing_dy)
             buf.fill_triangle(root, tip, (root[0] + 2, root[1] + 2),
                               membrane[0], membrane[1], part="wing")
             # wing-finger ridge: darkest step so the boundary stays sel-out dark
@@ -1361,9 +1467,30 @@ def flyer_config_from_spec(spec: dict | None) -> FlyerConfig:
     )
 
 
+def biped_config_from_spec(typeclass: str, spec: dict | None) -> BipedConfig:
+    """Overlay per-unit shape-language onto the base typeclass config (mirrors
+    ``flyer_config_from_spec``). Spec keys: ``build`` (neutral|agile|sturdy|
+    dangerous), ``seed`` (deterministic int), optional ``proportions`` dict
+    overriding head_w/head_h/torso_w/torso_h/leg_h/head_fwd. Absent keys -> the
+    base config unchanged (byte-identical to the pre-Part-B rig)."""
+    base = BIPED_CONFIGS[typeclass]
+    if not spec:
+        return base
+    over: dict = {}
+    if spec.get("build"):
+        over["build"] = spec["build"]
+    if "seed" in spec:
+        over["seed"] = int(spec["seed"])
+    prop = spec.get("proportions") or {}
+    for k in ("head_w", "head_h", "torso_w", "torso_h", "leg_h", "head_fwd"):
+        if k in prop:
+            over[k] = int(prop[k])
+    return replace(base, **over) if over else base
+
+
 def make_template(typeclass: str, spec: dict | None = None):
     if typeclass in BIPED_CONFIGS:
-        return BipedTemplate(BIPED_CONFIGS[typeclass])
+        return BipedTemplate(biped_config_from_spec(typeclass, spec))
     if typeclass == "aerial_flyer":
         return AerialFlyerTemplate(flyer_config_from_spec(spec))
     if typeclass == "siege_machine":

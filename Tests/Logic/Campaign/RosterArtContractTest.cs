@@ -14,7 +14,7 @@ using static GdUnit4.Assertions;
 [TestSuite]
 public class RosterArtContractTest
 {
-    private static string UnitsDir()
+    private static string ProjectRoot()
     {
         var dir = new DirectoryInfo(System.AppContext.BaseDirectory);
         while (dir is not null && !File.Exists(Path.Combine(dir.FullName, "project.godot")))
@@ -23,8 +23,15 @@ public class RosterArtContractTest
         }
         AssertThat(dir is not null)
             .OverrideFailureMessage("project root (project.godot) not found above test bin").IsTrue();
-        return Path.Combine(dir!.FullName, "art_pipeline", "output", "units");
+        return dir!.FullName;
     }
+
+    private static string UnitsDir() =>
+        Path.Combine(ProjectRoot(), "art_pipeline", "output", "units");
+
+    // distinctness report lives in output/reports/, NOT output/units/.
+    private static string ReportsDir() =>
+        Path.Combine(ProjectRoot(), "art_pipeline", "output", "reports");
 
     [TestCase]
     public void EveryRosterUnitHasSheetAndTickFaithfulManifest()
@@ -48,5 +55,42 @@ public class RosterArtContractTest
                 .OverrideFailureMessage($"{def.Id}: manifest backswing != catalog")
                 .IsEqual(def.BackswingTicks);
         }
+    }
+
+    /// <summary>
+    /// Silhouette shape-language gate: the roster's body silhouettes must be
+    /// pairwise-distinct (no "same rig recolored"). The Python art pipeline
+    /// (run_roster_batch.py) computes body-mask IoU + the dragon scale-gap +
+    /// per-archetype head-to-body ratio and writes roster_distinctness.json;
+    /// this asserts the verdict at gate time.
+    /// </summary>
+    [TestCase]
+    public void RosterSilhouettesAreDistinct()
+    {
+        var reportPath = Path.Combine(ReportsDir(), "roster_distinctness.json");
+        AssertThat(File.Exists(reportPath))
+            .OverrideFailureMessage(
+                $"missing {reportPath} — run `python art_pipeline/run_roster_batch.py`")
+            .IsTrue();
+
+        using var doc = JsonDocument.Parse(File.ReadAllText(reportPath));
+        var root = doc.RootElement;
+
+        // surface the offending pairs in the failure message so a regression is
+        // diagnosable without re-running the pipeline.
+        var sil = root.GetProperty("checks").GetProperty("silhouette_distinctness");
+        var offenders = new System.Text.StringBuilder();
+        foreach (var off in sil.GetProperty("offenders").EnumerateArray())
+        {
+            var pair = off.GetProperty("pair");
+            offenders.Append($"\n  {pair[0].GetString()} ~ {pair[1].GetString()} "
+                             + $"iou={off.GetProperty("iou").GetDouble()}");
+        }
+
+        AssertThat(root.GetProperty("passed").GetBoolean())
+            .OverrideFailureMessage(
+                "roster silhouettes not distinct (same rig recolored). Too-similar pairs:"
+                + offenders)
+            .IsTrue();
     }
 }

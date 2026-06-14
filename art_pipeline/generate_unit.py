@@ -100,6 +100,37 @@ def _body_bbox_size(buf) -> tuple[int, int]:
     return (max(xs) - min(xs) + 1, max(ys) - min(ys) + 1)
 
 
+# head parts measured for the head-to-body shape-language lint (verified part
+# names from skeletons.py BipedTemplate._draw_head / AerialFlyerTemplate heads).
+HEAD_PARTS = {"head", "face", "back_ear", "brow"}
+
+
+def _head_bbox_size(buf) -> tuple[int, int]:
+    """(w, h) of the head mass (HEAD_PARTS). (0,0) when the template draws no
+    head (siege) -- the head_to_body lint skips those by typed typeclass."""
+    xs, ys = [], []
+    for (x, y), cell in buf.cells.items():
+        if cell.part in HEAD_PARTS:
+            xs.append(x)
+            ys.append(y)
+    if not xs:
+        return (0, 0)
+    return (max(xs) - min(xs) + 1, max(ys) - min(ys) + 1)
+
+
+def _render_body_mask(buf):
+    """Solid black-fill BODY silhouette (props excluded) on transparent -- the
+    distinctness-lint instrument. Props are excluded because the body is what a
+    'recolored one rig' duplicates; a distinctive prop must not let a unit game
+    the IoU check."""
+    img = Image.new("RGBA", (buf.w, buf.h), (0, 0, 0, 0))
+    px = img.load()
+    for (x, y), cell in buf.cells.items():
+        if not cell.part.startswith("prop_"):
+            px[x, y] = (0, 0, 0, 255)
+    return img
+
+
 def generate_unit(spec: dict, outdir: str | Path | None = None,
                   pal: Palette | None = None) -> dict:
     """Generate sheet + manifest for one unit spec. Returns paths + manifest."""
@@ -162,6 +193,12 @@ def generate_unit(spec: dict, outdir: str | Path | None = None,
     if airborne:
         body_size["wingspan"] = max(s[0] for s in body_sizes.get(move, sizes))
 
+    # head proportion + the distinctness mask come from the canonical idle f0
+    # buffer (stable; not max-over-anims like width/height).
+    idle_buf = next((bufs[0] for anim, bufs in rows if anim.name == "idle"),
+                    rows[0][1][0])
+    body_size["head_w"], body_size["head_h"] = _head_bbox_size(idle_buf)
+
     max_frames = max(a.frames for a, _ in rows)
     sheet = Image.new("RGBA", (W * max_frames, H * len(rows)), (0, 0, 0, 0))
     for row, (anim, bufs) in enumerate(rows):
@@ -170,6 +207,9 @@ def generate_unit(spec: dict, outdir: str | Path | None = None,
 
     sheet_path = outdir / f"{name}_sheet.png"
     sheet.save(sheet_path)
+
+    silhouette_path = outdir / f"{name}.silhouette.png"
+    _render_body_mask(idle_buf).save(silhouette_path)
 
     manifest = {
         "name": name,
@@ -206,7 +246,8 @@ def generate_unit(spec: dict, outdir: str | Path | None = None,
     with open(manifest_path, "w", encoding="utf-8") as f:
         json.dump(manifest, f, indent=2)
 
-    return {"sheet": str(sheet_path), "manifest": str(manifest_path), "data": manifest}
+    return {"sheet": str(sheet_path), "manifest": str(manifest_path),
+            "silhouette": str(silhouette_path), "data": manifest}
 
 
 def main(argv=None) -> int:

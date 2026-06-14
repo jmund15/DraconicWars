@@ -162,8 +162,11 @@ def draw_crossbow(buf, pose, hand, colors, ground_y, canvas):
     (round-3 template rule: projectiles are sim-spawned)."""
     m = colors["metal"]
     a = colors["accent"]
-    back = canvas[0] * 14 // 32   # stock reach behind the hand
-    front = canvas[0] * 8 // 32   # stock reach past the hand
+    # SHOULDERED, not chest-spanning: butt sits just behind the grip, the stock
+    # reaches FORWARD to a long muzzle -> reads as a leveled aim, not a T-bar
+    # across the body (the quarry_slinger T-pose fix). Reach scales with canvas.
+    back = canvas[0] * 3 // 32    # stock reach behind the hand (butt at shoulder)
+    front = canvas[0] * 10 // 32  # stock reach forward (long aiming muzzle)
     if pose == "dropped":
         cx = canvas[0] // 2
         _shaft(buf, cx - back + 5, ground_y - 1, cx + front - 1, ground_y - 1,

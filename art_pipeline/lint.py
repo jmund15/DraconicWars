@@ -52,6 +52,28 @@ MAX_SAMPLES = 12   # offender coordinates kept per check
 MAX_BAND_RUN = 6   # parallel 1px same-ramp-successor bands longer than this fail
 WHITELIST_CAP = 6  # max whitelisted (deliberate-detail) pixels per frame
 
+# --- cross-unit silhouette-distinctness constants (roster_distinctness) -------
+# A body-mask pair AT OR ABOVE this IoU reads as "the same rig recolored".
+# Calibrated in the GAP between the two regimes (NOT inflated to pass): the
+# pre-Part-B near-identical bipeds measured 0.85-1.0 (all caught); the reworked
+# shape-language spread tops out at 0.70 (all clear). Two genuinely-distinct
+# humanoids share ~0.65-0.70 (same head/torso/2-leg body plan) -- that is
+# different shape-language, not a duplicate rig; 0.77 sits between with margin.
+IOU_MAX = 0.77
+# A dragon-tier silhouette must outweigh the heaviest infantry by this area
+# factor (art-direction.md section 4 -- the premium read).
+SCALE_GAP_MIN = 3.0
+# head_h / body_height band per archetype: the shape-language head-proportion
+# lever (agile=rounder/larger head, sturdy=small low head, dangerous=wedge).
+HEAD_BANDS = {
+    "melee_biped": (0.20, 0.46),
+    "ranged_biped": (0.20, 0.46),
+    "support_robed": (0.16, 0.42),
+    "sniper_biped": (0.14, 0.36),
+    "aerial_flyer": (0.10, 0.42),
+}
+NO_HEAD_CLASSES = {"siege_machine"}  # no head mass -> head_to_body skips it (typed)
+
 # body-mass floors per template class (art fix 4 / lint upgrade c).
 # "min" keys fail the check; "max" keys only produce warnings.
 CLASS_BODY_RULES = {
@@ -339,6 +361,114 @@ def lint_sheet(sheet_path: str | Path, manifest_path: str | Path | None = None) 
         "passed": passed,
         "checks": checks,
     }
+
+
+# ===========================================================================
+# Cross-unit silhouette distinctness (roster-level, not per-sheet)
+# ===========================================================================
+# These operate on solid black-fill BODY masks (props excluded -- the body is
+# what "recolored one rig" duplicates). generate_unit.py writes the body-only
+# mask as <name>.silhouette.png; run_roster_batch.py collects them and calls
+# roster_distinctness, writing roster_distinctness.json for the C# art-contract
+# gate. The math is pinned by test_distinctness.py (incl. the dragon area gap,
+# which the live roster can't exercise -- no dragon-tier unit).
+
+
+def silhouette_mask(img) -> set[tuple[int, int]]:
+    """Opaque (alpha==255) pixel coords of an RGBA image -- a black-fill mask.
+    The pipeline renders binary alpha (no AA against transparency, rule 9)."""
+    img = img.convert("RGBA")
+    w, h = img.size
+    px = img.load()
+    return {(x, y) for y in range(h) for x in range(w) if px[x, y][3] == 255}
+
+
+def iou(a: set, b: set) -> float:
+    """Intersection-over-union of two coord sets. Empty/empty -> 0 (no div0)."""
+    union = len(a | b)
+    return len(a & b) / union if union else 0.0
+
+
+def align_bottom_center(mask: set) -> frozenset:
+    """Translate so the mask's bbox bottom-center sits at the origin (feet y=0,
+    horizontal center x=0). Lets silhouettes be compared foot- and center-
+    aligned regardless of canvas size or placement on the canvas."""
+    if not mask:
+        return frozenset()
+    xs = [p[0] for p in mask]
+    ys = [p[1] for p in mask]
+    cx = round((min(xs) + max(xs)) / 2)
+    by = max(ys)
+    return frozenset((x - cx, y - by) for (x, y) in mask)
+
+
+def roster_distinctness(units: list[dict], iou_max: float = IOU_MAX,
+                        scale_gap_min: float = SCALE_GAP_MIN,
+                        head_bands: dict | None = None) -> dict:
+    """Roster-level distinctness report. ``units`` = list of dicts with keys
+    ``name``, ``typeclass``, ``mask`` (set of body-pixel coords), ``body_size``
+    ({width, height, head_w, head_h}). ``passed`` = every NON-skipped check
+    passes; a skipped check (e.g. scale_gap with no dragon) is NEUTRAL."""
+    head_bands = HEAD_BANDS if head_bands is None else head_bands
+    checks: dict[str, dict] = {}
+
+    # (j) pairwise body-silhouette IoU, foot/center aligned --------------------
+    aligned = [(u["name"], align_bottom_center(u["mask"])) for u in units]
+    matrix: dict[str, float] = {}
+    iou_offenders = []
+    for i in range(len(aligned)):
+        for k in range(i + 1, len(aligned)):
+            ni, mi = aligned[i]
+            nk, mk = aligned[k]
+            v = round(iou(set(mi), set(mk)), 4)
+            matrix[f"{ni}|{nk}"] = v
+            if v >= iou_max:
+                iou_offenders.append({"pair": [ni, nk], "iou": v})
+    iou_offenders.sort(key=lambda o: -o["iou"])
+    checks["silhouette_distinctness"] = {
+        "passed": not iou_offenders, "iou_max": iou_max,
+        "offenders": iou_offenders, "matrix": matrix,
+    }
+
+    # (k) dragon-to-infantry area gap (typed dragon signal ONLY) ---------------
+    areas = {u["name"]: len(u["mask"]) for u in units}
+    dragons = [u for u in units if u.get("typeclass") == "dragon"]
+    if not dragons:
+        checks["scale_gap"] = {"passed": True,
+                               "skipped": "no dragon-tier unit present"}
+    else:
+        infantry = [u for u in units if u.get("typeclass") != "dragon"]
+        base = max((areas[u["name"]] for u in infantry), default=0)
+        dragon_area = min(areas[u["name"]] for u in dragons)
+        ratio = (dragon_area / base) if base else float("inf")
+        checks["scale_gap"] = {
+            "passed": ratio >= scale_gap_min, "min": scale_gap_min,
+            "ratio": round(ratio, 3), "dragon_area": dragon_area,
+            "infantry_baseline": base,
+        }
+
+    # (l) per-archetype head-to-body ratio band -------------------------------
+    head_offenders = []
+    measured = []
+    for u in units:
+        tc = u.get("typeclass", "")
+        if tc in NO_HEAD_CLASSES:
+            continue
+        band = head_bands.get(tc)
+        if band is None:
+            continue
+        bs = u.get("body_size", {})
+        bh = bs.get("height", 0)
+        ratio = (bs.get("head_h", 0) / bh) if bh else 0.0
+        entry = {"name": u["name"], "ratio": round(ratio, 3), "band": list(band)}
+        measured.append(entry)
+        if not (band[0] <= ratio <= band[1]):
+            head_offenders.append(entry)
+    checks["head_to_body"] = {"passed": not head_offenders,
+                              "offenders": head_offenders, "measured": measured}
+
+    return {"passed": all(c["passed"] for c in checks.values()),
+            "unit_count": len(units), "checks": checks}
 
 
 def main(argv=None) -> int:

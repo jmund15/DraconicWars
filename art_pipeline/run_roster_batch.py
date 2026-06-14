@@ -18,6 +18,8 @@ import json
 import sys
 from pathlib import Path
 
+from PIL import Image
+
 import backgrounds
 import contact_sheet
 import generate_unit
@@ -33,6 +35,8 @@ SHEETS_DIR = OUT / "contact_sheets"
 BATCH: list[tuple[dict, str]] = [
     ({
         "name": "cinder_acolyte",
+        "build": "sturdy", "seed": 9,
+        "proportions": {"torso_w": 14, "torso_h": 12, "leg_h": 9, "head_w": 8, "head_h": 8},
         "typeclass": "support_robed",      # robed lobber -- "she lobs prayers"
         "element": "fire",
         "canvas": "32x32",
@@ -44,6 +48,8 @@ BATCH: list[tuple[dict, str]] = [
     }, "always"),
     ({
         "name": "ash_revenant",
+        "build": "dangerous", "seed": 1,
+        "proportions": {"torso_w": 15, "torso_h": 11, "leg_h": 10, "head_w": 8, "head_h": 7},
         "typeclass": "melee_biped",
         "element": "fire",
         "canvas": "32x32",
@@ -61,12 +67,14 @@ BATCH: list[tuple[dict, str]] = [
         "size_class": "small",
         "props": [],
         "palette_overrides": {},
-        "flyer": {"head": "horned", "eye_px": 2},
+        "flyer": {"head": "horned", "wing_mult": 1.0, "eye_px": 2},
         "foreswing_ticks": 8,
         "backswing_ticks": 10,
     }, "always"),
     ({
         "name": "pyre_ogre",
+        "build": "sturdy", "seed": 2,
+        "proportions": {"torso_w": 16, "torso_h": 13, "leg_h": 9, "head_w": 7, "head_h": 6},
         "typeclass": "melee_biped",
         "element": "fire",
         "canvas": "32x32",
@@ -78,6 +86,8 @@ BATCH: list[tuple[dict, str]] = [
     }, "always"),
     ({
         "name": "rime_sentry",
+        "build": "sturdy", "seed": 5,
+        "proportions": {"torso_w": 14, "torso_h": 12, "leg_h": 11, "head_w": 8, "head_h": 8},
         "typeclass": "melee_biped",
         "element": "frost",
         "canvas": "32x32",
@@ -89,6 +99,8 @@ BATCH: list[tuple[dict, str]] = [
     }, "always"),
     ({
         "name": "glacier_adept",
+        "build": "agile", "seed": 8,
+        "proportions": {"torso_w": 11, "leg_h": 12, "head_w": 8, "head_h": 9},
         "typeclass": "support_robed",
         "element": "frost",
         "canvas": "32x32",
@@ -100,6 +112,8 @@ BATCH: list[tuple[dict, str]] = [
     }, "always"),
     ({
         "name": "boreal_colossus",
+        "build": "sturdy", "seed": 6,
+        "proportions": {"torso_w": 18, "torso_h": 14, "leg_h": 9, "head_w": 7, "head_h": 7},
         "typeclass": "melee_biped",
         "element": "frost",
         "canvas": "32x32",
@@ -111,6 +125,8 @@ BATCH: list[tuple[dict, str]] = [
     }, "always"),
     ({
         "name": "bog_stalker",
+        "build": "agile", "seed": 3,
+        "proportions": {"torso_w": 13, "torso_h": 11, "leg_h": 10, "head_w": 8, "head_h": 8},
         "typeclass": "melee_biped",
         "element": "venom",
         "canvas": "32x32",
@@ -133,6 +149,8 @@ BATCH: list[tuple[dict, str]] = [
     }, "always"),
     ({
         "name": "quarry_slinger",
+        "seed": 5,
+        "proportions": {"head_fwd": 2},
         "typeclass": "sniper_biped",
         "element": "stone",
         "canvas": "48x64",
@@ -144,6 +162,8 @@ BATCH: list[tuple[dict, str]] = [
     }, "always"),
     ({
         "name": "deepway_bulwark",
+        "build": "sturdy", "seed": 4,
+        "proportions": {"torso_w": 18, "torso_h": 11, "leg_h": 8, "head_w": 8, "head_h": 9},
         "typeclass": "melee_biped",
         "element": "stone",
         "canvas": "32x32",
@@ -155,6 +175,8 @@ BATCH: list[tuple[dict, str]] = [
     }, "always"),
     ({
         "name": "spark_courier",
+        "build": "agile", "seed": 7,
+        "proportions": {"torso_w": 10, "torso_h": 8, "leg_h": 15, "head_w": 8, "head_h": 8},
         "typeclass": "melee_biped",
         "element": "storm",
         "canvas": "32x32",
@@ -172,7 +194,7 @@ BATCH: list[tuple[dict, str]] = [
         "size_class": "small",
         "props": [],
         "palette_overrides": {},
-        "flyer": {"head": "beaked", "wing_mult": 0.9, "eye_px": 2},
+        "flyer": {"head": "beaked", "wing_mult": 1.3, "eye_px": 2},
         "foreswing_ticks": 7,
         "backswing_ticks": 9,
     }, "always"),
@@ -202,6 +224,7 @@ def run(only: str | None = None) -> int:
 
     results = []
     strip_inputs = []
+    dist_units = []
     for spec, policy in BATCH:
         name = spec["name"]
         if only and name != only:
@@ -219,6 +242,15 @@ def run(only: str | None = None) -> int:
         with open(rp, "w", encoding="utf-8") as f:
             json.dump(report, f, indent=2)
         strip_inputs.append((str(sheet), str(manifest)))
+        # body-only silhouette mask for the cross-unit distinctness check
+        sil = UNITS_DIR / f"{name}.silhouette.png"
+        if sil.exists():
+            with Image.open(sil) as im:
+                mask = lint.silhouette_mask(im)
+            with open(manifest, "r", encoding="utf-8") as f:
+                mdata = json.load(f)
+            dist_units.append({"name": name, "typeclass": mdata["typeclass"],
+                               "mask": mask, "body_size": mdata.get("body_size", {})})
         results.append({
             "name": name,
             "regenerated": regen,
@@ -231,9 +263,16 @@ def run(only: str | None = None) -> int:
         })
 
     strip_paths = []
+    dist_report = None
     if not only:
         strip_paths = contact_sheet.make_silhouette_strip(
             strip_inputs, SHEETS_DIR, name="roster_silhouette_strip")
+        # cross-unit silhouette distinctness -> the C# art-contract gate reads
+        # this report (RosterArtContractTest.RosterSilhouettesAreDistinct).
+        dist_report = lint.roster_distinctness(dist_units)
+        dp = REPORTS_DIR / "roster_distinctness.json"
+        with open(dp, "w", encoding="utf-8") as f:
+            json.dump(dist_report, f, indent=2)
 
     print(f"{'unit':<18} {'regen':<6} {'lint':<5} {'failed checks / reason'}")
     print("-" * 78)
@@ -243,12 +282,24 @@ def run(only: str | None = None) -> int:
               f"{'PASS' if r['lint_pass'] else 'FAIL':<5} {extra}")
         for wmsg in r["warnings"]:
             print(f"{'':<18} warn: {wmsg}")
-    summary = {"units": results, "silhouette_strip": strip_paths}
+    summary = {"units": results, "silhouette_strip": strip_paths,
+               "distinctness": dist_report}
     sp = OUT / "roster_batch_summary.json"
     with open(sp, "w", encoding="utf-8") as f:
         json.dump(summary, f, indent=2)
     print(f"\nsummary: {sp}")
-    return 0 if all(r["lint_pass"] for r in results) else 1
+    if dist_report is not None:
+        dc = dist_report["checks"]
+        print(f"distinctness: {'PASS' if dist_report['passed'] else 'FAIL'}  "
+              f"(iou {'ok' if dc['silhouette_distinctness']['passed'] else 'XX'} / "
+              f"scale {'ok' if dc['scale_gap']['passed'] else 'XX'} / "
+              f"head {'ok' if dc['head_to_body']['passed'] else 'XX'})  -> "
+              f"{REPORTS_DIR / 'roster_distinctness.json'}")
+        for off in dc["silhouette_distinctness"]["offenders"]:
+            print(f"    too-similar: {off['pair'][0]} ~ {off['pair'][1]}  iou={off['iou']}")
+    lint_ok = all(r["lint_pass"] for r in results)
+    dist_ok = dist_report is None or dist_report["passed"]
+    return 0 if (lint_ok and dist_ok) else 1
 
 
 def main(argv=None) -> int:
