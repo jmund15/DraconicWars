@@ -1,0 +1,347 @@
+"""conform_external.py -- curated external sprite sheet -> DW-compliant sheet.
+
+Companion to ``generate_unit.py``. Where generate_unit DRAWS palette-correct
+pixels from templates, conform_external PROJECTS arbitrary external pixel art
+(e.g. a CC0 Luiz Melo sheet) onto the same contract: Resurrect-64 palette,
+1px-feet-on-ground-line framing, and a tick-faithful manifest. The external
+RGB never reaches the canvas -- only its luminance *level* (which ramp step) and
+hue *material* (which ramp) survive, so palette compliance holds by construction
+(art-direction.md section 3: ramp-lookup-only, no computed shades).
+
+Pipeline (art-pipeline-uplift.md Track 2):
+  1. posterize all opaque source pixels to N luminance levels (1-D k-means)
+  2. map each level -> ONE ramp step per material (palette-compliant)
+  3. hard-threshold alpha to 0/255
+  4. re-slice source rows into the DW one-animation-per-row layout
+  5. re-canvas each frame to the target 32x32 / 48x64 (nearest-neighbor)
+  6. re-anchor the lowest opaque row to the ground line (frame_h-3 grounded,
+     above it for airborne)
+  7. emit a manifest whose attack contact_frame maps onto the foreswing share
+     (NOT the source pack's native timing) via generate_unit.contact_frame_index
+
+Mapping dict / JSON (the per-source spec):
+    {
+      "name": "luiz_wizard",
+      "typeclass": "melee_biped",      # body_size floors come from this
+      "element": "fire",
+      "canvas": "32x32",               # target canvas (32x32 or 48x64)
+      "levels": 4,                     # posterize value levels
+      "materials": [                   # 1 entry -> whole body on one ramp;
+        {"ramp": "fire"}               # >1 -> nearest-hue assignment per pixel
+        # {"ramp": "tan", "hue": 30}, {"ramp": "frost", "hue": 210}
+      ],
+      "source_sheet": "external/sources/wizard.png",  # path (CLI only)
+      "source_grid": {"frame_w": 64, "frame_h": 64},  # source cell size
+      "rows": [                        # source row -> target animation
+        {"animation": "idle",   "src_row": 0, "frames": 4, "fps": 7,  "loop": true},
+        {"animation": "walk",   "src_row": 1, "frames": 8, "fps": 10, "loop": true},
+        {"animation": "attack", "src_row": 2, "frames": 8, "fps": 12, "loop": false},
+        {"animation": "death",  "src_row": 4, "frames": 7, "fps": 10, "loop": false}
+      ],
+      "foreswing_ticks": 8,
+      "backswing_ticks": 12,
+      "airborne": false                # optional; defaults true for aerial_flyer
+    }
+
+Determinism: no randomness anywhere (k-means uses a fixed percentile init, ties
+break to the lower index, empty clusters keep their centroid) -- identical
+source + mapping => identical bytes.
+
+CLI:
+    python art_pipeline/conform_external.py <mapping.json> [--outdir DIR]
+"""
+
+from __future__ import annotations
+
+import argparse
+import colorsys
+import json
+import sys
+from pathlib import Path
+
+from PIL import Image
+
+from generate_unit import contact_frame_index
+from lint import CLASS_BODY_RULES
+from palette import Palette, get_palette
+from skeletons import ground_row, parse_canvas
+
+DEFAULT_OUTDIR = Path(__file__).resolve().parent / "output" / "external"
+ALPHA_THRESHOLD = 128   # source alpha >= this -> opaque; below -> transparent
+AIRBORNE_MARGIN = 4     # airborne feet sit this many px above the ground line
+
+
+def _luma(rgb) -> float:
+    """Rec.601 luma -- the value axis the posterize quantizes."""
+    r, g, b = rgb
+    return 0.299 * r + 0.587 * g + 0.114 * b
+
+
+def kmeans_1d(values: list[float], k: int, iters: int = 30) -> list[float]:
+    """Deterministic 1-D Lloyd's on luminance. Returns k ascending centers.
+
+    Fixed percentile init; assignment ties break to the lower index; an empty
+    cluster keeps its previous centroid. No RNG -> byte-stable.
+    """
+    vals = sorted(values)
+    if not vals:
+        return [0.0] * max(1, k)
+    if k <= 1:
+        return [sum(vals) / len(vals)]
+    uniq = sorted(set(vals))
+    if len(uniq) <= k:
+        return (uniq + [uniq[-1]] * k)[:k]
+    lo, hi = vals[0], vals[-1]
+    centers = [lo + (hi - lo) * (i + 0.5) / k for i in range(k)]
+    for _ in range(iters):
+        buckets: list[list[float]] = [[] for _ in range(k)]
+        for v in vals:
+            best, bestd = 0, abs(v - centers[0])
+            for ci in range(1, k):
+                d = abs(v - centers[ci])
+                if d < bestd:   # strict < keeps the lower index on a tie
+                    best, bestd = ci, d
+            buckets[best].append(v)
+        new_centers = [sum(buckets[ci]) / len(buckets[ci]) if buckets[ci]
+                       else centers[ci] for ci in range(k)]
+        if new_centers == centers:
+            break
+        centers = new_centers
+    return sorted(centers)
+
+
+def _level_of(lum: float, centers: list[float]) -> int:
+    """Nearest center index (tie -> lower index). centers are ascending."""
+    best, bestd = 0, abs(lum - centers[0])
+    for ci in range(1, len(centers)):
+        d = abs(lum - centers[ci])
+        if d < bestd:
+            best, bestd = ci, d
+    return best
+
+
+def _level_to_index(level: int, levels: int, ramp_len: int) -> int:
+    """Map posterize level 0..levels-1 across ramp steps 0..ramp_len-1."""
+    if levels <= 1 or ramp_len <= 1:
+        return 0
+    idx = round(level / (levels - 1) * (ramp_len - 1))
+    return max(0, min(ramp_len - 1, idx))
+
+
+def _material_for(rgb, materials: list[dict]) -> dict:
+    """Single material -> that ramp; else nearest by circular hue distance."""
+    if len(materials) == 1:
+        return materials[0]
+    r, g, b = (c / 255 for c in rgb)
+    hue = colorsys.rgb_to_hsv(r, g, b)[0] * 360
+    best, bestd = materials[0], 1e9
+    for m in materials:
+        if "hue" not in m:
+            continue
+        d = abs(((hue - m["hue"] + 180) % 360) - 180)
+        if d < bestd:
+            best, bestd = m, d
+    return best
+
+
+def _target_body_height(typeclass: str, ground_y: int, airborne: bool) -> int:
+    """Scale target: mid of the typeclass body-height band, clamped to the
+    vertical space available above the (possibly airborne) anchor line."""
+    rules = CLASS_BODY_RULES.get(typeclass, {})
+    avail = ground_y + 1 - (AIRBORNE_MARGIN if airborne else 0)
+    if "min_h" in rules and "max_h" in rules:
+        th = (rules["min_h"] + rules["max_h"]) // 2
+    elif "min_h" in rules:
+        th = rules["min_h"] + 2
+    else:
+        th = avail
+    return max(1, min(th, avail))
+
+
+def _conform_cell(src: Image.Image, sx: int, sy: int, cw: int, ch: int,
+                  centers, materials, levels, pal, ramps_used,
+                  W, H, ground_y, airborne, typeclass):
+    """Posterize+ramp-map+threshold+scale+anchor ONE source cell -> a W x H
+    RGBA cell image. Returns (cell_img, (body_w, body_h)). Raises on empty."""
+    cell = src.crop((sx, sy, sx + cw, sy + ch)).convert("RGBA")
+    cpx = cell.load()
+    # threshold alpha + palettize, collecting opaque source points
+    pts: list[tuple[int, int, tuple[int, int, int]]] = []
+    for cy in range(ch):
+        for cx in range(cw):
+            r, g, b, a = cpx[cx, cy]
+            if a < ALPHA_THRESHOLD:
+                continue
+            level = _level_of(_luma((r, g, b)), centers)
+            mat = _material_for((r, g, b), materials)
+            ramp = mat["ramp"]
+            idx = _level_to_index(level, levels, pal.ramp_len(ramp))
+            ramps_used.add(ramp)
+            pts.append((cx, cy, pal.get(ramp, idx)))
+    if not pts:
+        raise ValueError("empty source cell (no opaque pixels above threshold)")
+
+    minx = min(p[0] for p in pts)
+    maxx = max(p[0] for p in pts)
+    miny = min(p[1] for p in pts)
+    maxy = max(p[1] for p in pts)
+    sw, sh = maxx - minx + 1, maxy - miny + 1
+
+    # palettized crop at source resolution
+    crop = Image.new("RGBA", (sw, sh), (0, 0, 0, 0))
+    crpx = crop.load()
+    for (cx, cy, rgb) in pts:
+        crpx[cx - minx, cy - miny] = (*rgb, 255)
+
+    # fit-scale to the body-height band, width-bounded by the canvas
+    th = _target_body_height(typeclass, ground_y, airborne)
+    scale = th / sh
+    if sw * scale > W:
+        scale = W / sw
+    ow = max(1, round(sw * scale))
+    oh = max(1, round(sh * scale))
+    scaled = crop.resize((ow, oh), Image.NEAREST)  # NEAREST keeps binary alpha
+
+    # re-anchor: lowest opaque row -> the ground line (or above, if airborne)
+    spx = scaled.load()
+    opaque_rows = [y for y in range(oh) for x in range(ow) if spx[x, y][3] == 255]
+    bottom = max(opaque_rows)
+    target_bottom = ground_y - (AIRBORNE_MARGIN if airborne else 0)
+    offx = (W - ow) // 2
+    offy = target_bottom - bottom
+
+    out = Image.new("RGBA", (W, H), (0, 0, 0, 0))
+    out.paste(scaled, (offx, offy), scaled)   # paste clips to bounds
+    return out, (ow, oh)
+
+
+def conform_external(mapping: dict, src_sheet: str | Path,
+                     outdir: str | Path | None = None,
+                     pal: Palette | None = None) -> dict:
+    """Conform ``src_sheet`` per ``mapping`` -> DW sheet + manifest. Returns
+    paths + the manifest dict."""
+    pal = pal or get_palette()
+    outdir = Path(outdir) if outdir else DEFAULT_OUTDIR
+    outdir.mkdir(parents=True, exist_ok=True)
+
+    name = mapping["name"]
+    typeclass = mapping["typeclass"]
+    W, H = parse_canvas(mapping.get("canvas", "32x32"))
+    levels = int(mapping.get("levels", 4))
+    materials = mapping["materials"]
+    grid = mapping["source_grid"]
+    cw, ch = int(grid["frame_w"]), int(grid["frame_h"])
+    rows = mapping["rows"]
+    fore = int(mapping["foreswing_ticks"])
+    back = int(mapping["backswing_ticks"])
+    airborne = bool(mapping.get("airborne", typeclass == "aerial_flyer"))
+    gy = ground_row(H)
+
+    src = Image.open(src_sheet).convert("RGBA")
+
+    # (1) global posterize: k-means over EVERY opaque source pixel's luminance,
+    # so the value->ramp mapping is consistent across all frames.
+    spx = src.load()
+    lums = [_luma(spx[x, y][:3])
+            for y in range(src.size[1]) for x in range(src.size[0])
+            if spx[x, y][3] >= ALPHA_THRESHOLD]
+    centers = kmeans_1d(lums, levels)
+
+    ramps_used: set[str] = set()
+    body_sizes: dict[str, list[tuple[int, int]]] = {}
+    max_frames = max(int(r["frames"]) for r in rows)
+    sheet = Image.new("RGBA", (W * max_frames, H * len(rows)), (0, 0, 0, 0))
+
+    for out_row, r in enumerate(rows):
+        anim = r["animation"]
+        src_row = int(r["src_row"])
+        for col in range(int(r["frames"])):
+            sx, sy = col * cw, src_row * ch
+            cell_img, (bw, bh) = _conform_cell(
+                src, sx, sy, cw, ch, centers, materials, levels, pal,
+                ramps_used, W, H, gy, airborne, typeclass)
+            body_sizes.setdefault(anim, []).append((bw, bh))
+            sheet.alpha_composite(cell_img, (col * W, out_row * H))
+
+    # body mass: max over idle + the locomotion animation (mirrors generate_unit)
+    move = "fly" if airborne else "walk"
+    sizes = body_sizes.get("idle", []) + body_sizes.get(move, [])
+    if not sizes:                       # fall back to whatever rows exist
+        sizes = [s for v in body_sizes.values() for s in v]
+    body_size = {"width": max(s[0] for s in sizes),
+                 "height": max(s[1] for s in sizes)}
+    if airborne:
+        body_size["wingspan"] = max(s[0] for s in body_sizes.get(move, sizes))
+
+    attack_frames = next((int(r["frames"]) for r in rows
+                          if r["animation"] == "attack"), 0)
+    contact = contact_frame_index(fore, back, attack_frames) if attack_frames else 0
+
+    animations = []
+    for out_row, r in enumerate(rows):
+        entry = {"name": r["animation"], "row": out_row, "frames": int(r["frames"]),
+                 "fps": int(r.get("fps", 10)), "loop": bool(r.get("loop", False))}
+        if r["animation"] == "attack":
+            entry["contact_frame"] = int(r.get("contact_frame", contact))
+        animations.append(entry)
+
+    manifest = {
+        "name": name,
+        "typeclass": typeclass,
+        "element": mapping.get("element", "fire"),
+        "size_class": mapping.get("size_class", "medium"),
+        "source": "external",
+        "frame_w": W,
+        "frame_h": H,
+        "animations": animations,
+        "foreswing_ticks": fore,
+        "backswing_ticks": back,
+        "ramps_used": sorted(ramps_used),
+        "pivot": "bottom_center",
+        "ground_y": gy,
+        "facing": "right",
+        "body_size": body_size,
+        "lint": {
+            "whitelist_colors": [],
+            "prop_colors": [],
+            "airborne_animations": [a["name"] for a in animations] if airborne else [],
+        },
+    }
+
+    sheet_path = outdir / f"{name}_sheet.png"
+    sheet.save(sheet_path)
+    manifest_path = outdir / f"{name}.manifest.json"
+    with open(manifest_path, "w", encoding="utf-8") as f:
+        json.dump(manifest, f, indent=2)
+
+    return {"sheet": str(sheet_path), "manifest": str(manifest_path), "data": manifest}
+
+
+def main(argv=None) -> int:
+    ap = argparse.ArgumentParser(description="Conform an external sprite sheet to the DW pipeline.")
+    ap.add_argument("mapping", help="path to a conform mapping .json file")
+    ap.add_argument("--outdir", default=None, help=f"output directory (default {DEFAULT_OUTDIR})")
+    ap.add_argument("--source", default=None, help="override mapping.source_sheet")
+    args = ap.parse_args(argv)
+
+    with open(args.mapping, "r", encoding="utf-8") as f:
+        mapping = json.load(f)
+    src = args.source or mapping.get("source_sheet")
+    if not src:
+        print("error: no source sheet (mapping.source_sheet or --source)", file=sys.stderr)
+        return 2
+    src = Path(src)
+    if not src.is_absolute():
+        src = Path(args.mapping).resolve().parent / src
+    if not src.exists():
+        print(f"error: no such source sheet: {src}", file=sys.stderr)
+        return 2
+
+    result = conform_external(mapping, src, args.outdir)
+    print(f"sheet:    {result['sheet']}")
+    print(f"manifest: {result['manifest']}")
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

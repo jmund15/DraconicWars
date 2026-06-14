@@ -28,6 +28,12 @@ Checks:
                      Fails under the floor; over-ceiling is a warning only.
   i. whitelist_cap   whitelisted colors cover at most 6 px per frame.
 
+Profiles: a manifest ``"source": "external"`` selects the relaxed profile, which
+demotes {no_aa, outline_1px, banding} to non-gating warnings (curated CC0 art
+conformed via conform_external.py). All other checks stay hard. Absent / any
+other source value = the strict profile (identical to the historical behavior).
+The report carries ``profile`` and a per-check ``severity`` ("error"|"warning").
+
 Output: JSON report (written next to the sheet as <stem>.lint.json unless
 --report is given). Exit code 0 = pass, 1 = fail, 2 = usage error.
 
@@ -51,6 +57,15 @@ OUTLINE_DARK_COVERAGE = 0.85
 MAX_SAMPLES = 12   # offender coordinates kept per check
 MAX_BAND_RUN = 6   # parallel 1px same-ramp-successor bands longer than this fail
 WHITELIST_CAP = 6  # max whitelisted (deliberate-detail) pixels per frame
+
+# Relaxed profile: a manifest with ``"source": "external"`` (curated CC0 art
+# conformed via conform_external.py) demotes these three checks to warnings --
+# external pixel art has no sel-out ink outline (outline_1px), legitimately uses
+# gradient shading (banding), and is alpha-thresholded but may carry residual
+# soft edges (no_aa). The load-bearing checks (on_palette, frames,
+# manifest_contract, body_size) AND orphan_pixels / whitelist_cap stay hard for
+# every profile -- only the exact string "external" relaxes anything.
+RELAXED_WARNING_CHECKS = ("no_aa", "outline_1px", "banding")
 
 # --- cross-unit silhouette-distinctness constants (roster_distinctness) -------
 # A body-mask pair AT OR ABOVE this IoU reads as "the same rig recolored".
@@ -354,10 +369,20 @@ def lint_sheet(sheet_path: str | Path, manifest_path: str | Path | None = None) 
     checks["whitelist_cap"] = {"passed": not cap_offenders, "cap": WHITELIST_CAP,
                                "offenders": cap_offenders[:MAX_SAMPLES]}
 
-    passed = all(c["passed"] for c in checks.values())
+    # Profile / severity layer: under the relaxed external profile the demoted
+    # checks become warnings (still reported, but not gating). Every check is
+    # tagged so callers/tests can read the full partition; ``passed`` is then
+    # the AND over non-warning checks only. A missing/non-"external" source
+    # leaves every severity "error" -> byte-identical to the strict flat AND.
+    relaxed = bool(manifest) and manifest.get("source") == "external"
+    demoted = RELAXED_WARNING_CHECKS if relaxed else ()
+    for name, check in checks.items():
+        check["severity"] = "warning" if name in demoted else "error"
+    passed = all(c["passed"] for c in checks.values() if c["severity"] != "warning")
     return {
         "sheet": str(sheet_path),
         "manifest": str(mp) if mp else None,
+        "profile": "external" if relaxed else "strict",
         "passed": passed,
         "checks": checks,
     }
@@ -488,9 +513,10 @@ def main(argv=None) -> int:
     with open(out, "w", encoding="utf-8") as f:
         json.dump(report, f, indent=2)
 
-    print(f"{'PASS' if report['passed'] else 'FAIL'}  {sheet.name}")
+    print(f"{'PASS' if report['passed'] else 'FAIL'}  {sheet.name}  [{report['profile']}]")
     for name, c in report["checks"].items():
-        print(f"  [{'ok' if c['passed'] else 'XX'}] {name}")
+        mark = "ok" if c["passed"] else ("ww" if c.get("severity") == "warning" else "XX")
+        print(f"  [{mark}] {name}")
     print(f"report: {out}")
     return 0 if report["passed"] else 1
 
