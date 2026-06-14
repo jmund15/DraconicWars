@@ -45,9 +45,11 @@
       "errors": [],
       "warnings": [],
       "measured": {
-        "width": 25,
-        "height": 18,
-        "wingspan": 25
+        "width": 28,
+        "height": 16,
+        "wingspan": 28,
+        "head_w": 10,
+        "head_h": 5
       },
       "rules": {
         "min_h": 14,

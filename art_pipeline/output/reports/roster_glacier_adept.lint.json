@@ -45,8 +45,10 @@
       "errors": [],
       "warnings": [],
       "measured": {
-        "width": 16,
-        "height": 24
+        "width": 15,
+        "height": 26,
+        "head_w": 6,
+        "head_h": 9
       },
       "rules": {
         "min_h": 24,

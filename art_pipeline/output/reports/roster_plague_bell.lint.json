@@ -46,7 +46,9 @@
       "warnings": [],
       "measured": {
         "width": 26,
-        "height": 21
+        "height": 21,
+        "head_w": 0,
+        "head_h": 0
       },
       "rules": {
         "min_h": 20,

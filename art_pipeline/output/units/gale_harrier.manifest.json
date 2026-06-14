@@ -48,9 +48,11 @@
   "ground_y": 29,
   "facing": "right",
   "body_size": {
-    "width": 25,
-    "height": 18,
-    "wingspan": 25
+    "width": 28,
+    "height": 16,
+    "wingspan": 28,
+    "head_w": 10,
+    "head_h": 5
   },
   "lint": {
     "whitelist_colors": [

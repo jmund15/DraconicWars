@@ -1,0 +1,197 @@
+{
+  "passed": true,
+  "unit_count": 13,
+  "checks": {
+    "silhouette_distinctness": {
+      "passed": true,
+      "iou_max": 0.77,
+      "offenders": [],
+      "matrix": {
+        "cinder_acolyte|ash_revenant": 0.6033,
+        "cinder_acolyte|cinder_wyrmling": 0.3382,
+        "cinder_acolyte|pyre_ogre": 0.5464,
+        "cinder_acolyte|rime_sentry": 0.4828,
+        "cinder_acolyte|glacier_adept": 0.6866,
+        "cinder_acolyte|boreal_colossus": 0.4879,
+        "cinder_acolyte|bog_stalker": 0.6413,
+        "cinder_acolyte|plague_bell": 0.4631,
+        "cinder_acolyte|quarry_slinger": 0.2231,
+        "cinder_acolyte|deepway_bulwark": 0.5221,
+        "cinder_acolyte|spark_courier": 0.5122,
+        "cinder_acolyte|gale_harrier": 0.3221,
+        "ash_revenant|cinder_wyrmling": 0.1924,
+        "ash_revenant|pyre_ogre": 0.6699,
+        "ash_revenant|rime_sentry": 0.6689,
+        "ash_revenant|glacier_adept": 0.4345,
+        "ash_revenant|boreal_colossus": 0.5635,
+        "ash_revenant|bog_stalker": 0.6955,
+        "ash_revenant|plague_bell": 0.3719,
+        "ash_revenant|quarry_slinger": 0.2754,
+        "ash_revenant|deepway_bulwark": 0.5952,
+        "ash_revenant|spark_courier": 0.4387,
+        "ash_revenant|gale_harrier": 0.1283,
+        "cinder_wyrmling|pyre_ogre": 0.232,
+        "cinder_wyrmling|rime_sentry": 0.1386,
+        "cinder_wyrmling|glacier_adept": 0.3067,
+        "cinder_wyrmling|boreal_colossus": 0.217,
+        "cinder_wyrmling|bog_stalker": 0.2357,
+        "cinder_wyrmling|plague_bell": 0.2323,
+        "cinder_wyrmling|quarry_slinger": 0.0539,
+        "cinder_wyrmling|deepway_bulwark": 0.2292,
+        "cinder_wyrmling|spark_courier": 0.1176,
+        "cinder_wyrmling|gale_harrier": 0.4038,
+        "pyre_ogre|rime_sentry": 0.5216,
+        "pyre_ogre|glacier_adept": 0.3861,
+        "pyre_ogre|boreal_colossus": 0.6768,
+        "pyre_ogre|bog_stalker": 0.6068,
+        "pyre_ogre|plague_bell": 0.4148,
+        "pyre_ogre|quarry_slinger": 0.2166,
+        "pyre_ogre|deepway_bulwark": 0.6561,
+        "pyre_ogre|spark_courier": 0.3522,
+        "pyre_ogre|gale_harrier": 0.1837,
+        "rime_sentry|glacier_adept": 0.3479,
+        "rime_sentry|boreal_colossus": 0.4558,
+        "rime_sentry|bog_stalker": 0.5831,
+        "rime_sentry|plague_bell": 0.2976,
+        "rime_sentry|quarry_slinger": 0.3078,
+        "rime_sentry|deepway_bulwark": 0.4657,
+        "rime_sentry|spark_courier": 0.4688,
+        "rime_sentry|gale_harrier": 0.1083,
+        "glacier_adept|boreal_colossus": 0.3197,
+        "glacier_adept|bog_stalker": 0.4968,
+        "glacier_adept|plague_bell": 0.3507,
+        "glacier_adept|quarry_slinger": 0.1623,
+        "glacier_adept|deepway_bulwark": 0.3877,
+        "glacier_adept|spark_courier": 0.3929,
+        "glacier_adept|gale_harrier": 0.2736,
+        "boreal_colossus|bog_stalker": 0.4844,
+        "boreal_colossus|plague_bell": 0.4481,
+        "boreal_colossus|quarry_slinger": 0.244,
+        "boreal_colossus|deepway_bulwark": 0.6522,
+        "boreal_colossus|spark_courier": 0.3187,
+        "boreal_colossus|gale_harrier": 0.1633,
+        "bog_stalker|plague_bell": 0.3522,
+        "bog_stalker|quarry_slinger": 0.2,
+        "bog_stalker|deepway_bulwark": 0.6039,
+        "bog_stalker|spark_courier": 0.4963,
+        "bog_stalker|gale_harrier": 0.1585,
+        "plague_bell|quarry_slinger": 0.166,
+        "plague_bell|deepway_bulwark": 0.4779,
+        "plague_bell|spark_courier": 0.2731,
+        "plague_bell|gale_harrier": 0.2794,
+        "quarry_slinger|deepway_bulwark": 0.1803,
+        "quarry_slinger|spark_courier": 0.1866,
+        "quarry_slinger|gale_harrier": 0.0623,
+        "deepway_bulwark|spark_courier": 0.3975,
+        "deepway_bulwark|gale_harrier": 0.1576,
+        "spark_courier|gale_harrier": 0.1126
+      }
+    },
+    "scale_gap": {
+      "passed": true,
+      "skipped": "no dragon-tier unit present"
+    },
+    "head_to_body": {
+      "passed": true,
+      "offenders": [],
+      "measured": [
+        {
+          "name": "cinder_acolyte",
+          "ratio": 0.32,
+          "band": [
+            0.16,
+            0.42
+          ]
+        },
+        {
+          "name": "ash_revenant",
+          "ratio": 0.25,
+          "band": [
+            0.2,
+            0.46
+          ]
+        },
+        {
+          "name": "cinder_wyrmling",
+          "ratio": 0.278,
+          "band": [
+            0.1,
+            0.42
+          ]
+        },
+        {
+          "name": "pyre_ogre",
+          "ratio": 0.292,
+          "band": [
+            0.2,
+            0.46
+          ]
+        },
+        {
+          "name": "rime_sentry",
+          "ratio": 0.296,
+          "band": [
+            0.2,
+            0.46
+          ]
+        },
+        {
+          "name": "glacier_adept",
+          "ratio": 0.346,
+          "band": [
+            0.16,
+            0.42
+          ]
+        },
+        {
+          "name": "boreal_colossus",
+          "ratio": 0.269,
+          "band": [
+            0.2,
+            0.46
+          ]
+        },
+        {
+          "name": "bog_stalker",
+          "ratio": 0.333,
+          "band": [
+            0.2,
+            0.46
+          ]
+        },
+        {
+          "name": "quarry_slinger",
+          "ratio": 0.279,
+          "band": [
+            0.14,
+            0.36
+          ]
+        },
+        {
+          "name": "deepway_bulwark",
+          "ratio": 0.375,
+          "band": [
+            0.2,
+            0.46
+          ]
+        },
+        {
+          "name": "spark_courier",
+          "ratio": 0.308,
+          "band": [
+            0.2,
+            0.46
+          ]
+        },
+        {
+          "name": "gale_harrier",
+          "ratio": 0.312,
+          "band": [
+            0.1,
+            0.42
+          ]
+        }
+      ]
+    }
+  }
+}

@@ -50,7 +50,9 @@
   "body_size": {
     "width": 25,
     "height": 18,
-    "wingspan": 25
+    "wingspan": 25,
+    "head_w": 8,
+    "head_h": 5
   },
   "lint": {
     "whitelist_colors": [
