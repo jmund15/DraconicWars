@@ -911,6 +911,7 @@ public sealed class BattleSim
             {
                 continue;
             }
+            unit.ContactTriggered = false;   // one-tick view pulse; cleared each tick, set at contact below
             if (unit.IFrameTicks > 0)
             {
                 unit.IFrameTicks--;
@@ -947,6 +948,7 @@ public sealed class BattleSim
                     if (unit.PhaseTicksLeft <= 0)
                     {
                         ResolveContact(state, unit);
+                        unit.ContactTriggered = true;   // surface the contact moment for the view layer
                         unit.AttackPhase = AttackPhase.Backswing;
                         unit.PhaseTicksLeft = ScaledTicks(state, unit, unit.Def.BackswingTicks);
                         if (unit.PhaseTicksLeft <= 0)

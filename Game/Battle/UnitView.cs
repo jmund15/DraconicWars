@@ -4,6 +4,7 @@ using DraconicWars.Sim.Battle;
 using DraconicWars.Sim.Units;
 using DraconicWars.Game.Battle.Vfx;
 using Godot;
+using Jmodot.Implementation.Shared;
 
 /// <summary>
 /// Renders one sim unit: AnimatedSprite2D bound to a SimUnit instance. Programmatic
@@ -22,6 +23,7 @@ public partial class UnitView : Node2D
     private AnimatedSprite2D _sprite = null!;
     private StringName _moveAnim = WalkAnim;
     private float _lastX;
+    private bool _lastContact;
 
     public int InstanceId { get; private set; }
 
@@ -71,6 +73,15 @@ public partial class UnitView : Node2D
 
         Position = LaneGeometry.ToWorld(_unit.X, _unit.Stratum);
 
+        // Magic-archetype units conjure a cosmetic form at the contact moment. Fire
+        // on the RISING edge: ContactTriggered stays true across the render frames
+        // between two sim ticks, so a level check would spawn duplicates.
+        if (_unit.ContactTriggered && !_lastContact && _unit.Def.Attack.ProducesForm)
+        {
+            SpawnAttackForm();
+        }
+        _lastContact = _unit.ContactTriggered;
+
         if (_unit.AttackPhase != AttackPhase.None)
         {
             PlayIfAvailable(AttackAnim);
@@ -84,6 +95,26 @@ public partial class UnitView : Node2D
             PlayIfAvailable(IdleAnim);
         }
         _lastX = _unit.X;
+    }
+
+    /// <summary>Conjure the unit's element form and fly it from the caster to the hit
+    /// point (Range down the lane in the unit's facing). Added to the scene container,
+    /// not this view, so it stays in lane space instead of riding the caster.</summary>
+    private void SpawnAttackForm()
+    {
+        var element = _unit.Def.Element.ToString().ToLowerInvariant();
+        var shape = _unit.Def.Attack.Form.ToString().ToLowerInvariant();
+        var frames = FormView.LoadFrames(element, shape);
+        if (frames is null)
+        {
+            JmoLogger.Warning(this, $"[UnitView] no baked form '{element}_{shape}' for {_unit.Def.Id}");
+            return;
+        }
+        var facing = _unit.Side == PlayerSide.Left ? 1f : -1f;
+        var to = LaneGeometry.ToWorld(_unit.X + facing * _unit.Def.Range, _unit.Stratum);
+        var form = new FormView();
+        (GetParent() ?? (Node)this).AddChild(form);
+        form.Launch(Position, to, frames);
     }
 
     /// <summary>Detaches from sim state, plays death, frees itself.</summary>

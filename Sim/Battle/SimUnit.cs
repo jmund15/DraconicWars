@@ -39,6 +39,12 @@ public sealed class SimUnit
     public int TollCount { get; set; }
 
     public bool HasStruck { get; set; }
+
+    /// <summary>One-tick pulse: true only during the tick the unit's foreswing
+    /// resolves (the damage moment). The view layer reads it to spawn a cosmetic
+    /// attack form; it does not affect hitscan resolution. See
+    /// arch-attack-archetypes.md §6.</summary>
+    public bool ContactTriggered { get; set; }
 }
 
 public enum AttackPhase
