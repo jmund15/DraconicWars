@@ -50,6 +50,26 @@ def _build_source(path: str) -> None:
     sheet.save(path)
 
 
+def _build_speckled_source(path: str) -> None:
+    """A solid body PLUS isolated specks of a distinct luminance -- the shape
+    real downscaled pixel art produces (thin staffs, glints, VFX motes) that the
+    clean-band fixture never does. After posterize each speck maps to a different
+    ramp index than the body -> a sub-3px orphan region. One speck sits inside
+    the body (must be absorbed into the body color); one floats above it in
+    transparency (must be deleted)."""
+    sheet = Image.new("RGBA", (SRC_CELL * SRC_COLS, SRC_CELL * SRC_ROWS), (0, 0, 0, 0))
+    px = sheet.load()
+    for row in range(SRC_ROWS):
+        for col in range(SRC_COLS):
+            ox, oy = col * SRC_CELL, row * SRC_CELL
+            for y in range(2, 28):              # solid 16x26 body, one grey
+                for x in range(8, 24):
+                    px[ox + x, oy + y] = (130, 130, 130, 255)
+            px[ox + 15, oy + 14] = (245, 245, 245, 255)   # interior glint speck
+            px[ox + 15, oy + 0] = (245, 245, 245, 255)    # floating mote (above body)
+    sheet.save(path)
+
+
 def _mapping() -> dict:
     return {
         "name": "synth_hero",
@@ -127,6 +147,21 @@ class ConformExternalTest(unittest.TestCase):
                         continue
                     self.assertIn((r, g, bb), pal.colors_rgb,
                                   f"off-palette pixel {(r, g, bb)} at {(x, y)}")
+
+    def test_downscale_specks_are_denoised(self):
+        """Real downscaled art fragments into sub-3px specks; the conform must
+        despeckle so orphan_pixels (HARD in every profile) passes. The clean-band
+        fixture never exercises this -- a speckled source is the adversarial case."""
+        with tempfile.TemporaryDirectory() as d:
+            src = str(Path(d) / "speckled.png")
+            _build_speckled_source(src)
+            result = conform_external.conform_external(_mapping(), src, outdir=d)
+            report = lint.lint_sheet(result["sheet"], result["manifest"])
+            orphan = report["checks"]["orphan_pixels"]
+            self.assertTrue(orphan["passed"],
+                            f"specks not denoised: {orphan['count']} orphans "
+                            f"{orphan['offenders'][:3]}")
+            self.assertTrue(report["passed"])
 
     def test_conform_is_deterministic(self):
         """Identical source + mapping => identical bytes (pipeline invariant)."""

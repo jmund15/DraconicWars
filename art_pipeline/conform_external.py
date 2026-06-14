@@ -61,8 +61,10 @@ from pathlib import Path
 
 from PIL import Image
 
+from collections import Counter
+
 from generate_unit import contact_frame_index
-from lint import CLASS_BODY_RULES
+from lint import CLASS_BODY_RULES, MIN_CLUSTER
 from palette import Palette, get_palette
 from skeletons import ground_row, parse_canvas
 
@@ -158,6 +160,62 @@ def _target_body_height(typeclass: str, ground_y: int, airborne: bool) -> int:
     return max(1, min(th, avail))
 
 
+def _denoise_orphans(cell: Image.Image, min_cluster: int = MIN_CLUSTER) -> Image.Image:
+    """Despeckle a palettized cell so it satisfies lint's orphan_pixels (HARD).
+
+    Nearest-neighbor downscaling of detailed external art fragments thin features
+    (staffs, glints, VFX motes) into sub-min_cluster exact-color regions. Each
+    such region is absorbed into its dominant 8-neighbor color, or deleted when it
+    floats in transparency (a stray downscale artifact). Iterates to a fixpoint.
+    Palette-safe (only reassigns colors already present) and deterministic
+    (regions and tie-broken neighbor colors are taken in sorted order)."""
+    px = cell.load()
+    w, h = cell.size
+    for _ in range(32):                       # fixpoint cap; merges converge fast
+        opaque = {(x, y): px[x, y][:3]
+                  for y in range(h) for x in range(w) if px[x, y][3] == 255}
+        seen: set[tuple[int, int]] = set()
+        changed = False
+        for start in sorted(opaque):          # deterministic region order
+            if start in seen:
+                continue
+            rgb = opaque[start]
+            region = [start]
+            seen.add(start)
+            qi = 0
+            while qi < len(region):
+                cx, cy = region[qi]
+                qi += 1
+                for nx in (cx - 1, cx, cx + 1):
+                    for ny in (cy - 1, cy, cy + 1):
+                        p = (nx, ny)
+                        if p not in seen and opaque.get(p) == rgb:
+                            seen.add(p)
+                            region.append(p)
+            if len(region) >= min_cluster:
+                continue
+            nbr: Counter = Counter()
+            for (cx, cy) in region:
+                for nx in (cx - 1, cx, cx + 1):
+                    for ny in (cy - 1, cy, cy + 1):
+                        c = opaque.get((nx, ny))
+                        if c is not None and c != rgb:
+                            nbr[c] += 1
+            if nbr:
+                best = max(sorted(nbr), key=lambda c: nbr[c])  # tie -> lowest color
+                for (cx, cy) in region:
+                    px[cx, cy] = (*best, 255)
+                    opaque[(cx, cy)] = best   # live update: adjacent specks
+            else:                             # collapse together, never swap
+                for (cx, cy) in region:       # isolated speck -> drop
+                    px[cx, cy] = (0, 0, 0, 0)
+                    opaque.pop((cx, cy), None)
+            changed = True
+        if not changed:
+            break
+    return cell
+
+
 def _conform_cell(src: Image.Image, sx: int, sy: int, cw: int, ch: int,
                   centers, materials, levels, pal, ramps_used,
                   W, H, ground_y, airborne, typeclass):
@@ -201,10 +259,15 @@ def _conform_cell(src: Image.Image, sx: int, sy: int, cw: int, ch: int,
     ow = max(1, round(sw * scale))
     oh = max(1, round(sh * scale))
     scaled = crop.resize((ow, oh), Image.NEAREST)  # NEAREST keeps binary alpha
+    scaled = _denoise_orphans(scaled)              # despeckle BEFORE anchoring so
+                                                   # dropping a foot speck can't
+                                                   # lift the sprite off the line
 
     # re-anchor: lowest opaque row -> the ground line (or above, if airborne)
     spx = scaled.load()
     opaque_rows = [y for y in range(oh) for x in range(ow) if spx[x, y][3] == 255]
+    if not opaque_rows:
+        raise ValueError("source cell emptied by despeckle")
     bottom = max(opaque_rows)
     target_bottom = ground_y - (AIRBORNE_MARGIN if airborne else 0)
     offx = (W - ow) // 2
