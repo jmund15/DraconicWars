@@ -1,0 +1,17 @@
+{
+  "name": "storm_bolt",
+  "kind": "form",
+  "shape": "bolt",
+  "element": "storm",
+  "frame_w": 16,
+  "frame_h": 16,
+  "frames": [
+    "spawn",
+    "travel",
+    "impact"
+  ],
+  "loop_frame": 1,
+  "ramps_used": [
+    "storm"
+  ]
+}
