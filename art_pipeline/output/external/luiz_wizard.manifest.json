@@ -1,0 +1,61 @@
+{
+  "name": "luiz_wizard",
+  "typeclass": "melee_biped",
+  "element": "shadow",
+  "size_class": "medium",
+  "source": "external",
+  "frame_w": 32,
+  "frame_h": 32,
+  "animations": [
+    {
+      "name": "idle",
+      "row": 0,
+      "frames": 6,
+      "fps": 7,
+      "loop": true
+    },
+    {
+      "name": "walk",
+      "row": 1,
+      "frames": 8,
+      "fps": 10,
+      "loop": true
+    },
+    {
+      "name": "attack",
+      "row": 2,
+      "frames": 8,
+      "fps": 12,
+      "loop": false,
+      "contact_frame": 3
+    },
+    {
+      "name": "death",
+      "row": 3,
+      "frames": 7,
+      "fps": 10,
+      "loop": false
+    }
+  ],
+  "foreswing_ticks": 8,
+  "backswing_ticks": 12,
+  "ramps_used": [
+    "frost_teal",
+    "peach",
+    "radiant",
+    "rose",
+    "shadow"
+  ],
+  "pivot": "bottom_center",
+  "ground_y": 29,
+  "facing": "right",
+  "body_size": {
+    "width": 27,
+    "height": 26
+  },
+  "lint": {
+    "whitelist_colors": [],
+    "prop_colors": [],
+    "airborne_animations": []
+  }
+}
