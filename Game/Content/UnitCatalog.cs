@@ -25,7 +25,10 @@ public static class UnitCatalog
             MaxHp: 70, Damage: 10, ForeswingTicks: 6, BackswingTicks: 12,
             Range: 6.5f, RangeMin: 0f, IsArea: false, MoveSpeed: 1.8f,
             KnockbackCount: 2, DeployCost: 60, DeployCooldownTicks: 90,
-            Stratum: Stratum.Ground, CanTargetGround: true, CanTargetAir: true),
+            Stratum: Stratum.Ground, CanTargetGround: true, CanTargetAir: true)
+        {
+            Attack = new AttackArchetype(AttackClass.Physical, AttackPose.Shoot, AttackForm.Arrow),
+        },
         new UnitDef(
             Id: "frost_whelp", DisplayName: "Frost Whelp", Tier: 1,
             TypeClass: TypeClass.Aerial, Element: Element.Frost,
@@ -63,7 +66,10 @@ public static class UnitCatalog
             MaxHp: 80, Damage: 30, ForeswingTicks: 14, BackswingTicks: 22,
             Range: 9.0f, RangeMin: 3.0f, IsArea: false, MoveSpeed: 1.5f,
             KnockbackCount: 1, DeployCost: 140, DeployCooldownTicks: 210,
-            Stratum: Stratum.Ground, CanTargetGround: true, CanTargetAir: true),
+            Stratum: Stratum.Ground, CanTargetGround: true, CanTargetAir: true)
+        {
+            Attack = new AttackArchetype(AttackClass.Physical, AttackPose.Shoot, AttackForm.Arrow),
+        },
         new UnitDef(
             Id: "stone_ram", DisplayName: "Stone Ram", Tier: 3,
             TypeClass: TypeClass.Siege, Element: Element.Stone,
@@ -223,6 +229,7 @@ public static class UnitCatalog
         {
             BonusVsHighHpPct = 0.5f,
             HighHpThreshold = 300,
+            Attack = new AttackArchetype(AttackClass.Physical, AttackPose.Shoot, AttackForm.Arrow),
         },
         new UnitDef(
             Id: "deepway_bulwark", DisplayName: "Deepway Bulwark", Tier: 2,

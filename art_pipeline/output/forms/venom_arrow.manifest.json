@@ -1,0 +1,20 @@
+{
+  "name": "venom_arrow",
+  "kind": "form",
+  "shape": "arrow",
+  "element": "venom",
+  "frame_w": 16,
+  "frame_h": 16,
+  "frames": [
+    "spawn",
+    "travel",
+    "impact"
+  ],
+  "loop_frame": 1,
+  "ramps_used": [
+    "ink",
+    "leather",
+    "mauve_grey",
+    "venom"
+  ]
+}

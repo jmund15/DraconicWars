@@ -31,7 +31,7 @@ from palette import Palette, get_palette
 
 ROOT = Path(__file__).resolve().parent
 
-FORM_SHAPES = ("shard", "ball", "chunk", "bolt")
+FORM_SHAPES = ("shard", "ball", "chunk", "bolt", "arrow")
 FRAME_KINDS = ("spawn", "travel", "impact")
 
 # The canonical form each element conjures (mirrors the UnitDef.Attack.Form the
@@ -45,6 +45,11 @@ CANONICAL = (
     ("storm", "bolt"),
 )
 
+# Physical projectiles -- the arrow a Physical/Shoot archer looses (so bow + sniper
+# units visibly fire, like the magic forms). Mostly neutral wood/metal with an
+# element-tinted tip; generated for every element so any archer's element works.
+PHYSICAL = tuple((el, "arrow") for el in ("fire", "frost", "venom", "stone", "storm"))
+
 
 def resolve_form_colors(element: str, pal: Palette) -> dict[str, tuple[str, int]]:
     """Element primary ramp -> core / hot / edge steps (palette-contract)."""
@@ -53,6 +58,10 @@ def resolve_form_colors(element: str, pal: Palette) -> dict[str, tuple[str, int]
         "core": (primary, pal.clamp_index(primary, 2)),
         "hot": (primary, pal.clamp_index(primary, 4)),
         "edge": (primary, pal.clamp_index(primary, 1)),
+        # neutral materials for physical projectiles (arrow shaft / head) -- mid-tone
+        # so 2px parts survive the sel-out outline (same rule as unit prop wood/metal).
+        "wood": ("leather", pal.clamp_index("leather", 2)),
+        "metal": ("mauve_grey", pal.clamp_index("mauve_grey", 2)),
     }
 
 
@@ -127,6 +136,28 @@ class FormTemplate:
             for dx, dy in ((-5, -2), (5, -2), (-4, 3), (4, 3), (0, -5), (0, 5)):
                 buf.line(cx, cy, cx + dx, cy + dy, hr, hi, part="form", no_outline=True)
 
+    def _draw_arrow(self, buf, kind, cx, cy, c):
+        # physical projectile: wood shaft + metal head, faces right (+x). A small
+        # element-tinted glint on the tip ties it to the archer's element.
+        wr, wi = c["wood"]
+        mr, mi = c["metal"]
+        hr, hi = c["hot"]
+        if kind == "spawn":
+            # nocked: short shaft drawn back, head just ahead
+            buf.fill_rect(cx - 4, cy, cx, cy, wr, wi, part="form")
+            buf.fill_triangle((cx, cy - 1), (cx + 2, cy), (cx, cy + 1), mr, mi, part="form")
+        elif kind == "travel":
+            buf.fill_rect(cx - 6, cy, cx + 3, cy, wr, wi, part="form")                      # shaft
+            buf.fill_triangle((cx + 3, cy - 2), (cx + 6, cy), (cx + 3, cy + 2), mr, mi, part="form")  # head
+            buf.set_px(cx + 5, cy, hr, hi, part="form", no_outline=True)                    # element tip glint
+            buf.fill_triangle((cx - 6, cy - 2), (cx - 3, cy), (cx - 6, cy + 2),
+                              wr, max(wi - 1, 0), part="form")                               # fletching
+        else:  # impact: embedded shaft + an element spark spray off the tip
+            buf.fill_rect(cx - 3, cy, cx + 2, cy, wr, wi, part="form")
+            buf.fill_triangle((cx + 2, cy - 1), (cx + 4, cy), (cx + 2, cy + 1), mr, mi, part="form")
+            for dx, dy in ((4, -2), (5, 0), (4, 2)):
+                buf.set_px(cx + dx, cy + dy, hr, hi, part="form", no_outline=True)
+
 
 def generate_form(element: str, shape: str, outdir: str | Path | None = None,
                   pal: Palette | None = None) -> dict:
@@ -187,7 +218,7 @@ def run(only: str | None = None) -> int:
     print(f"{'form':<18} {'lint':<5} {'errors'}")
     print("-" * 60)
     ok = True
-    for element, shape in CANONICAL:
+    for element, shape in CANONICAL + PHYSICAL:
         name = f"{element}_{shape}"
         if only and name != only:
             continue

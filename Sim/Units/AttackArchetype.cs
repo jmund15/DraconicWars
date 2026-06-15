@@ -4,13 +4,15 @@ namespace DraconicWars.Sim.Units;
 /// a detached form.</summary>
 public enum AttackClass { Physical, Magic }
 
-/// <summary>How the body animates the attack. Physical poses move the held weapon;
-/// magic poses (Cast/Channel) gesture, BodyStrike lunges weaponlessly.</summary>
-public enum AttackPose { Swing, Thrust, Cast, Channel, BodyStrike }
+/// <summary>How the body animates the attack. Physical poses move the held weapon
+/// (Swing/Thrust melee, Shoot looses a bow/crossbow); magic poses (Cast/Channel)
+/// gesture, BodyStrike lunges weaponlessly.</summary>
+public enum AttackPose { Swing, Thrust, Shoot, Cast, Channel, BodyStrike }
 
-/// <summary>The conjured form a Magic attack spawns. None = no form (physical, or a
-/// pure gesture). Shapes are baked per element by the Element-Form-Core Generator.</summary>
-public enum AttackForm { None, Shard, Ball, Chunk, Bolt }
+/// <summary>The form an attack spawns as it lands. None = no form (a melee swing or a
+/// formless gesture). Magic forms (Shard/Ball/Chunk/Bolt) and the physical Arrow are
+/// baked per element by the Element-Form-Core Generator.</summary>
+public enum AttackForm { None, Shard, Ball, Chunk, Bolt, Arrow }
 
 /// <summary>
 /// Decouples a unit's attack VISUAL from its body-plan: class (Physical|Magic) x pose
@@ -25,7 +27,9 @@ public sealed record AttackArchetype(AttackClass Class, AttackPose Pose, AttackF
     public static readonly AttackArchetype MeleePhysical =
         new(AttackClass.Physical, AttackPose.Swing, AttackForm.None);
 
-    /// <summary>Only Magic + a non-None form spawns a view form; everything else is
-    /// pose-only (physical weapon swing, or a formless gesture).</summary>
-    public bool ProducesForm => Class == AttackClass.Magic && Form != AttackForm.None;
+    /// <summary>Any non-None form spawns a view form: a magic conjuration (Ball/Shard/
+    /// ...) OR a physical projectile (Arrow). A melee swing or formless gesture has
+    /// Form=None and spawns nothing. The class drives the POSE, not whether a form
+    /// flies — so physical archers visibly loose arrows.</summary>
+    public bool ProducesForm => Form != AttackForm.None;
 }
