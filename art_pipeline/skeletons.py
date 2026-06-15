@@ -1392,6 +1392,19 @@ class FlyerConfig:
     dragon: bool = False        # dedicated dragon anatomy (S-neck, fan wings)
     feather_wing: bool = False  # bird/griffin: a feathered vane (skin-colored + feather
                                 # strokes) instead of a translucent dragon membrane
+    insect_wing: bool = False   # faerie/sprite: two thin gossamer wing pairs (a long
+                                # forewing + short hindwing), no membrane / no feathers
+
+
+def _insect_wing_pair(buf, root, wm, fill, part):
+    """Two thin gossamer wings from a shoulder root -- a long forewing angled up-back
+    + a shorter hindwing down-back. The faerie/insect silhouette (small path only)."""
+    fr, fi = fill
+    rx, ry = root
+    buf.fill_triangle((rx, ry), (rx - round(11 * wm), ry - 5),
+                      (rx - round(6 * wm), ry + 1), fr, fi, part=part)
+    buf.fill_triangle((rx, ry + 1), (rx - round(8 * wm), ry + 5),
+                      (rx - round(5 * wm), ry + 2), fr, fi, part=part)
 
 
 def _feather_wing_fill(buf, root, tip, trail, fill, sep_idx, part, fingers=3):
@@ -1514,7 +1527,9 @@ class AerialFlyerTemplate:
         else:
             ftip = (root_far[0] - round(12 * wm), root_far[1] + wing_dy + 1)
             ftrail = (root_far[0] - 2, root_far[1] + 3)
-            if self.cfg.feather_wing:
+            if self.cfg.insect_wing:
+                _insect_wing_pair(buf, root_far, wm, (membrane[0], far_dark), "back_wing")
+            elif self.cfg.feather_wing:
                 _feather_wing_fill(buf, root_far, ftip, ftrail,
                                    (skin[0], max(skin[1] - 1, 0)), max(skin[1] - 2, 0), "back_wing")
             else:
@@ -1575,7 +1590,9 @@ class AerialFlyerTemplate:
         else:
             tip = (root[0] - round(9 * wm), root[1] + wing_dy)
             trail = (root[0] + 2, root[1] + 2)
-            if self.cfg.feather_wing:
+            if self.cfg.insect_wing:
+                _insect_wing_pair(buf, root, wm, belly, "wing")
+            elif self.cfg.feather_wing:
                 _feather_wing_fill(buf, root, tip, trail, skin, max(skin[1] - 1, 0), "wing")
             else:
                 buf.fill_triangle(root, tip, trail, membrane[0], membrane[1], part="wing")
@@ -2184,6 +2201,7 @@ def flyer_config_from_spec(spec: dict | None) -> FlyerConfig:
         body_dy=int(fl.get("body_dy", 0)),
         dragon=bool(fl.get("dragon", False)),
         feather_wing=bool(fl.get("feather_wing", False)),
+        insect_wing=bool(fl.get("insect_wing", False)),
     )
 
 

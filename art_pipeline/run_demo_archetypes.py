@@ -56,6 +56,19 @@ DEMOS: list[dict] = [
         "palette_overrides": {},
         "foreswing_ticks": 8, "backswing_ticks": 12,
     },
+    {
+        "name": "demo_faerie",
+        "typeclass": "aerial_flyer",
+        "element": "frost",
+        "canvas": "32x32",
+        "size_class": "small",
+        "props": [],
+        # tiny sprite: two thin gossamer wing pairs (wide enough to clear the 24px
+        # aerial wingspan floor), minimal head
+        "flyer": {"head": "wyvern", "wing_mult": 1.3, "insect_wing": True, "eye_px": 2},
+        "palette_overrides": {},
+        "foreswing_ticks": 6, "backswing_ticks": 10,
+    },
 ]
 
 
