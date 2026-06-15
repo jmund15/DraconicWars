@@ -86,6 +86,35 @@
       },
       "key_takeaway": "A --red-team capstone's first-party code-read caught a cross-project memory false-positive (PushinPotions 'Global autoload' from the passively-loaded sibling MEMORY.md was shaping a DraconicWars ThemeService design; DW has zero autoloads). Recalled passive-memory facts naming repo-specific artifacts must be verified first-party. The multi-agent red-team passes earned their cost: they also caught a TextureFilter-on-Texture2D API error and a non-hermetic test plan that Socratic alone would have missed.",
       "notes": "Architecture brainstorm for the UI Art System Part; --red-team ran 3 passes (Step-2 + Step-4 Mode B, Step-7 Mode A), ~12 critic agents total. Output entirely in the Obsidian vault (ui-art-system.md design doc + roadmap.md: UI Art System -> plan-pending, +3 arch-pending siblings) plus 2 .claude/auto-memory files; ZERO .cs changes (regression gate exempt). Surfaced a harness misconfig: this DW session passively auto-loaded PushinPotions' MEMORY.md (native memory-dir config, not the project hook). No CLAUDE.md/skill/hook edit proposed — the learning is a gotcha (auto-memory, saved via autolearn) + a harness-config recommendation, not an instruction-adherence gap."
+    },
+    {
+      "session_id": "373b9a69-5592-4cc0-b4a8-435e130a19ae",
+      "id": 3,
+      "title": "Flyer body-plan family + grander dragons (CBPT completion)",
+      "date": "2026-06-15",
+      "outcome": "clean",
+      "pattern": null,
+      "domains": [
+        "art-pipeline",
+        "refactoring",
+        "meta",
+        "data-files"
+      ],
+      "corrections": [],
+      "skills_used": [
+        "session_audit",
+        "autolearn",
+        "self_evaluate"
+      ],
+      "memory_searches": 2,
+      "memory_hits": [],
+      "tests": {
+        "written": 0,
+        "total_passing": 13,
+        "tdd_followed": true
+      },
+      "key_takeaway": "Differentiate creatures at the body-plan/silhouette level, not surface trim (wing-fill). Viewing the rendered PNG is non-negotiable — lint passes art that reads wrong (fire caterpillar vs eastern dragon). Element palette silently trips the whitelist cap when accent/hot collides with a major body color (venom skin==accent, frost hot==accent).",
+      "notes": "Post-compaction continued session, run as two /goals + a /session_end. Opened by addressing a Stop-hook gap (delivering per-task ideal-workflow recommendations the prior turn had executed-but-not-articulated). Goal = flyer creative uniqueness (prior wing-trim approach was insufficient) + grander/bigger dragons. Delivered: FlyerConfig.body_plan axis (drake/wyrm/seraph/wisp/manta), cinder_wyrmling->wyrm in-roster, elder_drake->80px + grander _draw_dragon; then user-authorized (AskUserQuestion) fixing 3 pre-existing ground-unit lint failures (FloatingShards grounding, SpiderLegs/bog_stalker height, boreal crystal-spike clamp). Verified byte-identity (only 6 intended sheets changed), all batches lint-clean, distinctness PASS, 13 python self-tests PASS, C# RosterArtContractTest PASS. CBPT Part marked complete on roadmap (hand-edited — /update_roadmap cannot reach the vault-located roadmap from the repo cwd). Self-caught a doc error during the critique pass: had drafted wing-type-first as the ideal workflow (the rejected approach) and inverted it to body-plan-first."
     }
   ]
 }

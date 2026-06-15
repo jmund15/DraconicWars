@@ -77,6 +77,7 @@
 - [MEMORY.md is agent-maintained](feedback_memory_md_is_auto_managed.md) — write topic file + add MEMORY.md pointer in same turn; no separate hooks/workflows.
 - [Separate pre-existing changes before commit](feedback_separate_preexisting_changes_before_commit.md) — bulk-mechanical commits: edit-signature detector isolates your changes.
 - [Autonomous loop needs positive liveness](arch_rule_autonomous_loop_positive_liveness.md) — convergence loops must prove each lens RAN; never read "0 findings" as success.
+- [cwd-executor can't reach vault doc](gotcha_cwd_executor_cannot_reach_vault_doc.md) — /update_roadmap can't find the vault roadmap from repo cwd; hand-edit w/ full multi-section recompute.
 
 ## Jmodot framework
 - [Jmodot 2D Movement Architecture](jmodot_2d_movement_architecture.md) — MovementProcessor2D, shared BBDataSig, TurnRateProfile3D rename, HitContext2D bridge.
@@ -99,6 +100,10 @@
 - [Explicit DIM orphans on interface removal](gotcha_explicit_dim_orphans_on_base_interface_removal.md) — `IFoo.Member=>…` → CS0540 when IFoo leaves the base list; grep explicit-DIMs first.
 - [Godot typed Dictionary export gotchas](gotcha_godot_typed_dictionary.md) — `Dictionary<Resource,V>` [Export]: `.tres` literal form + null-key from empty slot; scene-load test.
 - [uid-only refs break orphan detection](gotcha_godot4_uid_only_refs_break_orphan_detection.md) — Godot-4 uid-only ext_resource → text orphan sweeps over-count; verify in editor.
+
+## Art pipeline (procedural sprites)
+- [Art whitelist hex collision](gotcha_art_whitelist_hex_collision.md) — whitelist cap counts ALL hex pixels; element accent/hot==body color trips it. Route big glow via belly.
+- [Sprite sharp-tip 2x2 ink](gotcha_sprite_sharp_tip_2x2_ink.md) — thin/edge tip → 2x2 outline-ink fail; blunt the apex or clamp inside canvas; clamp only the offender.
 
 ## DraconicWars (project-local)
 - [tscn C# node exports need node_paths](gotcha_tscn_csharp_node_exports_need_node_paths.md) — hand-authored scenes: node_paths=PackedStringArray(...) or exports stay null.
