@@ -51,8 +51,8 @@
   "facing": "right",
   "body_size": {
     "width": 29,
-    "height": 42,
-    "head_w": 15,
+    "height": 46,
+    "head_w": 12,
     "head_h": 10
   },
   "lint": {

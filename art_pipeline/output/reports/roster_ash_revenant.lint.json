@@ -52,12 +52,13 @@
       "passed": true,
       "errors": [],
       "warnings": [
+        "body height 46 over target 42",
         "body width 29 over target 27"
       ],
       "measured": {
         "width": 29,
-        "height": 42,
-        "head_w": 15,
+        "height": 46,
+        "head_w": 12,
         "head_h": 10
       },
       "rules": {

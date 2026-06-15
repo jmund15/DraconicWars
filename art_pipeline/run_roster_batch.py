@@ -49,12 +49,14 @@ BATCH: list[tuple[dict, str]] = [
     ({
         "name": "ash_revenant",
         "build": "dangerous", "seed": 1,
-        "proportions": {"torso_w": 15, "torso_h": 11, "leg_h": 10, "head_w": 8, "head_h": 7},
+        "proportions": {"torso_w": 15, "torso_h": 12, "leg_h": 12, "head_w": 8, "head_h": 7},
         "typeclass": "melee_biped",
+        "base": "wraith",          # undead: no legs, a frayed floating shroud
+        "head_style": "hood",      # hooded wraith
         "element": "fire",
         "canvas": "48x48",
         "size_class": "large",
-        "props": ["sword"],
+        "props": ["sword"],        # a spectral blade
         "palette_overrides": {"cloth": ["leather", 1]},
         "foreswing_ticks": 5,
         "backswing_ticks": 7,
@@ -126,12 +128,15 @@ BATCH: list[tuple[dict, str]] = [
     ({
         "name": "bog_stalker",
         "build": "agile", "seed": 3,
-        "proportions": {"torso_w": 13, "torso_h": 11, "leg_h": 10, "head_w": 8, "head_h": 8},
+        "proportions": {"torso_w": 13, "torso_h": 8, "leg_h": 13, "head_w": 8, "head_h": 7},
         "typeclass": "melee_biped",
+        "base": "spider",          # 8 arachnid legs; compact body rides on top
+        "attack_pose": "body_strike",   # lunge-bite, no held weapon
+        "head_style": "snout",     # forward fanged maw
         "element": "venom",
         "canvas": "28x28",
         "size_class": "small",
-        "props": ["sword"],
+        "props": [],               # biter: no weapon
         "palette_overrides": {"cloth": ["leather", 1]},
         "foreswing_ticks": 5,
         "backswing_ticks": 9,

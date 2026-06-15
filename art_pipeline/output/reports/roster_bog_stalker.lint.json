@@ -2,7 +2,7 @@
   "sheet": "C:\\Users\\jmund\\Game_Dev\\Godot_Projects\\DraconicWars\\art_pipeline\\output\\units\\bog_stalker_sheet.png",
   "manifest": "C:\\Users\\jmund\\Game_Dev\\Godot_Projects\\DraconicWars\\art_pipeline\\output\\units\\bog_stalker.manifest.json",
   "profile": "strict",
-  "passed": true,
+  "passed": false,
   "checks": {
     "on_palette": {
       "passed": true,
@@ -49,13 +49,17 @@
       "severity": "error"
     },
     "body_size": {
-      "passed": true,
-      "errors": [],
-      "warnings": [],
+      "passed": false,
+      "errors": [
+        "body height 19 under floor 21"
+      ],
+      "warnings": [
+        "body width 21 over target 16"
+      ],
       "measured": {
-        "width": 15,
-        "height": 21,
-        "head_w": 8,
+        "width": 21,
+        "height": 19,
+        "head_w": 10,
         "head_h": 7
       },
       "rules": {

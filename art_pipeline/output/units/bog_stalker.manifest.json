@@ -38,21 +38,20 @@
   ],
   "foreswing_ticks": 5,
   "backswing_ticks": 9,
-  "attack_pose": "thrust",
+  "attack_pose": "body_strike",
   "ramps_used": [
     "ink",
     "leather",
     "mauve_grey",
-    "storm",
-    "venom"
+    "storm"
   ],
   "pivot": "bottom_center",
   "ground_y": 25,
   "facing": "right",
   "body_size": {
-    "width": 15,
-    "height": 21,
-    "head_w": 8,
+    "width": 21,
+    "height": 19,
+    "head_w": 10,
     "head_h": 7
   },
   "lint": {

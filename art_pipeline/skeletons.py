@@ -1245,11 +1245,78 @@ class FloatingShards:
             _diamond_facets(buf, sx, t, bot, w, sr, lit, shadow, part=f"shard_base_{i}")
 
 
+class SpiderLegs:
+    """N arachnid legs per side, arching up off the body then angling down to splayed
+    ground feet -- a wide, low, distinctly non-humanoid base. The upper body (any
+    BipedConfig) rides on top, so 'spider base + caster torso' is just this part plus
+    a robed/cast config; 'spider + biter' is this plus a body_strike pose."""
+
+    def __init__(self, per_side=4):
+        self.per_side = per_side
+
+    def draw(self, tmpl, buf, kind, phase, tx0, tx1, hip_y, GY, skin):
+        sr, si = skin
+        d = max(si - 1, 0)
+        cx = (tx0 + tx1) // 2
+        span = max(tx1 - tx0, 6)
+        reach = span // 2 + 4
+        for side in (-1, 1):
+            part = "front_leg" if side == 1 else "back_leg"
+            didx = si if side == 1 else d
+            for i in range(self.per_side):
+                t = (i + 1) / (self.per_side + 1)        # fan position 0..1
+                gait = 0
+                if kind == "walk":
+                    gait = (1, -1)[(phase + i) % 2]      # alternating shuffle
+                elif kind == "lunge" and side == 1:
+                    gait = 2
+                hipx = cx + side
+                knee_x = cx + side * (1 + round(reach * t * 0.55))
+                knee_y = hip_y - 2 - i                    # outer legs arch higher (knee above body base)
+                foot_x = cx + side * (2 + round(reach * t)) + side * gait
+                foot_y = GY - (i % 2)                     # stagger feet 1px for an organic line
+                buf.line(hipx, hip_y, knee_x, knee_y, sr, didx, part=part)      # body -> knee (up/out)
+                buf.line(knee_x, knee_y, foot_x, foot_y, sr, didx, part=part)   # knee -> foot (down/out)
+
+
+class WraithTail:
+    """No legs -- a tattered shroud tapering from the hip into frayed wisp tongues
+    that hover just off the ground (a floating gap). The undead/wraith base; the
+    upper body rides on top as usual. Drawn in the unit's skin/cloth color."""
+
+    def draw(self, tmpl, buf, kind, phase, tx0, tx1, hip_y, GY, skin):
+        cr, ci = skin
+        d = max(ci - 1, 0)
+        cx = (tx0 + tx1) // 2
+        sway = 0
+        if kind == "walk":
+            sway = (-1, 0, 1, 0)[phase % 4]
+        elif kind == "lunge":
+            sway = 2
+        region = max(GY - hip_y, 4)
+        bottom = GY - 2                                   # shroud hovers 2px off the ground
+        half = max(2, (tx1 - tx0) // 2)
+        # tapering shroud: wide at the hip, narrowing toward the hover line
+        for i in range(bottom - hip_y + 1):
+            t = i / max(bottom - hip_y, 1)
+            w = max(1, round(half * (1 - 0.6 * t)))
+            dx = round(sway * t)
+            y = hip_y + i
+            buf.fill_rect(cx - w + dx, y, cx + w + dx, y, cr, ci, part="robe")
+        # frayed wisp tongues trailing below the shroud (darker; the dissolving edge)
+        for k, off in enumerate((-half + 1, 0, half - 1)):
+            fx = cx + off + round(sway * 0.5)
+            buf.fill_triangle((fx - 1, hip_y + region // 2), (fx, GY - (k % 2)),
+                              (fx + 1, hip_y + region // 2), cr, d, part="wisp")
+
+
 HUMANOID_LEGS = HumanoidLegs()
 OGRE_STUMPS = OgreStumps()
 SEGMENTED_PILLARS = SegmentedPillars()
 CRYSTALLINE_LEGS = CrystallineLegs()
 FLOATING_SHARDS = FloatingShards()
+SPIDER_LEGS = SpiderLegs()
+WRAITH_TAIL = WraithTail()
 
 # Spec ``base`` key -> part. Adding a base archetype = one entry here + the class.
 LOCOMOTION_PARTS = {
@@ -1258,6 +1325,8 @@ LOCOMOTION_PARTS = {
     "segmented": SEGMENTED_PILLARS,
     "crystalline_legs": CRYSTALLINE_LEGS,
     "shards": FLOATING_SHARDS,
+    "spider": SPIDER_LEGS,
+    "wraith": WRAITH_TAIL,
 }
 
 
@@ -2087,6 +2156,10 @@ def _overlay_biped_config(base: BipedConfig, spec: dict | None) -> BipedConfig:
         over["head_fwd"] = int(prop["head_fwd"])
     if spec.get("construct_style"):
         over["construct_style"] = spec["construct_style"]
+    if spec.get("head_style"):
+        # upper-body knob: pick a head independent of the typeclass default
+        # (e.g. a hood on a wraith, a snout on a beast).
+        over["head_style"] = spec["head_style"]
     if spec.get("attack_pose"):
         # the archetype magic pose (cast/channel/body_strike) drives the arm via
         # ARM_POSES, overriding the typeclass's default weapon pose.
