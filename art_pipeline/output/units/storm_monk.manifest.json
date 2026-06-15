@@ -38,6 +38,7 @@
   ],
   "foreswing_ticks": 4,
   "backswing_ticks": 6,
+  "attack_pose": "thrust",
   "ramps_used": [
     "ink",
     "leather",
@@ -49,7 +50,9 @@
   "facing": "right",
   "body_size": {
     "width": 17,
-    "height": 26
+    "height": 26,
+    "head_w": 12,
+    "head_h": 9
   },
   "lint": {
     "whitelist_colors": [

@@ -38,6 +38,7 @@
   ],
   "foreswing_ticks": 12,
   "backswing_ticks": 24,
+  "attack_pose": "siege_machine",
   "ramps_used": [
     "ink",
     "leather",
@@ -49,7 +50,9 @@
   "facing": "right",
   "body_size": {
     "width": 26,
-    "height": 21
+    "height": 21,
+    "head_w": 0,
+    "head_h": 0
   },
   "lint": {
     "whitelist_colors": [

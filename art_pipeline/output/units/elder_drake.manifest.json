@@ -38,6 +38,7 @@
   ],
   "foreswing_ticks": 12,
   "backswing_ticks": 18,
+  "attack_pose": "aerial_flyer",
   "ramps_used": [
     "ink",
     "leather",
@@ -50,7 +51,9 @@
   "body_size": {
     "width": 49,
     "height": 38,
-    "wingspan": 49
+    "wingspan": 49,
+    "head_w": 6,
+    "head_h": 7
   },
   "lint": {
     "whitelist_colors": [

@@ -1,16 +1,19 @@
 {
   "sheet": "C:\\Users\\jmund\\Game_Dev\\Godot_Projects\\DraconicWars\\art_pipeline\\output\\units\\elder_drake_sheet.png",
   "manifest": "C:\\Users\\jmund\\Game_Dev\\Godot_Projects\\DraconicWars\\art_pipeline\\output\\units\\elder_drake.manifest.json",
+  "profile": "strict",
   "passed": true,
   "checks": {
     "on_palette": {
       "passed": true,
-      "off_palette_colors": {}
+      "off_palette_colors": {},
+      "severity": "error"
     },
     "no_aa": {
       "passed": true,
       "semi_transparent_pixels": 0,
-      "samples": []
+      "samples": [],
+      "severity": "error"
     },
     "orphan_pixels": {
       "passed": true,
@@ -19,26 +22,31 @@
       "whitelist": [
         "e6904e",
         "ffffff"
-      ]
+      ],
+      "severity": "error"
     },
     "outline_1px": {
       "passed": true,
       "boundary_dark_coverage": 1.0,
       "light_boundary_samples": [],
-      "ink_2x2_blocks": []
+      "ink_2x2_blocks": [],
+      "severity": "error"
     },
     "frames": {
       "passed": true,
-      "failures": []
+      "failures": [],
+      "severity": "error"
     },
     "banding": {
       "passed": true,
-      "max_run": 6,
-      "offenders": []
+      "max_run": 12,
+      "offenders": [],
+      "severity": "error"
     },
     "manifest_contract": {
       "passed": true,
-      "errors": []
+      "errors": [],
+      "severity": "error"
     },
     "body_size": {
       "passed": true,
@@ -47,18 +55,22 @@
       "measured": {
         "width": 49,
         "height": 38,
-        "wingspan": 49
+        "wingspan": 49,
+        "head_w": 6,
+        "head_h": 7
       },
       "rules": {
         "min_h": 28,
         "max_h": 40,
         "min_wingspan": 48
-      }
+      },
+      "severity": "error"
     },
     "whitelist_cap": {
       "passed": true,
       "cap": 6,
-      "offenders": []
+      "offenders": [],
+      "severity": "error"
     }
   }
 }
