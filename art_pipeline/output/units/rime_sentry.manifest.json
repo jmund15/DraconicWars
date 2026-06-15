@@ -63,6 +63,7 @@
       "4d65b4",
       "7f708a"
     ],
-    "airborne_animations": []
+    "airborne_animations": [],
+    "detail_exempt_colors": []
   }
 }

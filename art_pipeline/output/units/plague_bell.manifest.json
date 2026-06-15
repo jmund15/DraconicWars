@@ -60,6 +60,7 @@
       "ffffff"
     ],
     "prop_colors": [],
-    "airborne_animations": []
+    "airborne_animations": [],
+    "detail_exempt_colors": []
   }
 }

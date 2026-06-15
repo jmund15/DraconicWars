@@ -66,6 +66,11 @@
       "fly",
       "attack",
       "death"
+    ],
+    "detail_exempt_colors": [
+      "2e222f",
+      "4c3e24",
+      "676633"
     ]
   }
 }
