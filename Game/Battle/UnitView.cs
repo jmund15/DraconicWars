@@ -24,6 +24,7 @@ public partial class UnitView : Node2D
     private StringName _moveAnim = WalkAnim;
     private float _lastX;
     private bool _lastContact;
+    private float _frameHeight;
 
     public int InstanceId { get; private set; }
 
@@ -37,6 +38,7 @@ public partial class UnitView : Node2D
             FlipH = unit.Side == PlayerSide.Right,
         };
         AnchorFeetToOrigin(_sprite, frames);
+        _frameHeight = FirstFrameTexture(frames)?.GetHeight() ?? 0f;
         // Element identity is always-on (playtest: tints only on re-sworn units made
         // both elements and Rebreathing illegible). Re-sworn companies read louder.
         var attuned = unit.Def.NativeElement is { } native && native != unit.Def.Element;
@@ -111,10 +113,15 @@ public partial class UnitView : Node2D
             return;
         }
         var facing = _unit.Side == PlayerSide.Left ? 1f : -1f;
-        var to = LaneGeometry.ToWorld(_unit.X + facing * _unit.Def.Range, _unit.Stratum);
+        // Lift the flight line to mid-body: feet-anchored Position sits on the lane line, so
+        // a form launched from Position would appear under the caster. Both ends ride the
+        // same height so the form flies level toward the (same-stratum) target.
+        var castOffset = new Vector2(0f, -_frameHeight * 0.5f);
+        var from = Position + castOffset;
+        var to = LaneGeometry.ToWorld(_unit.X + facing * _unit.Def.Range, _unit.Stratum) + castOffset;
         var form = new FormView();
         (GetParent() ?? (Node)this).AddChild(form);
-        form.Launch(Position, to, frames);
+        form.Launch(from, to, frames);
     }
 
     /// <summary>Detaches from sim state, plays death, frees itself.</summary>

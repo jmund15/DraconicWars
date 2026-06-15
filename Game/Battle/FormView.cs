@@ -22,6 +22,7 @@ public partial class FormView : Node2D
 
     private AnimatedSprite2D _sprite = null!;
     private Vector2 _target;
+    private bool _flightStarted;
 
     /// <summary>Load (cached) the 3-frame core for an element x shape, as one
     /// non-looping "fly" animation (spawn -> travel -> impact). Returns null when no
@@ -70,25 +71,40 @@ public partial class FormView : Node2D
         return frames;
     }
 
-    /// <summary>Place the form at <paramref name="from"/> with its core sprite ready;
-    /// the flight tween + self-free start when it enters the tree (_Ready). Splitting
-    /// setup from the tween keeps the spawn assertable without a live SceneTree.</summary>
+    /// <summary>Place the form at <paramref name="from"/>, build + play its core sprite, and
+    /// (if already in the tree) start the flight tween. Order-independent: the caller may
+    /// Launch before OR after AddChild — the tween starts here when in-tree, else _Ready
+    /// starts it on tree-entry. (A prior version relied on _Ready firing AFTER Launch; the
+    /// caller did AddChild first, so _Ready bailed on a null sprite and the form never flew.)</summary>
     public void Launch(Vector2 from, Vector2 to, SpriteFrames frames)
     {
         Position = from;
         _target = to;
         _sprite = new AnimatedSprite2D { SpriteFrames = frames, Centered = true };
         AddChild(_sprite);
+        _sprite.Play(FlyAnim);
+        _sprite.AnimationFinished += QueueFree;   // free after spawn->travel->impact plays once
+        if (IsInsideTree())
+        {
+            StartFlight();
+        }
     }
 
     public override void _Ready()
     {
-        if (_sprite is null)
+        if (_sprite is not null)
         {
-            return;   // never launched (defensive)
+            StartFlight();   // Launch ran before AddChild — start the tween now that we're in-tree
         }
-        _sprite.Play(FlyAnim);
-        _sprite.AnimationFinished += QueueFree;   // free after spawn->travel->impact plays once
+    }
+
+    private void StartFlight()
+    {
+        if (_flightStarted)
+        {
+            return;
+        }
+        _flightStarted = true;
         CreateTween().TweenProperty(this, "position", _target, FlightSeconds);
     }
 
