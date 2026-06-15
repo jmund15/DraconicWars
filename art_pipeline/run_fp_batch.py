@@ -143,14 +143,14 @@ BATCH: list[tuple[dict, str]] = [
         "name": "elder_drake",
         "typeclass": "aerial_flyer",
         "element": "stone",
-        "canvas": "64x64",
+        "canvas": "80x80",        # adult-dragon tier (roadmap reserves 80-96)
         "size_class": "large",
         "props": [],
         # slate membrane: the moss-green stone ramp reads swampy against the
         # ochre leather body; neutral basalt grey keeps the stone identity
         "palette_overrides": {"membrane": ["mauve_grey", 1]},
-        "flyer": {"scale": 2.1, "wing_mult": 0.92, "tail_mult": 1.2,
-                  "head": "horned", "eye_px": 2, "body_dx": -6, "body_dy": -1,
+        "flyer": {"scale": 2.5, "wing_mult": 1.05, "tail_mult": 1.25,
+                  "head": "horned", "eye_px": 2, "body_dx": -2, "body_dy": -1,
                   "dragon": True},
         "foreswing_ticks": 12,
         "backswing_ticks": 18,

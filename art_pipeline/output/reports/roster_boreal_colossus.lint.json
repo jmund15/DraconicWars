@@ -2,7 +2,7 @@
   "sheet": "C:\\Users\\jmund\\Game_Dev\\Godot_Projects\\DraconicWars\\art_pipeline\\output\\units\\boreal_colossus_sheet.png",
   "manifest": "C:\\Users\\jmund\\Game_Dev\\Godot_Projects\\DraconicWars\\art_pipeline\\output\\units\\boreal_colossus.manifest.json",
   "profile": "strict",
-  "passed": false,
+  "passed": true,
   "checks": {
     "on_palette": {
       "passed": true,
@@ -26,76 +26,15 @@
       "severity": "error"
     },
     "outline_1px": {
-      "passed": false,
+      "passed": true,
       "boundary_dark_coverage": 1.0,
       "light_boundary_samples": [],
-      "ink_2x2_blocks": [
-        [
-          127,
-          134
-        ]
-      ],
+      "ink_2x2_blocks": [],
       "severity": "error"
     },
     "frames": {
-      "passed": false,
-      "failures": [
-        {
-          "animation": "idle",
-          "frame": 0,
-          "error": "feet not on ground line (bottom row 60, expected 61)"
-        },
-        {
-          "animation": "idle",
-          "frame": 1,
-          "error": "feet not on ground line (bottom row 60, expected 61)"
-        },
-        {
-          "animation": "walk",
-          "frame": 0,
-          "error": "feet not on ground line (bottom row 60, expected 61)"
-        },
-        {
-          "animation": "walk",
-          "frame": 2,
-          "error": "feet not on ground line (bottom row 60, expected 61)"
-        },
-        {
-          "animation": "walk",
-          "frame": 3,
-          "error": "feet not on ground line (bottom row 59, expected 61)"
-        },
-        {
-          "animation": "attack",
-          "frame": 0,
-          "error": "feet not on ground line (bottom row 60, expected 61)"
-        },
-        {
-          "animation": "attack",
-          "frame": 1,
-          "error": "feet not on ground line (bottom row 59, expected 61)"
-        },
-        {
-          "animation": "attack",
-          "frame": 2,
-          "error": "feet not on ground line (bottom row 60, expected 61)"
-        },
-        {
-          "animation": "attack",
-          "frame": 3,
-          "error": "feet not on ground line (bottom row 60, expected 61)"
-        },
-        {
-          "animation": "death",
-          "frame": 0,
-          "error": "feet not on ground line (bottom row 60, expected 61)"
-        },
-        {
-          "animation": "death",
-          "frame": 1,
-          "error": "feet not on ground line (bottom row 60, expected 61)"
-        }
-      ],
+      "passed": true,
+      "failures": [],
       "severity": "error"
     },
     "banding": {

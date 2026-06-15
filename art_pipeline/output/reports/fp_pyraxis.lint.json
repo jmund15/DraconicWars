@@ -52,11 +52,11 @@
       "passed": true,
       "errors": [],
       "warnings": [
-        "body height 61 over target 60"
+        "body height 68 over target 60"
       ],
       "measured": {
         "width": 74,
-        "height": 61,
+        "height": 68,
         "wingspan": 74,
         "head_w": 12,
         "head_h": 11

@@ -49,10 +49,10 @@
   "ground_y": 29,
   "facing": "right",
   "body_size": {
-    "width": 25,
+    "width": 30,
     "height": 18,
-    "wingspan": 25,
-    "head_w": 8,
+    "wingspan": 30,
+    "head_w": 5,
     "head_h": 5
   },
   "lint": {

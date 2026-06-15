@@ -21,6 +21,7 @@ prop anchor), so units are template INSTANCES, not bespoke drawings.
 
 from __future__ import annotations
 
+import math
 from dataclasses import dataclass, replace
 from typing import Protocol, runtime_checkable
 
@@ -1041,8 +1042,11 @@ class ConstructTemplate(BipedTemplate):
         # tall crown shard
         buf.fill_triangle((cx - 2, ty0 + 2), (cx + sp, ty0 - sh - 2), (cx + 3, ty0 + 2),
                           cr, ci, part="shard")
-        # long upper shoulder spikes (reach well past the body edges)
-        buf.fill_triangle((tx1 - 2, ty0 + 3), (tx1 + sh, ty0 - sh + 1), (tx1, ty0 + 6),
+        # long upper shoulder spikes (reach well past the body edges). The right
+        # tip is clamped 2px inside the canvas so a lunge-frame spike that would
+        # overshoot the edge keeps room for its outline (else a 2x2 ink block).
+        rtip_x = min(self.cfg.canvas[0] - 2, tx1 + sh)
+        buf.fill_triangle((tx1 - 2, ty0 + 3), (rtip_x, ty0 - sh + 1), (tx1, ty0 + 6),
                           cr, d, part="shard")
         buf.fill_triangle((tx0 + 2, ty0 + 3), (tx0 - sh + 1, ty0 - sh + 2), (tx0, ty0 + 6),
                           cr, ci, part="shard")
@@ -1232,12 +1236,13 @@ class FloatingShards:
             bob = -1
         region = GY - hip_y
         gap = max(2, region // 4)               # floating gap between body and shards
-        top = hip_y + gap + bob
-        bot = GY - 1 + bob                       # hover 1px off the ground line
+        top = hip_y + gap
+        bot = GY                                 # lowest shard grounded (feet-on-line);
+                                                 # the float read comes from the body gap
         n = self.count or max(2, min(3, span // 10))
         mid = n // 2
         for i in range(n):
-            sx = cx if n == 1 else tx0 + round((i + 0.5) * span / n)
+            sx = (cx if n == 1 else tx0 + round((i + 0.5) * span / n)) + bob
             lit, shadow = (si, d) if (i % 2 == 0) else (d, d)
             hw = max(2, span // (2 * n))
             t = top if i == mid else top + 1     # centre shard tallest (cluster read)
@@ -1272,7 +1277,7 @@ class SpiderLegs:
                     gait = 2
                 hipx = cx + side
                 knee_x = cx + side * (1 + round(reach * t * 0.55))
-                knee_y = hip_y - 2 - i                    # outer legs arch higher (knee above body base)
+                knee_y = hip_y - 4 - i                    # outer legs arch higher (knee above body base)
                 foot_x = cx + side * (2 + round(reach * t)) + side * gait
                 foot_y = GY - (i % 2)                     # stagger feet 1px for an organic line
                 buf.line(hipx, hip_y, knee_x, knee_y, sr, didx, part=part)      # body -> knee (up/out)
@@ -1394,6 +1399,9 @@ class FlyerConfig:
                                 # strokes) instead of a translucent dragon membrane
     insect_wing: bool = False   # faerie/sprite: two thin gossamer wing pairs (a long
                                 # forewing + short hindwing), no membrane / no feathers
+    body_plan: str = "drake"    # drake (default winged biped, byte-stable) | wyrm
+                                # (serpentine eastern dragon) | seraph (multi-wing) |
+                                # wisp (wingless mote-ring) | manta (sky-ray glider)
 
 
 def _insect_wing_pair(buf, root, wm, fill, part):
@@ -1489,7 +1497,16 @@ class AerialFlyerTemplate:
         raise KeyError(anim)
 
     def draw_pose(self, buf: PixelBuffer, pose: dict, unit: dict, pal: Palette) -> None:
-        if self.cfg.dragon:
+        bp = self.cfg.body_plan
+        if bp == "wyrm":
+            self._draw_wyrm(buf, pose, unit, pal)
+        elif bp == "seraph":
+            self._draw_seraph(buf, pose, unit, pal)
+        elif bp == "wisp":
+            self._draw_wisp(buf, pose, unit, pal)
+        elif bp == "manta":
+            self._draw_manta(buf, pose, unit, pal)
+        elif self.cfg.dragon:
             self._draw_dragon(buf, pose, unit, pal)
         elif self.cfg.s < 1.5:
             self._draw_small(buf, pose, unit, pal)
@@ -1803,9 +1820,9 @@ class AerialFlyerTemplate:
                               membrane[0], far_dark, part="back_wing")
         else:
             fw = int(round(wing_dy * 0.9)) - R(1)
-            tip_f = (rf[0] - R(9.5 * wm), rf[1] + fw)
-            f1_f = (rf[0] - R(6.5 * wm), rf[1] + fw + R(2.6))
-            f2_f = (rf[0] - R(3.0 * wm), rf[1] + R(1.8))
+            tip_f = (rf[0] - R(12.0 * wm), rf[1] + fw)
+            f1_f = (rf[0] - R(9.5 * wm), rf[1] + fw + R(3.4))
+            f2_f = (rf[0] - R(3.4 * wm), rf[1] + R(2.0))
             buf.fill_triangle(rf, tip_f, f1_f, membrane[0], far_dark, part="back_wing")
             buf.fill_triangle(rf, f1_f, f2_f, membrane[0], far_dark, part="back_wing")
 
@@ -1868,7 +1885,7 @@ class AerialFlyerTemplate:
 
         # --- S-curve neck: three tapering segments climbing forward-up ------
         hx = bx + R(6.4) + R(hdx)
-        hy = by - R(7.2) + R(hdy)
+        hy = by - R(8.6) + R(hdy)
         if crumple:
             # damped head drop: the pose-table dy is tuned for the 32px whelp;
             # at dragon scale the full offset sinks the head through the
@@ -1938,10 +1955,10 @@ class AerialFlyerTemplate:
                               (rn[0] - R(1), rn[1] + R(3.2)),
                               membrane[0], membrane[1], part="wing")
         else:
-            tip = (rn[0] - R(10.5 * wm), rn[1] + wing_dy)
-            f1 = (rn[0] - R(7.0 * wm), rn[1] + wing_dy + R(3.4))
-            f2 = (rn[0] - R(3.2 * wm), rn[1] + int(round(wing_dy * 0.35)) + R(4.2))
-            trail = (rn[0] - R(0.8), rn[1] + R(2.6))
+            tip = (rn[0] - R(13.0 * wm), rn[1] + wing_dy)
+            f1 = (rn[0] - R(9.8 * wm), rn[1] + wing_dy + R(4.2))
+            f2 = (rn[0] - R(4.0 * wm), rn[1] + int(round(wing_dy * 0.35)) + R(4.6))
+            trail = (rn[0] - R(0.8), rn[1] + R(2.8))
             buf.fill_triangle(rn, tip, f1, membrane[0], membrane[1], part="wing")
             buf.fill_triangle(rn, f1, f2, membrane[0], membrane[1], part="wing")
             buf.fill_triangle(rn, f2, trail, membrane[0], membrane[1], part="wing")
@@ -1954,6 +1971,306 @@ class AerialFlyerTemplate:
                      part="wing_finger2", no_outline=True)
             buf.line(wrist[0], wrist[1], f2[0], f2[1], skin[0], 0,
                      part="wing_finger3", no_outline=True)
+
+    # ------------------------------------------- wyrm (serpentine eastern dragon)
+    # A long undulating ribbon body, no large wings: dorsal fins, a swept mane,
+    # trailing whiskers, a high antlered head. Reads as a wholly different
+    # CREATURE from the winged drake (body-plan axis, not wing trim).
+
+    def _draw_wyrm(self, buf: PixelBuffer, pose: dict, unit: dict, pal: Palette) -> None:
+        cfg = self.cfg
+        s = cfg.s
+
+        def R(v):
+            return int(round(v * s))
+
+        colors = unit["colors"]
+        skin, belly = colors["skin"], colors["belly"]
+        membrane = colors["membrane"]
+        dark_skin = max(skin[1] - 1, 0)
+        hot, horn = colors["hot"], colors["horn"]
+        W, H = cfg.canvas
+        bdx, bdy = pose.get("body", (0, 0))
+        hdx, hdy = pose.get("head", (0, 0))
+        phase = pose.get("wing", -4)
+        crumple = pose.get("crumple", False)
+        mouth_open = pose.get("mouth_open")
+        bx = W // 2 - 1 + cfg.body_dx + R(bdx)
+        by = H // 2 + R(1) + cfg.body_dy + R(bdy)
+
+        # --- serpentine spine: tail (left) -> neck (right) on a sine wave; the
+        # pose phase slides the wave so the body slithers, flattens on death ----
+        nseg = 10
+        amp = R(0.6) if crumple else R(2.8)
+        head_x = bx + R(7)
+        tail_x = bx - R(13)
+        span = head_x - tail_x
+        ph = phase * 0.5
+        lift = R(0.8) if crumple else R(3.0)
+        seg = []
+        for i in range(nseg):
+            t = i / (nseg - 1)
+            sx = round(tail_x + span * t)
+            sy = by + round(amp * math.sin(ph + t * 6.28)) - round(lift * t)
+            # thin tail swelling to a thick fore-body, easing toward the neck
+            rad = R(1.0 + 2.3 * (t ** 0.7) * (1.0 - 0.25 * t))
+            seg.append((sx, sy, rad))
+
+        # smooth ribbon: dense FLAT ellipses (ry < rx) overlap into one body,
+        # not a chain of round segments (which read as a grub)
+        for sx, sy, rad in seg:
+            buf.fill_ellipse(sx, sy, rad, max(R(0.9), int(round(rad * 0.7))),
+                             skin[0], skin[1], part="body")
+        for sx, sy, rad in seg[nseg // 2:]:
+            ry = max(R(0.9), int(round(rad * 0.7)))
+            buf.fill_rect(sx - rad + R(0.5), sy + ry - R(0.8), sx + rad - R(0.5),
+                          sy + ry - 1, belly[0], belly[1], part="belly")
+        # dorsal spine: a few deliberate fins along the back, not one per segment
+        if not crumple:
+            for idx in (2, 4, 6):
+                sx, sy, rad = seg[idx]
+                ry = max(R(0.9), int(round(rad * 0.7)))
+                buf.fill_triangle((sx - R(1.1), sy - ry + R(0.2)),
+                                  (sx, sy - ry - R(2.0)), (sx + R(1.1), sy - ry + R(0.2)),
+                                  membrane[0], membrane[1], part=f"fin{idx}")
+        tsx, tsy, _ = seg[0]
+        buf.fill_triangle((tsx + R(0.6), tsy), (tsx - R(3.4), tsy - R(2.2)),
+                          (tsx - R(0.8), tsy + R(1.2)), skin[0], dark_skin, part="tail")
+
+        # --- head: high, antlered, maned, whiskered --------------------------
+        nx, ny, _ = seg[-1]
+        hx = head_x + R(2) + R(hdx)
+        hy = (ny - R(3) + R(hdy)) if not crumple else (ny + int(round(R(hdy) * 0.3)))
+        if not crumple:
+            for j, (mx, my, mh) in enumerate(((-1.8, -1.0, 2.6), (-3.0, -0.2, 2.2),
+                                              (-4.2, 0.8, 1.8))):
+                cx0, cy0 = hx + R(mx), hy + R(my)
+                buf.fill_triangle((cx0 - R(0.9), cy0 + R(0.6)),
+                                  (cx0 - R(0.3), cy0 - R(mh)),
+                                  (cx0 + R(0.9), cy0 + R(0.6)),
+                                  skin[0], dark_skin, part=f"mane{j}")
+        buf.fill_ellipse(hx, hy, R(2.4), R(2.0), skin[0], skin[1], part="head")
+        if mouth_open:
+            buf.fill_triangle((hx + R(1.4), hy - R(1.6)), (hx + R(4.8), hy - R(1.2)),
+                              (hx + R(1.4), hy + R(0.2)), skin[0], skin[1], part="snout")
+            buf.fill_triangle((hx + R(1.2), hy + R(0.8)), (hx + R(4.0), hy + R(2.4)),
+                              (hx + R(1.2), hy + R(1.8)), skin[0], dark_skin, part="jaw")
+            buf.fill_rect(hx + R(1.6), hy - R(0.6), hx + R(3.4), hy + R(0.6),
+                          hot[0], hot[1], part="maw")
+        else:
+            buf.fill_triangle((hx + R(1.2), hy - R(1.4)), (hx + R(4.8), hy + R(0.2)),
+                              (hx + R(1.2), hy + R(1.6)), skin[0], skin[1], part="snout")
+            buf.fill_rect(hx + R(1.2), hy + R(1.0), hx + R(3.2), hy + R(1.5),
+                          skin[0], dark_skin, part="jaw")
+        buf.fill_triangle((hx - R(0.4), hy - R(1.6)), (hx - R(3.4), hy - R(5.0)),
+                          (hx + R(0.6), hy - R(1.9)), horn[0], horn[1], part="antler")
+        buf.fill_triangle((hx + R(1.0), hy - R(1.9)), (hx + R(1.2), hy - R(5.2)),
+                          (hx + R(2.4), hy - R(2.1)), horn[0], horn[1], part="antler2")
+        if not crumple:
+            buf.fill_triangle((hx + R(2.2), hy + R(0.6)), (hx + R(5.4), hy + R(1.8)),
+                              (hx + R(2.2), hy + R(1.4)), skin[0], dark_skin, part="barbel")
+        eo = unit.get("eye_offset", (0, 0))
+        ex, ey = hx + R(0.2) + eo[0], hy - R(0.6) + eo[1]
+        for dx_, dy_ in [(0, 0), (-1, 0), (0, 1), (-1, 1)][: max(1, min(cfg.eye_px, 4))]:
+            buf.set_px(ex + dx_, ey + dy_, *colors["eye"], part="eye", no_outline=True)
+
+    # ------------------------------------------ seraph (multi-winged celestial)
+    # A frontal, hovering luminous being: a slim glowing core, a halo, and THREE
+    # symmetric wing-pairs fanning out (6 wings). Radial awe, not a side bird.
+
+    def _draw_seraph(self, buf: PixelBuffer, pose: dict, unit: dict, pal: Palette) -> None:
+        cfg = self.cfg
+        s = cfg.s
+
+        def R(v):
+            return int(round(v * s))
+
+        colors = unit["colors"]
+        skin = colors["skin"]
+        membrane = colors["membrane"]
+        dark_skin = max(skin[1] - 1, 0)
+        hot = colors["hot"]
+        W, H = cfg.canvas
+        wm = cfg.wing_mult
+        bdx, bdy = pose.get("body", (0, 0))
+        hdx, hdy = pose.get("head", (0, 0))
+        wing = pose.get("wing", -4)
+        fold = pose.get("fold", False)
+        crumple = pose.get("crumple", False)
+        mouth_open = pose.get("mouth_open")
+        cx = W // 2 - 1 + cfg.body_dx + R(bdx)
+        cy = H // 2 + R(1) + cfg.body_dy + R(bdy)
+        beat = 0 if fold else int(round(R(wing) * 0.35))
+
+        # three symmetric wing tiers (root_dy, length, tip_dy, fill); broad solid
+        # vanes outline cleanly. The mid pair is brightest (skin) + widest -> sets
+        # the wingspan; upper/lower are darker membrane, layered behind the body.
+        tiers = ((-5.0, 12.5, -4.5, "mem"), (0.5, 15.5, 0.0, "skin"),
+                 (5.5, 11.5, 4.5, "mem"))
+        if crumple:
+            tiers = ((-1.5, 6.0, 4.0, "mem"), (1.0, 7.5, 5.0, "skin"),
+                     (3.5, 5.0, 6.0, "mem"))
+        for k, (rdy, ln, tdy, col) in enumerate(tiers):
+            fill = (skin[0], skin[1]) if col == "skin" else (membrane[0], membrane[1])
+            for sgn in (-1, 1):
+                rt = (cx + sgn * R(1.6), cy + R(rdy) - R(1.8))
+                rb = (cx + sgn * R(1.6), cy + R(rdy) + R(1.8))
+                tip = (cx + sgn * R(ln * wm), cy + R(tdy) + (beat if k != 1 else 0))
+                buf.fill_triangle(rt, rb, tip, fill[0], fill[1], part=f"wing{k}_{sgn}")
+                buf.line(rt[0], rt[1], tip[0], tip[1], skin[0], 0,
+                         part=f"wf{k}_{sgn}", no_outline=True)
+
+        # glowing core body + trailing robe wisp
+        buf.fill_ellipse(cx, cy, R(2.0), R(3.2), skin[0], skin[1], part="body")
+        if not crumple:
+            buf.fill_triangle((cx - R(1.6), cy + R(2.6)), (cx, cy + R(6.5)),
+                              (cx + R(1.6), cy + R(2.6)), skin[0], dark_skin, part="robe")
+        buf.fill_rect(cx - R(0.8), cy - R(1.8), cx + R(0.8), cy + R(2.2),
+                      hot[0], hot[1], part="core")
+
+        # head + halo
+        hx = cx + R(hdx)
+        hy = cy - R(4.6) + R(hdy)
+        buf.fill_ellipse(hx, hy, R(1.7), R(1.7), skin[0], skin[1], part="head")
+        if not crumple:
+            buf.fill_ellipse(hx, hy - R(2.8), R(2.4), R(0.9), hot[0], hot[1], part="halo")
+        eo = unit.get("eye_offset", (0, 0))
+        for sgn in (-1, 1):
+            buf.set_px(hx + sgn * R(0.8) + eo[0], hy - R(0.2) + eo[1],
+                       *colors["eye"], part="eye", no_outline=True)
+
+        if mouth_open:
+            buf.fill_ellipse(cx, cy, R(1.4), R(1.4), hot[0], hot[1], part="maw")
+
+    # ------------------------------------------ wisp (wingless floating elemental)
+    # No wings, no head, no limbs: a glowing core ringed by orbiting motes. The
+    # pose phase spins the motes; the orbit width carries the aerial wingspan.
+
+    def _draw_wisp(self, buf: PixelBuffer, pose: dict, unit: dict, pal: Palette) -> None:
+        cfg = self.cfg
+        s = cfg.s
+
+        def R(v):
+            return int(round(v * s))
+
+        colors = unit["colors"]
+        skin = colors["skin"]
+        membrane = colors["membrane"]
+        belly = colors["belly"]
+        dark_skin = max(skin[1] - 1, 0)
+        W, H = cfg.canvas
+        bdx, bdy = pose.get("body", (0, 0))
+        wing = pose.get("wing", -4)
+        crumple = pose.get("crumple", False)
+        mouth_open = pose.get("mouth_open")
+        cx = W // 2 - 1 + cfg.body_dx + R(bdx)
+        cy = H // 2 + R(1) + cfg.body_dy + R(bdy)
+
+        # orbiting motes (diamonds) spun by the pose phase; death scatters them
+        spin = wing * 0.5
+        nmote = 6
+        # death implodes the ring inward (motes fall into the dimming core),
+        # which also keeps the death frames inside the airborne band
+        dying = crumple or pose.get("fold", False)
+        ring = R(5) if dying else R(12)
+        sz = R(1.1) if dying else R(1.6)
+        for i in range(nmote):
+            ang = spin + i * (6.28 / nmote)
+            mx = cx + int(round(ring * math.cos(ang)))
+            my = cy + int(round(ring * 0.62 * math.sin(ang)))
+            buf.fill_triangle((mx - sz, my), (mx, my - sz), (mx + sz, my),
+                              skin[0], skin[1], part=f"mote{i}")
+            buf.fill_triangle((mx - sz, my), (mx, my + sz), (mx + sz, my),
+                              skin[0], dark_skin, part=f"mote{i}b")
+
+        # core: membrane aura ring + skin orb + a bright energy heart (BELLY, a
+        # bright non-whitelisted glow -- avoids the hot==accent collision)
+        if not crumple:
+            buf.fill_ellipse(cx, cy, R(3.2), R(3.0), membrane[0], membrane[1], part="aura")
+        buf.fill_ellipse(cx, cy, R(2.2), R(2.1), skin[0], skin[1], part="body")
+        cr = R(1.3) if not crumple else R(0.8)
+        buf.fill_ellipse(cx, cy, cr, cr, belly[0], belly[1], part="core")
+        eo = unit.get("eye_offset", (0, 0))
+        buf.set_px(cx + eo[0], cy + eo[1], *colors["eye"], part="eye", no_outline=True)
+        if mouth_open:
+            buf.fill_triangle((cx + R(2), cy - R(1.3)), (cx + R(8), cy),
+                              (cx + R(2), cy + R(1.3)), belly[0], belly[1], part="lance")
+
+    # ------------------------------------------------- manta (sky-ray glider)
+    # A wide flat delta body (pectoral wings continuous with the body, not
+    # attached limbs), twin cephalic horns at the nose, a long trailing
+    # whip-tail. The pose 'wing' value undulates the wing tips.
+
+    def _draw_manta(self, buf: PixelBuffer, pose: dict, unit: dict, pal: Palette) -> None:
+        cfg = self.cfg
+        s = cfg.s
+
+        def R(v):
+            return int(round(v * s))
+
+        colors = unit["colors"]
+        skin, belly = colors["skin"], colors["belly"]
+        dark_skin = max(skin[1] - 1, 0)
+        hot = colors["hot"]
+        W, H = cfg.canvas
+        wm = cfg.wing_mult
+        tm = cfg.tail_mult
+        bdx, bdy = pose.get("body", (0, 0))
+        hdx, hdy = pose.get("head", (0, 0))
+        wing = pose.get("wing", -4)
+        fold = pose.get("fold", False)
+        crumple = pose.get("crumple", False)
+        mouth_open = pose.get("mouth_open")
+        cx = W // 2 - 1 + cfg.body_dx + R(bdx)
+        cy = H // 2 - R(1) + cfg.body_dy + R(bdy)
+        dying = fold or crumple
+        beat = 0 if dying else int(round(R(wing) * 0.4))
+
+        nose = (cx + R(hdx), cy - R(6) + R(hdy))
+        if dying:
+            lt = (cx - R(6), cy - R(2))
+            rt = (cx + R(6), cy - R(2))
+            tail_base = (cx, cy + R(3))
+        else:
+            wtip = cy + R(1) + beat
+            lt = (cx - R(13 * wm), wtip)
+            rt = (cx + R(13 * wm), wtip)
+            tail_base = (cx, cy + R(5))
+
+        # flat delta body: two halves of a swept kite, pectoral tips = wings
+        buf.fill_triangle(nose, lt, tail_base, skin[0], skin[1], part="body")
+        buf.fill_triangle(nose, rt, tail_base, skin[0], skin[1], part="body")
+        # shaded trailing edge for a banked-glide read
+        buf.fill_triangle(lt, tail_base, (cx - R(5), cy + R(2)), skin[0], dark_skin,
+                          part="wingshadeL")
+        buf.fill_triangle(rt, tail_base, (cx + R(5), cy + R(2)), skin[0], dark_skin,
+                          part="wingshadeR")
+        # pale underside chevron near the nose
+        buf.fill_triangle(nose, (cx - R(3.6), cy), (cx + R(3.6), cy),
+                          belly[0], belly[1], part="belly")
+        # twin cephalic horns (the manta's forward lobes)
+        if not dying:
+            buf.fill_triangle((nose[0] - R(0.8), nose[1] + R(0.4)),
+                              (nose[0] - R(3.0), nose[1] - R(2.2)),
+                              (nose[0] - R(1.8), nose[1] + R(0.8)),
+                              skin[0], dark_skin, part="cephL")
+            buf.fill_triangle((nose[0] + R(0.8), nose[1] + R(0.4)),
+                              (nose[0] + R(3.0), nose[1] - R(2.2)),
+                              (nose[0] + R(1.8), nose[1] + R(0.8)),
+                              skin[0], dark_skin, part="cephR")
+        if mouth_open:
+            buf.fill_rect(nose[0] - R(1.4), nose[1] + R(0.6), nose[0] + R(1.4),
+                          nose[1] + R(1.8), hot[0], hot[1], part="maw")
+        eo = unit.get("eye_offset", (0, 0))
+        for sgn in (-1, 1):
+            buf.set_px(nose[0] + sgn * R(1.9) + eo[0], nose[1] + R(1.2) + eo[1],
+                       *colors["eye"], part="eye", no_outline=True)
+        # long trailing whip-tail streaming back
+        if not crumple:
+            tx, ty = cx - R(7 * tm), tail_base[1] + R(5 * tm)
+            buf.line(tail_base[0], tail_base[1], tx, ty, skin[0], dark_skin,
+                     part="tail", width=2)
+            buf.set_px(tx - 1, ty + 1, skin[0], dark_skin, part="tail")
 
 
 # ===========================================================================
@@ -2202,6 +2519,7 @@ def flyer_config_from_spec(spec: dict | None) -> FlyerConfig:
         dragon=bool(fl.get("dragon", False)),
         feather_wing=bool(fl.get("feather_wing", False)),
         insect_wing=bool(fl.get("insect_wing", False)),
+        body_plan=str(fl.get("body_plan", "drake")),
     )
 
 

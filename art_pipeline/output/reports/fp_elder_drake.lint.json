@@ -39,7 +39,7 @@
     },
     "banding": {
       "passed": true,
-      "max_run": 12,
+      "max_run": 15,
       "offenders": [],
       "severity": "error"
     },
@@ -51,18 +51,20 @@
     "body_size": {
       "passed": true,
       "errors": [],
-      "warnings": [],
+      "warnings": [
+        "body height 51 over target 50"
+      ],
       "measured": {
-        "width": 49,
-        "height": 38,
-        "wingspan": 49,
-        "head_w": 6,
-        "head_h": 7
+        "width": 66,
+        "height": 51,
+        "wingspan": 66,
+        "head_w": 7,
+        "head_h": 10
       },
       "rules": {
-        "min_h": 28,
-        "max_h": 40,
-        "min_wingspan": 48
+        "min_h": 35,
+        "max_h": 50,
+        "min_wingspan": 60
       },
       "severity": "error"
     },

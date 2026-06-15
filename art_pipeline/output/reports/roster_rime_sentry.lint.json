@@ -2,7 +2,7 @@
   "sheet": "C:\\Users\\jmund\\Game_Dev\\Godot_Projects\\DraconicWars\\art_pipeline\\output\\units\\rime_sentry_sheet.png",
   "manifest": "C:\\Users\\jmund\\Game_Dev\\Godot_Projects\\DraconicWars\\art_pipeline\\output\\units\\rime_sentry.manifest.json",
   "profile": "strict",
-  "passed": false,
+  "passed": true,
   "checks": {
     "on_palette": {
       "passed": true,
@@ -33,59 +33,8 @@
       "severity": "error"
     },
     "frames": {
-      "passed": false,
-      "failures": [
-        {
-          "animation": "idle",
-          "frame": 0,
-          "error": "feet not on ground line (bottom row 28, expected 29)"
-        },
-        {
-          "animation": "idle",
-          "frame": 1,
-          "error": "feet not on ground line (bottom row 28, expected 29)"
-        },
-        {
-          "animation": "walk",
-          "frame": 0,
-          "error": "feet not on ground line (bottom row 28, expected 29)"
-        },
-        {
-          "animation": "walk",
-          "frame": 2,
-          "error": "feet not on ground line (bottom row 28, expected 29)"
-        },
-        {
-          "animation": "walk",
-          "frame": 3,
-          "error": "feet not on ground line (bottom row 27, expected 29)"
-        },
-        {
-          "animation": "attack",
-          "frame": 0,
-          "error": "feet not on ground line (bottom row 28, expected 29)"
-        },
-        {
-          "animation": "attack",
-          "frame": 1,
-          "error": "feet not on ground line (bottom row 27, expected 29)"
-        },
-        {
-          "animation": "attack",
-          "frame": 2,
-          "error": "feet not on ground line (bottom row 28, expected 29)"
-        },
-        {
-          "animation": "attack",
-          "frame": 3,
-          "error": "feet not on ground line (bottom row 28, expected 29)"
-        },
-        {
-          "animation": "death",
-          "frame": 0,
-          "error": "feet not on ground line (bottom row 28, expected 29)"
-        }
-      ],
+      "passed": true,
+      "failures": [],
       "severity": "error"
     },
     "banding": {

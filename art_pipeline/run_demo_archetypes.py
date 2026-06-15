@@ -69,6 +69,63 @@ DEMOS: list[dict] = [
         "palette_overrides": {},
         "foreswing_ticks": 6, "backswing_ticks": 10,
     },
+    {
+        "name": "demo_wyrm",
+        "typeclass": "aerial_flyer",
+        "element": "fire",
+        "canvas": "48x48",
+        "size_class": "medium",
+        "props": [],
+        # serpentine eastern dragon: a long ribbon body, no large wings, dorsal
+        # fins + mane + barbels + a high antlered head. Fire ramp = a red/gold
+        # eastern dragon (venom is avoided: its accent hex == skin, tripping the
+        # whitelist cap on a wingless body).
+        "flyer": {"body_plan": "wyrm", "eye_px": 2},
+        "palette_overrides": {},
+        "foreswing_ticks": 8, "backswing_ticks": 12,
+    },
+    {
+        "name": "demo_seraph",
+        "typeclass": "aerial_flyer",
+        "element": "storm",
+        "canvas": "48x48",
+        "size_class": "medium",
+        "props": [],
+        # frontal celestial: a glowing core + halo + three symmetric wing-pairs
+        # (6 wings). Storm ramp = a radiant golden seraph (frost is avoided: its
+        # hot hex == accent, tripping the whitelist cap on the big core glow).
+        "flyer": {"body_plan": "seraph", "eye_px": 1, "wing_mult": 1.0},
+        "palette_overrides": {},
+        "foreswing_ticks": 8, "backswing_ticks": 12,
+    },
+    {
+        "name": "demo_wisp",
+        "typeclass": "aerial_flyer",
+        "element": "frost",
+        "canvas": "32x32",
+        "size_class": "small",
+        "props": [],
+        # wingless floating elemental: a bright teal heart + skin orb + membrane
+        # aura, ringed by orbiting motes (no head/wings). The bright core uses
+        # BELLY, not hot (frost's hot hex == accent would trip the whitelist).
+        "flyer": {"body_plan": "wisp", "eye_px": 1},
+        "palette_overrides": {},
+        "foreswing_ticks": 4, "backswing_ticks": 8,
+    },
+    {
+        "name": "demo_manta",
+        "typeclass": "aerial_flyer",
+        "element": "stone",
+        "canvas": "48x48",
+        "size_class": "medium",
+        "props": [],
+        # sky-ray glider: a wide flat delta body (pectoral wings continuous with
+        # the body), twin cephalic horns at the nose, a long trailing whip-tail
+        # (stone ramp = a sandstone sky-ray)
+        "flyer": {"body_plan": "manta", "eye_px": 1},
+        "palette_overrides": {},
+        "foreswing_ticks": 6, "backswing_ticks": 12,
+    },
 ]
 
 

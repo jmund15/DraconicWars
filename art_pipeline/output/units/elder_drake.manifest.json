@@ -3,8 +3,8 @@
   "typeclass": "aerial_flyer",
   "element": "stone",
   "size_class": "large",
-  "frame_w": 64,
-  "frame_h": 64,
+  "frame_w": 80,
+  "frame_h": 80,
   "animations": [
     {
       "name": "idle",
@@ -46,14 +46,14 @@
     "stone"
   ],
   "pivot": "bottom_center",
-  "ground_y": 61,
+  "ground_y": 77,
   "facing": "right",
   "body_size": {
-    "width": 49,
-    "height": 38,
-    "wingspan": 49,
-    "head_w": 6,
-    "head_h": 7
+    "width": 66,
+    "height": 51,
+    "wingspan": 66,
+    "head_w": 7,
+    "head_h": 10
   },
   "lint": {
     "whitelist_colors": [

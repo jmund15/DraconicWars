@@ -69,7 +69,8 @@ BATCH: list[tuple[dict, str]] = [
         "size_class": "small",
         "props": [],
         "palette_overrides": {},
-        "flyer": {"head": "horned", "wing_mult": 1.0, "eye_px": 2},
+        # a small fire serpent: the serpentine wyrm body-plan (name = wyrmling)
+        "flyer": {"body_plan": "wyrm", "eye_px": 2},
         "foreswing_ticks": 8,
         "backswing_ticks": 10,
     }, "always"),
@@ -128,9 +129,9 @@ BATCH: list[tuple[dict, str]] = [
     ({
         "name": "bog_stalker",
         "build": "agile", "seed": 3,
-        "proportions": {"torso_w": 13, "torso_h": 8, "leg_h": 13, "head_w": 8, "head_h": 7},
+        "proportions": {"torso_w": 13, "torso_h": 9, "leg_h": 15, "head_w": 8, "head_h": 7},
         "typeclass": "melee_biped",
-        "base": "spider",          # 8 arachnid legs; compact body rides on top
+        "base": "spider",          # 8 arachnid legs; taller body rides on top
         "attack_pose": "body_strike",   # lunge-bite, no held weapon
         "head_style": "snout",     # forward fanged maw
         "element": "venom",

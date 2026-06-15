@@ -145,13 +145,15 @@
       "reason": "forced",
       "lint_pass": true,
       "failed_checks": [],
-      "warnings": [],
+      "warnings": [
+        "body height 51 over target 50"
+      ],
       "body_size": {
-        "width": 49,
-        "height": 38,
-        "wingspan": 49,
-        "head_w": 6,
-        "head_h": 7
+        "width": 66,
+        "height": 51,
+        "wingspan": 66,
+        "head_w": 7,
+        "head_h": 10
       },
       "contact_sheets": [
         "C:\\Users\\jmund\\Game_Dev\\Godot_Projects\\DraconicWars\\art_pipeline\\output\\contact_sheets\\elder_drake_contact_1x.png",
@@ -165,11 +167,11 @@
       "lint_pass": true,
       "failed_checks": [],
       "warnings": [
-        "body height 61 over target 60"
+        "body height 68 over target 60"
       ],
       "body_size": {
         "width": 74,
-        "height": 61,
+        "height": 68,
         "wingspan": 74,
         "head_w": 12,
         "head_h": 11
