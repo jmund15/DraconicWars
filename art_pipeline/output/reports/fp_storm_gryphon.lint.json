@@ -1,16 +1,19 @@
 {
   "sheet": "C:\\Users\\jmund\\Game_Dev\\Godot_Projects\\DraconicWars\\art_pipeline\\output\\units\\storm_gryphon_sheet.png",
   "manifest": "C:\\Users\\jmund\\Game_Dev\\Godot_Projects\\DraconicWars\\art_pipeline\\output\\units\\storm_gryphon.manifest.json",
+  "profile": "strict",
   "passed": true,
   "checks": {
     "on_palette": {
       "passed": true,
-      "off_palette_colors": {}
+      "off_palette_colors": {},
+      "severity": "error"
     },
     "no_aa": {
       "passed": true,
       "semi_transparent_pixels": 0,
-      "samples": []
+      "samples": [],
+      "severity": "error"
     },
     "orphan_pixels": {
       "passed": true,
@@ -19,26 +22,92 @@
       "whitelist": [
         "d5e04b",
         "ffffff"
-      ]
+      ],
+      "severity": "error"
     },
     "outline_1px": {
       "passed": true,
-      "boundary_dark_coverage": 1.0,
-      "light_boundary_samples": [],
-      "ink_2x2_blocks": []
+      "boundary_dark_coverage": 0.934,
+      "light_boundary_samples": [
+        [
+          8,
+          16,
+          "676633"
+        ],
+        [
+          14,
+          18,
+          "676633"
+        ],
+        [
+          16,
+          19,
+          "676633"
+        ],
+        [
+          17,
+          19,
+          "676633"
+        ],
+        [
+          18,
+          20,
+          "676633"
+        ],
+        [
+          19,
+          20,
+          "676633"
+        ],
+        [
+          20,
+          21,
+          "676633"
+        ],
+        [
+          21,
+          21,
+          "676633"
+        ],
+        [
+          60,
+          22,
+          "676633"
+        ],
+        [
+          61,
+          22,
+          "676633"
+        ],
+        [
+          62,
+          22,
+          "676633"
+        ],
+        [
+          66,
+          23,
+          "676633"
+        ]
+      ],
+      "ink_2x2_blocks": [],
+      "severity": "error"
     },
     "frames": {
       "passed": true,
-      "failures": []
+      "failures": [],
+      "severity": "error"
     },
     "banding": {
       "passed": true,
-      "max_run": 6,
-      "offenders": []
+      "max_run": 9,
+      "offenders": [],
+      "severity": "error"
     },
     "manifest_contract": {
       "passed": true,
-      "errors": []
+      "errors": [],
+      "severity": "error"
     },
     "body_size": {
       "passed": true,
@@ -47,18 +116,22 @@
       "measured": {
         "width": 37,
         "height": 26,
-        "wingspan": 37
+        "wingspan": 37,
+        "head_w": 9,
+        "head_h": 8
       },
       "rules": {
         "min_h": 21,
         "max_h": 30,
         "min_wingspan": 36
-      }
+      },
+      "severity": "error"
     },
     "whitelist_cap": {
       "passed": true,
       "cap": 6,
-      "offenders": []
+      "offenders": [],
+      "severity": "error"
     }
   }
 }

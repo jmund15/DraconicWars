@@ -1366,6 +1366,22 @@ class FlyerConfig:
     body_dx: int = 0            # absolute canvas shift (right-edge headroom)
     body_dy: int = 0
     dragon: bool = False        # dedicated dragon anatomy (S-neck, fan wings)
+    feather_wing: bool = False  # bird/griffin: a feathered vane (skin-colored + feather
+                                # strokes) instead of a translucent dragon membrane
+
+
+def _feather_wing_fill(buf, root, tip, trail, fill, sep_idx, part, fingers=3):
+    """A feathered wing vane: a skin-colored fill (NOT a translucent membrane) with
+    dark feather-separation strokes fanning from the root across the outer edge --
+    reads as layered flight feathers (bird / griffin), the differentiator from the
+    dragon membrane wing. Same triangle footprint, so it still clears the wingspan lint."""
+    fr, fi = fill
+    buf.fill_triangle(root, tip, trail, fr, fi, part=part)
+    for i in range(1, fingers + 1):
+        t = i / (fingers + 1)
+        ex = round(tip[0] + (trail[0] - tip[0]) * t)
+        ey = round(tip[1] + (trail[1] - tip[1]) * t)
+        buf.line(root[0], root[1], ex, ey, fr, sep_idx, part=part, no_outline=True)
 
 
 class AerialFlyerTemplate:
@@ -1472,9 +1488,13 @@ class AerialFlyerTemplate:
                               (root_far[0] - 1, root_far[1] + 3),
                               membrane[0], far_dark, part="back_wing")
         else:
-            buf.fill_triangle(root_far, (root_far[0] - round(12 * wm), root_far[1] + wing_dy + 1),
-                              (root_far[0] - 2, root_far[1] + 3),
-                              membrane[0], far_dark, part="back_wing")
+            ftip = (root_far[0] - round(12 * wm), root_far[1] + wing_dy + 1)
+            ftrail = (root_far[0] - 2, root_far[1] + 3)
+            if self.cfg.feather_wing:
+                _feather_wing_fill(buf, root_far, ftip, ftrail,
+                                   (skin[0], max(skin[1] - 1, 0)), max(skin[1] - 2, 0), "back_wing")
+            else:
+                buf.fill_triangle(root_far, ftip, ftrail, membrane[0], far_dark, part="back_wing")
 
         # tail: draconic whip (default) or a short raptor fan (beaked)
         td = max(skin[1] - 1, 0)
@@ -1530,11 +1550,14 @@ class AerialFlyerTemplate:
                               membrane[0], membrane[1], part="wing")
         else:
             tip = (root[0] - round(9 * wm), root[1] + wing_dy)
-            buf.fill_triangle(root, tip, (root[0] + 2, root[1] + 2),
-                              membrane[0], membrane[1], part="wing")
-            # wing-finger ridge: darkest step so the boundary stays sel-out dark
-            buf.line(root[0], root[1], tip[0], tip[1], skin[0], 0,
-                     part="wing_finger", no_outline=True)
+            trail = (root[0] + 2, root[1] + 2)
+            if self.cfg.feather_wing:
+                _feather_wing_fill(buf, root, tip, trail, skin, max(skin[1] - 1, 0), "wing")
+            else:
+                buf.fill_triangle(root, tip, trail, membrane[0], membrane[1], part="wing")
+                # wing-finger ridge: darkest step so the boundary stays sel-out dark
+                buf.line(root[0], root[1], tip[0], tip[1], skin[0], 0,
+                         part="wing_finger", no_outline=True)
 
     # ------------------------------------------- scaled path (48/64/96 px)
     # Dragon/gryphon detailing: broad scalloped wing membranes with finger
@@ -1574,8 +1597,13 @@ class AerialFlyerTemplate:
             tip_f = (rf[0] - R(12 * wm), rf[1] + wing_dy + R(1))
             sc1_f = (rf[0] - R(7.5 * wm), rf[1] + wing_dy + R(4.6))
             sc2_f = (rf[0] - R(2.5), rf[1] + R(3.2))
-            buf.fill_triangle(rf, tip_f, sc1_f, membrane[0], far_dark, part="back_wing")
-            buf.fill_triangle(rf, sc1_f, sc2_f, membrane[0], far_dark, part="back_wing")
+            if cfg.feather_wing:
+                _feather_wing_fill(buf, rf, tip_f, sc2_f,
+                                   (skin[0], max(skin[1] - 1, 0)), max(skin[1] - 2, 0),
+                                   "back_wing", fingers=4)
+            else:
+                buf.fill_triangle(rf, tip_f, sc1_f, membrane[0], far_dark, part="back_wing")
+                buf.fill_triangle(rf, sc1_f, sc2_f, membrane[0], far_dark, part="back_wing")
 
         # --- tail: tapered triangle wedge (buf.line width caps at 2 px and
         # reads as wire at scale), tip segment whips back up ----------------
@@ -1685,12 +1713,16 @@ class AerialFlyerTemplate:
             tip = (rn[0] - R(11 * wm), rn[1] + wing_dy)
             sc1 = (rn[0] - R(6.5 * wm), rn[1] + wing_dy + R(3.8))
             sc2 = (rn[0] - R(2), rn[1] + R(3))
-            buf.fill_triangle(rn, tip, sc1, membrane[0], membrane[1], part="wing")
-            buf.fill_triangle(rn, sc1, sc2, membrane[0], membrane[1], part="wing")
-            buf.line(rn[0], rn[1], tip[0], tip[1], skin[0], 0,
-                     part="wing_finger", no_outline=True)
-            buf.line(rn[0], rn[1], sc1[0], sc1[1], skin[0], 0,
-                     part="wing_finger2", no_outline=True)
+            if cfg.feather_wing:
+                _feather_wing_fill(buf, rn, tip, sc2, skin, max(skin[1] - 1, 0),
+                                   "wing", fingers=4)
+            else:
+                buf.fill_triangle(rn, tip, sc1, membrane[0], membrane[1], part="wing")
+                buf.fill_triangle(rn, sc1, sc2, membrane[0], membrane[1], part="wing")
+                buf.line(rn[0], rn[1], tip[0], tip[1], skin[0], 0,
+                         part="wing_finger", no_outline=True)
+                buf.line(rn[0], rn[1], sc1[0], sc1[1], skin[0], 0,
+                         part="wing_finger2", no_outline=True)
 
     # ------------------------------------------------- dragon path (64/96 px)
     # Showpiece anatomy the generic scaled path can't reach: two-mass tapered
@@ -2127,6 +2159,7 @@ def flyer_config_from_spec(spec: dict | None) -> FlyerConfig:
         body_dx=int(fl.get("body_dx", 0)),
         body_dy=int(fl.get("body_dy", 0)),
         dragon=bool(fl.get("dragon", False)),
+        feather_wing=bool(fl.get("feather_wing", False)),
     )
 
 

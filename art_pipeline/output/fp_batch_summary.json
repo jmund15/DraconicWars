@@ -9,7 +9,9 @@
       "warnings": [],
       "body_size": {
         "width": 16,
-        "height": 26
+        "height": 26,
+        "head_w": 11,
+        "head_h": 9
       },
       "contact_sheets": [
         "C:\\Users\\jmund\\Game_Dev\\Godot_Projects\\DraconicWars\\art_pipeline\\output\\contact_sheets\\stone_warden_contact_1x.png",
@@ -25,7 +27,9 @@
       "warnings": [],
       "body_size": {
         "width": 17,
-        "height": 26
+        "height": 26,
+        "head_w": 12,
+        "head_h": 9
       },
       "contact_sheets": [
         "C:\\Users\\jmund\\Game_Dev\\Godot_Projects\\DraconicWars\\art_pipeline\\output\\contact_sheets\\storm_monk_contact_1x.png",
@@ -107,7 +111,9 @@
       "warnings": [],
       "body_size": {
         "width": 26,
-        "height": 21
+        "height": 21,
+        "head_w": 0,
+        "head_h": 0
       },
       "contact_sheets": [
         "C:\\Users\\jmund\\Game_Dev\\Godot_Projects\\DraconicWars\\art_pipeline\\output\\contact_sheets\\stone_ram_contact_1x.png",
@@ -124,7 +130,9 @@
       "body_size": {
         "width": 37,
         "height": 26,
-        "wingspan": 37
+        "wingspan": 37,
+        "head_w": 9,
+        "head_h": 8
       },
       "contact_sheets": [
         "C:\\Users\\jmund\\Game_Dev\\Godot_Projects\\DraconicWars\\art_pipeline\\output\\contact_sheets\\storm_gryphon_contact_1x.png",
@@ -141,7 +149,9 @@
       "body_size": {
         "width": 49,
         "height": 38,
-        "wingspan": 49
+        "wingspan": 49,
+        "head_w": 6,
+        "head_h": 7
       },
       "contact_sheets": [
         "C:\\Users\\jmund\\Game_Dev\\Godot_Projects\\DraconicWars\\art_pipeline\\output\\contact_sheets\\elder_drake_contact_1x.png",
@@ -160,7 +170,9 @@
       "body_size": {
         "width": 74,
         "height": 61,
-        "wingspan": 74
+        "wingspan": 74,
+        "head_w": 12,
+        "head_h": 11
       },
       "contact_sheets": [
         "C:\\Users\\jmund\\Game_Dev\\Godot_Projects\\DraconicWars\\art_pipeline\\output\\contact_sheets\\pyraxis_contact_1x.png",
@@ -172,5 +184,10 @@
     "C:\\Users\\jmund\\Game_Dev\\Godot_Projects\\DraconicWars\\art_pipeline\\output\\contact_sheets\\silhouette_strip_1x.png",
     "C:\\Users\\jmund\\Game_Dev\\Godot_Projects\\DraconicWars\\art_pipeline\\output\\contact_sheets\\silhouette_strip_4x.png"
   ],
-  "cinderfell": []
+  "cinderfell": [
+    "C:\\Users\\jmund\\Game_Dev\\Godot_Projects\\DraconicWars\\art_pipeline\\output\\backgrounds\\cinderfell_sky.png",
+    "C:\\Users\\jmund\\Game_Dev\\Godot_Projects\\DraconicWars\\art_pipeline\\output\\backgrounds\\cinderfell_far.png",
+    "C:\\Users\\jmund\\Game_Dev\\Godot_Projects\\DraconicWars\\art_pipeline\\output\\backgrounds\\cinderfell_mid.png",
+    "C:\\Users\\jmund\\Game_Dev\\Godot_Projects\\DraconicWars\\art_pipeline\\output\\backgrounds\\cinderfell_ground.png"
+  ]
 }

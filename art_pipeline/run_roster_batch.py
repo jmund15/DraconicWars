@@ -199,7 +199,7 @@ BATCH: list[tuple[dict, str]] = [
         "size_class": "small",
         "props": [],
         "palette_overrides": {},
-        "flyer": {"head": "beaked", "wing_mult": 1.3, "eye_px": 2},
+        "flyer": {"head": "beaked", "wing_mult": 1.3, "eye_px": 2, "feather_wing": True},
         "foreswing_ticks": 7,
         "backswing_ticks": 9,
     }, "always"),
