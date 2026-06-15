@@ -1310,6 +1310,28 @@ class WraithTail:
                               (fx + 1, hip_y + region // 2), cr, d, part="wisp")
 
 
+class FlyingMount:
+    """A hovering platform/disc the unit RIDES (flying machinery / a magic item):
+    no legs of its own -- short feet plant on a disc that floats with a gap below.
+    Pure composition: a humanoid upper body + this base = a sky-rider, with NO flyer
+    template needed (the aerial-creature flyers stay their own family)."""
+
+    def draw(self, tmpl, buf, kind, phase, tx0, tx1, hip_y, GY, skin):
+        sr, si = skin
+        d = max(si - 1, 0)
+        cx = (tx0 + tx1) // 2
+        span = max(tx1 - tx0, 6)
+        halfw = span // 2 + 1
+        # short planted feet from the body down onto the deck
+        for fx, didx in ((cx - 2, d), (cx + 1, si)):
+            buf.fill_rect(fx, hip_y, fx + 1, GY - 1, sr, didx, part="legs")
+        # the platform deck: an ellipse with its bottom on the lane line + a darker
+        # rim row. (A real airborne rider sits in Stratum.Air with the aerial lint
+        # profile, which lets the whole deck hover off the line -- see methodology doc.)
+        buf.fill_ellipse(cx, GY - 1, halfw, 1.6, sr, si, part="mount")
+        buf.fill_rect(cx - halfw + 1, GY, cx + halfw - 1, GY, sr, d, part="mount")
+
+
 HUMANOID_LEGS = HumanoidLegs()
 OGRE_STUMPS = OgreStumps()
 SEGMENTED_PILLARS = SegmentedPillars()
@@ -1317,6 +1339,7 @@ CRYSTALLINE_LEGS = CrystallineLegs()
 FLOATING_SHARDS = FloatingShards()
 SPIDER_LEGS = SpiderLegs()
 WRAITH_TAIL = WraithTail()
+FLYING_MOUNT = FlyingMount()
 
 # Spec ``base`` key -> part. Adding a base archetype = one entry here + the class.
 LOCOMOTION_PARTS = {
@@ -1327,6 +1350,7 @@ LOCOMOTION_PARTS = {
     "shards": FLOATING_SHARDS,
     "spider": SPIDER_LEGS,
     "wraith": WRAITH_TAIL,
+    "mount": FLYING_MOUNT,
 }
 
 

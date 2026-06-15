@@ -1,0 +1,71 @@
+{
+  "name": "demo_phoenix",
+  "typeclass": "aerial_flyer",
+  "element": "fire",
+  "size_class": "medium",
+  "frame_w": 48,
+  "frame_h": 48,
+  "animations": [
+    {
+      "name": "idle",
+      "row": 0,
+      "frames": 2,
+      "fps": 7,
+      "loop": true
+    },
+    {
+      "name": "fly",
+      "row": 1,
+      "frames": 6,
+      "fps": 10,
+      "loop": true
+    },
+    {
+      "name": "attack",
+      "row": 2,
+      "frames": 4,
+      "fps": 12,
+      "loop": false,
+      "contact_frame": 1
+    },
+    {
+      "name": "death",
+      "row": 3,
+      "frames": 3,
+      "fps": 10,
+      "loop": false
+    }
+  ],
+  "foreswing_ticks": 8,
+  "backswing_ticks": 12,
+  "attack_pose": "aerial_flyer",
+  "ramps_used": [
+    "fire",
+    "fire_dark",
+    "ink",
+    "mauve_grey"
+  ],
+  "pivot": "bottom_center",
+  "ground_y": 45,
+  "facing": "right",
+  "body_size": {
+    "width": 43,
+    "height": 27,
+    "wingspan": 43,
+    "head_w": 7,
+    "head_h": 7
+  },
+  "lint": {
+    "whitelist_colors": [
+      "f79617",
+      "ffffff"
+    ],
+    "prop_colors": [],
+    "airborne_animations": [
+      "idle",
+      "fly",
+      "attack",
+      "death"
+    ]
+  }
+}
