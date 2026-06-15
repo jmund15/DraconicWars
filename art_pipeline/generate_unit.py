@@ -170,14 +170,25 @@ def generate_unit(spec: dict, outdir: str | Path | None = None,
 
     rows: list[tuple[skeletons.AnimDef, list]] = []
     ramps_used: set[str] = set()
+    # internal-volume hexes, harvested from the finalized buffers (tagged
+    # part='volume') -> manifest detail_exempt_colors so lint treats those
+    # deliberate interior bands as exempt from banding/orphan run-checks.
+    detail_exempt: set[str] = set()
     body_sizes: dict[str, list[tuple[int, int]]] = {}
     for anim in anims:
         bufs = []
-        for pose in template.poses(anim.name, contact):
+        poses = template.poses(anim.name, contact)
+        # secondary-motion lag: the far wing trails the body by one frame (no-op
+        # for forms without a 'wing' drive). WRAP for looping clips, CLAMP else.
+        skeletons.apply_secondary_lag(poses, anim.loop, lag=1, keys=("wing",))
+        for pose in poses:
             buf = skeletons.PixelBuffer(W, H)
             template.draw_pose(buf, pose, unit, pal)
+            skeletons.apply_internal_volume(buf, pal)
             skeletons.finalize(buf, pal, protected)
             ramps_used |= buf.ramps_used()
+            detail_exempt |= {pal.hex_of(c.ramp, c.idx)
+                              for c in buf.cells.values() if c.volume}
             body_sizes.setdefault(anim.name, []).append(_body_bbox_size(buf))
             bufs.append(buf)
         if len(bufs) != anim.frames:
@@ -246,6 +257,7 @@ def generate_unit(spec: dict, outdir: str | Path | None = None,
             "whitelist_colors": whitelist,
             "prop_colors": prop_colors,
             "airborne_animations": [a.name for a, _ in rows] if airborne else [],
+            "detail_exempt_colors": sorted(detail_exempt),
         },
     }
     manifest_path = outdir / f"{name}.manifest.json"

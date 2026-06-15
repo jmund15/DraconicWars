@@ -70,7 +70,7 @@ BATCH: list[tuple[dict, str]] = [
         "props": [],
         "palette_overrides": {},
         # a small fire serpent: the serpentine wyrm body-plan (name = wyrmling)
-        "flyer": {"body_plan": "wyrm", "eye_px": 2},
+        "flyer": {"body_plan": "wyrm", "eye_px": 2, "eye_shape": "slit"},
         "foreswing_ticks": 8,
         "backswing_ticks": 10,
     }, "always"),
@@ -134,6 +134,7 @@ BATCH: list[tuple[dict, str]] = [
         "base": "spider",          # 8 arachnid legs; taller body rides on top
         "attack_pose": "body_strike",   # lunge-bite, no held weapon
         "head_style": "snout",     # forward fanged maw
+        "eye_shape": "slit",       # reptilian stalker -- vertical slit pupil
         "element": "venom",
         "canvas": "28x28",
         "size_class": "small",

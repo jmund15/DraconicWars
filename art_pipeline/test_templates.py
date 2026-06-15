@@ -16,7 +16,9 @@ from __future__ import annotations
 
 import sys
 
+import skeletons
 from skeletons import BodyPlanTemplate, make_template
+from palette import get_palette
 
 
 def check(label, cond):
@@ -86,9 +88,92 @@ def test_contract_conformance():
             check(f"{tc}: poses('attack', ...) non-empty", len(poses) > 0)
 
 
+def test_internal_volume():
+    """apply_internal_volume darkens the lower-ventral interior of a >=48px body
+    mass one ramp step (a core shadow), flags those cells volume=True for the
+    exempt harvest, leaves the upper body at the base fill, and no-ops < 48px."""
+    pal = get_palette()
+    buf = skeletons.PixelBuffer(20, 60)
+    for y in range(10, 50):                  # torso rows 10..49 (h=40)
+        for x in range(5, 15):
+            buf.set_px(x, y, "fire", 2, part="body")
+    skeletons.apply_internal_volume(buf, pal)
+    lo = buf.cells[(10, 45)]
+    check("internal volume darkens the ventral interior one ramp step", lo.idx == 1)
+    check("volume cells are flagged for the exempt harvest", lo.volume is True)
+    hi = buf.cells[(10, 15)]
+    check("upper body keeps the base fill (no volume flag)",
+          hi.idx == 2 and hi.volume is False)
+
+    small = skeletons.PixelBuffer(20, 32)    # < 48 -> no volume
+    for y in range(8, 28):
+        for x in range(5, 15):
+            small.set_px(x, y, "fire", 2, part="body")
+    skeletons.apply_internal_volume(small, pal)
+    check("internal volume no-ops below 48px", small.cells[(10, 25)].volume is False)
+
+
+def test_eye_shape():
+    """_flyer_eye 'slit' = a 2px VERTICAL pair (reptilian identity accent);
+    'round' = the eye_px block. Default 'round' keeps the byte-identical shape."""
+    pal = get_palette()
+    colors = {"eye": ("mauve_grey", 4)}
+    slit = skeletons.PixelBuffer(10, 10)
+    skeletons._flyer_eye(slit, 5, 5, colors, 2, "slit")
+    check("slit eye is a 2px vertical pair",
+          (5, 5) in slit.cells and (5, 6) in slit.cells and (4, 5) not in slit.cells)
+    check("slit eye stays within the 6px whitelist cap", len(slit.cells) == 2)
+    rnd = skeletons.PixelBuffer(10, 10)
+    skeletons._flyer_eye(rnd, 5, 5, colors, 2, "round")
+    check("round eye is the eye_px block (horizontal pair, byte-identical default)",
+          (5, 5) in rnd.cells and (4, 5) in rnd.cells and (5, 6) not in rnd.cells)
+
+
+def test_squash_breathe_anchors_feet():
+    """The idle 'squash' breathe compresses the torso TOP downward while the
+    feet stay on the same ground row (the grounded-frame lint invariant)."""
+    import generate_unit
+    pal = get_palette()
+    tmpl = skeletons.make_template("melee_biped", {"typeclass": "melee_biped",
+                                                   "canvas": "32x32"})
+    colors = generate_unit.resolve_colors(tmpl, "fire", None, pal)
+    unit = {"colors": colors, "props": [], "eye_offset": (0, 0)}
+
+    def render(pose):
+        buf = skeletons.PixelBuffer(*tmpl.canvas)
+        tmpl.draw_pose(buf, pose, unit, pal)
+        return buf
+
+    rest, breathe = (render(p) for p in tmpl.poses("idle", 1))
+    bottom = lambda b: max(y for (_, y) in b.cells)
+    torso_top = lambda b: min(y for (x, y), c in b.cells.items() if c.part == "torso")
+    check("breathe keeps feet on the same ground row (squash anchors feet)",
+          bottom(rest) == bottom(breathe))
+    check("breathe compresses the torso top downward (squash applied)",
+          torso_top(breathe) > torso_top(rest))
+
+
+def test_secondary_lag():
+    """apply_secondary_lag injects a frame-lagged 'wing' drive: WRAP for loop
+    clips (frame 0 reads the last), CLAMP at 0 for one-shots; trails by `lag`."""
+    base = [{"wing": 0}, {"wing": 3}, {"wing": 6}, {"wing": 9}]
+    loop_p = [dict(p) for p in base]
+    skeletons.apply_secondary_lag(loop_p, loop=True, lag=1, keys=("wing",))
+    check("loop lag wraps: frame 0 reads the last frame's wing",
+          loop_p[0]["wing_lag"] == 9)
+    check("loop lag trails by 1: frame 2 reads frame 1's wing",
+          loop_p[2]["wing_lag"] == 3)
+    clamp_p = [dict(p) for p in base]
+    skeletons.apply_secondary_lag(clamp_p, loop=False, lag=1, keys=("wing",))
+    check("one-shot lag clamps: frame 0 reads itself", clamp_p[0]["wing_lag"] == 0)
+    check("one-shot lag trails elsewhere: frame 2 reads frame 1", clamp_p[2]["wing_lag"] == 3)
+
+
 def main():
     print("test_templates.py")
-    for fn in (test_make_template_resolves_all_typeclasses, test_contract_conformance):
+    for fn in (test_make_template_resolves_all_typeclasses, test_contract_conformance,
+               test_internal_volume, test_eye_shape, test_squash_breathe_anchors_feet,
+               test_secondary_lag):
         print(f"{fn.__name__}:")
         fn()
     print(f"\n{'PASS' if not check.failed else f'FAIL ({check.failed})'}")

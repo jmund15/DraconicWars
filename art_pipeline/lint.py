@@ -162,9 +162,13 @@ def lint_sheet(sheet_path: str | Path, manifest_path: str | Path | None = None) 
             manifest = json.load(f)
     whitelist = set()
     prop_colors = set()
+    detail_exempt = set()
     if manifest:
         whitelist = {c.lower() for c in manifest.get("lint", {}).get("whitelist_colors", [])}
         prop_colors = {c.lower() for c in manifest.get("lint", {}).get("prop_colors", [])}
+        # Rim-light + internal-volume bands are deliberate detail (Sprite Detail
+        # Passes Part): exempt from banding run-length and orphan-cluster gates.
+        detail_exempt = {c.lower() for c in manifest.get("lint", {}).get("detail_exempt_colors", [])}
 
     opaque: dict[tuple[int, int], tuple[int, int, int]] = {}
     aa_offenders = []
@@ -222,7 +226,7 @@ def lint_sheet(sheet_path: str | Path, manifest_path: str | Path | None = None) 
         if len(region) >= MIN_CLUSTER:
             continue
         hx = rgb_to_hex(rgb)
-        if hx in whitelist:
+        if hx in whitelist or hx in detail_exempt:
             continue
         touches_edge = any(
             (cx + dx, cy + dy) not in opaque
@@ -320,6 +324,7 @@ def lint_sheet(sheet_path: str | Path, manifest_path: str | Path | None = None) 
                 h2 = hexes.get(at(p, c + 1))
                 ok = (h1 is not None and h2 is not None and h1 != h2
                       and frozenset((h1, h2)) in adjacent_steps
+                      and h1 not in detail_exempt and h2 not in detail_exempt
                       and hexes.get(at(p, c - 1)) != h1
                       and hexes.get(at(p, c + 2)) != h2)
                 if ok:

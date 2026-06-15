@@ -99,6 +99,7 @@ BATCH: list[tuple[dict, str]] = [
         "element": "fire",
         "canvas": "32x32",
         "size_class": "small",
+        "eye_shape": "slit",       # reptilian kobold -- vertical slit pupil
         "props": ["spear", "small_shield"],
         "palette_overrides": {"cloth": ["leather", 1]},
         "foreswing_ticks": 4,
@@ -150,8 +151,8 @@ BATCH: list[tuple[dict, str]] = [
         # ochre leather body; neutral basalt grey keeps the stone identity
         "palette_overrides": {"membrane": ["mauve_grey", 1]},
         "flyer": {"scale": 2.5, "wing_mult": 1.05, "tail_mult": 1.25,
-                  "head": "horned", "eye_px": 2, "body_dx": -2, "body_dy": -1,
-                  "dragon": True},
+                  "head": "horned", "eye_px": 2, "eye_shape": "slit",
+                  "body_dx": -2, "body_dy": -1, "dragon": True},
         "foreswing_ticks": 12,
         "backswing_ticks": 18,
     }, "always"),
@@ -165,7 +166,7 @@ BATCH: list[tuple[dict, str]] = [
         "palette_overrides": {},
         "flyer": {"scale": 3.2, "wing_mult": 0.84, "tail_mult": 1.3,
                   "head": "crowned", "crest": "ridge", "fire_tail": True,
-                  "eye_px": 4, "boss": True, "body_dx": -10,
+                  "eye_px": 4, "eye_shape": "slit", "boss": True, "body_dx": -10,
                   "dragon": True},
         "foreswing_ticks": 10,
         "backswing_ticks": 14,

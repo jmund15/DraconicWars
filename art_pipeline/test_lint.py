@@ -93,6 +93,67 @@ def _build_fixture(tmpdir: str, *, source: str | None = None,
     return str(sheet_path), str(manifest_path)
 
 
+def _minimal_manifest(tmpdir: str, sheet, *, fw: int, fh: int,
+                      exempt: list[str] | None = None,
+                      whitelist: list[str] | None = None) -> str:
+    """Write a bare manifest carrying just the lint block + frame geometry."""
+    manifest = {
+        "name": "fx", "frame_w": fw, "frame_h": fh,
+        "animations": [{"name": "idle", "row": 0, "frames": 1}],
+        "ground_y": fh - 3,
+        "lint": {
+            "whitelist_colors": whitelist or [],
+            "prop_colors": [],
+            "airborne_animations": [],
+            "detail_exempt_colors": exempt or [],
+        },
+    }
+    mp = Path(tmpdir) / "fx.manifest.json"
+    with open(mp, "w", encoding="utf-8") as f:
+        json.dump(manifest, f)
+    return str(mp)
+
+
+def _build_banded_fixture(tmpdir: str, *, exempt: list[str] | None = None
+                          ) -> tuple[str, str]:
+    """Two ADJACENT fire-ramp steps as a 1px/1px hugging horizontal pair of
+    run length 13 (> band_limit 6 at fh=32), isolated above/below -> a banding
+    offender. With its hi hex in detail_exempt_colors it must stop counting."""
+    pal = get_palette()
+    ramp = pal.ramps["fire"]
+    hi_hex, lo_hex = ramp[2], ramp[3]          # consecutive -> in adjacent_steps
+    hi, lo = hex_to_rgb(hi_hex), hex_to_rgb(lo_hex)
+    fw = fh = 32
+    sheet = Image.new("RGBA", (fw, fh), (0, 0, 0, 0))
+    px = sheet.load()
+    y = 10
+    for x in range(5, 18):                     # 13 columns
+        px[x, y] = (*hi, 255)
+        px[x, y + 1] = (*lo, 255)
+    sheet_path = Path(tmpdir) / "banded.png"
+    sheet.save(sheet_path)
+    mp = _minimal_manifest(tmpdir, sheet, fw=fw, fh=fh, exempt=exempt)
+    return str(sheet_path), mp
+
+
+def _build_orphan_fixture(tmpdir: str, *, exempt: list[str] | None = None
+                          ) -> tuple[str, str]:
+    """A single isolated MID-ramp pixel (not a darkest sel-out step) -> a
+    sub-MIN_CLUSTER orphan offender. With its hex in detail_exempt_colors it
+    must be exempted like a whitelisted detail pixel."""
+    pal = get_palette()
+    mid_hex = pal.ramps["fire"][3]             # mid-ramp, NOT step-0 darkest
+    mid = hex_to_rgb(mid_hex)
+    fw = fh = 32
+    sheet = Image.new("RGBA", (fw, fh), (0, 0, 0, 0))
+    px = sheet.load()
+    px[16, 16] = (*mid, 255)                   # isolated single pixel
+    sheet_path = Path(tmpdir) / "orphan.png"
+    sheet.save(sheet_path)
+    mp = _minimal_manifest(tmpdir, sheet, fw=fw, fh=fh, exempt=exempt)
+    return str(sheet_path), mp
+
+
 # Checks the relaxed external profile demotes to warnings (spec verbatim).
 DEMOTED = {"no_aa", "outline_1px", "banding"}
 # Checks that must stay hard regardless of profile.
@@ -164,6 +225,66 @@ class RelaxedLintProfileTest(unittest.TestCase):
                       if c["severity"] == "error"}
             self.assertEqual(warnings, DEMOTED)
             self.assertEqual(errors, HARD)
+
+    # --- Part C / WS5: detail_exempt_colors channel (rim-light + internal volume) ---
+
+    def test_banding_offender_then_exempt_channel(self):
+        """A long adjacent-step 1px band trips banding; declaring its hex in
+        detail_exempt_colors exempts it (rim-light / internal-shading bands)."""
+        with tempfile.TemporaryDirectory() as d:
+            sheet, manifest = _build_banded_fixture(d, exempt=None)
+            report = lint.lint_sheet(sheet, manifest)
+            self.assertFalse(report["checks"]["banding"]["passed"],
+                             "control: long adjacent-step band must trip banding")
+        with tempfile.TemporaryDirectory() as d:
+            hi_hex = get_palette().ramps["fire"][2]
+            sheet, manifest = _build_banded_fixture(d, exempt=[hi_hex])
+            report = lint.lint_sheet(sheet, manifest)
+            self.assertTrue(report["checks"]["banding"]["passed"],
+                            "detail_exempt_colors must exempt the declared band hex")
+
+    def test_orphan_then_exempt_channel(self):
+        """An isolated mid-ramp pixel trips orphan_pixels; declaring its hex in
+        detail_exempt_colors exempts it like a whitelisted detail pixel."""
+        with tempfile.TemporaryDirectory() as d:
+            sheet, manifest = _build_orphan_fixture(d, exempt=None)
+            report = lint.lint_sheet(sheet, manifest)
+            self.assertFalse(report["checks"]["orphan_pixels"]["passed"],
+                             "control: isolated mid-ramp pixel must trip orphan_pixels")
+        with tempfile.TemporaryDirectory() as d:
+            mid_hex = get_palette().ramps["fire"][3]
+            sheet, manifest = _build_orphan_fixture(d, exempt=[mid_hex])
+            report = lint.lint_sheet(sheet, manifest)
+            self.assertTrue(report["checks"]["orphan_pixels"]["passed"],
+                            "detail_exempt_colors must exempt the declared orphan hex")
+
+
+class WhitelistCapCollisionTest(unittest.TestCase):
+    """Anti-collision is enforced by lint's whitelist_cap, NOT a producer-side
+    color-assert: a color collision (accent hex == a fill hex) is only a real
+    violation when that fill actually draws > WHITELIST_CAP px in a frame (lint
+    counts by raw hex, part-blind). A producer color-assert false-positives on
+    harmless collisions -- demo_faerie ships fine with accent==hot==8fd3ff
+    because its insect-wing body draws <=6px of it. lint is the authoritative,
+    pixel-accurate gate; this pins the mechanism Slice-5 accents rely on."""
+
+    def test_whitelist_cap_counts_collided_fill(self):
+        """A body fill sharing the whitelisted (accent) hex blows the 6px cap --
+        this is the gate that protects against a Slice-5 accent landing on a
+        LARGE fill, caught pixel-accurately at regen."""
+        with tempfile.TemporaryDirectory() as d:
+            fw = fh = 32
+            sheet = Image.new("RGBA", (fw, fh), (0, 0, 0, 0))
+            px = sheet.load()
+            for y in range(8, 12):
+                for x in range(8, 12):          # 16px block >> 6
+                    px[x, y] = (*BODY_RGB, 255)
+            sp = Path(d) / "cap.png"
+            sheet.save(sp)
+            mp = _minimal_manifest(d, sheet, fw=fw, fh=fh, whitelist=[BODY_HEX])
+            report = lint.lint_sheet(str(sp), mp)
+            self.assertFalse(report["checks"]["whitelist_cap"]["passed"],
+                             "part-blind: a 16px whitelisted fill blows the 6px cap")
 
 
 if __name__ == "__main__":

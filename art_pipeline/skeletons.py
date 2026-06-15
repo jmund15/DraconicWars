@@ -69,6 +69,7 @@ class Cell:
     idx: int
     part: str
     no_outline: bool = False  # thin props (shafts, straps) keep their own color
+    volume: bool = False      # big-tier internal-volume shading (lint-exempt)
 
 
 class PixelBuffer:
@@ -364,6 +365,57 @@ def dissolve_small_clusters(buf: PixelBuffer, pal: Palette,
             break
 
 
+VOLUME_MIN_CANVAS = 48      # the flat-slab read starts at the large size tier
+VOLUME_PARTS = ("torso", "body")
+
+
+def apply_internal_volume(buf: PixelBuffer, pal: Palette) -> None:
+    """Break the big-tier flat-slab torso into volume: repaint the lower-ventral
+    interior of the main body mass one ramp step darker (a core shadow) so a
+    >=48px torso reads as a rounded form, not a single flat fill. Runs BEFORE
+    finalize (between draw_pose and finalize) -- a SOLID interior region, not a
+    1px line, so finalize's outline/shade/dissolve handle it as ordinary
+    geometry (the rim lesson: post-passes strand orphans / perturb the outline).
+    Cells are flagged ``volume`` so generate_unit harvests their hexes into
+    detail_exempt_colors (the ventral band's adjacent-step boundary is then
+    banding-exempt). Palette-locked (ramp step). No-op below VOLUME_MIN_CANVAS."""
+    if buf.h < VOLUME_MIN_CANVAS:
+        return
+    boxes = buf.part_bboxes()
+    for part in VOLUME_PARTS:
+        box = boxes.get(part)
+        if box is None:
+            continue
+        x0, y0, x1, y1 = box
+        h = y1 - y0 + 1
+        if h < 6:
+            continue
+        venter = y0 + (h * 3) // 5  # lower ~40% of the mass = ventral core shadow
+        for (x, y), cell in buf.cells.items():
+            if cell.part != part or cell.no_outline or y < venter:
+                continue
+            new_idx = max(cell.idx - 1, 0)
+            if new_idx == cell.idx:
+                continue  # already darkest -> no core shadow available
+            cell.idx = new_idx
+            cell.volume = True
+
+
+def apply_secondary_lag(poses, loop, lag: int = 1, keys=("wing",)) -> None:
+    """Inject a frame-lagged copy of the secondary-motion drive value(s) into
+    each pose so a trailing part (the far wing) reads motion from ``lag`` frames
+    earlier while the body reads the current frame -- the follow-through that
+    makes flight read alive. WRAPS for looping clips (fly/idle), CLAMPS at frame
+    0 for one-shots (attack/death). Mutates the pose dicts in place; a no-op for
+    poses that carry none of ``keys`` (e.g. bipeds, which have no 'wing')."""
+    n = len(poses)
+    for i, pose in enumerate(poses):
+        src = poses[(i - lag) % n] if loop else poses[max(0, i - lag)]
+        for k in keys:
+            if k in src:
+                pose[k + "_lag"] = src[k]
+
+
 def finalize(buf: PixelBuffer, pal: Palette, protected_hexes=()) -> None:
     protected = set(protected_hexes)
     outline = apply_selout_outline(buf, pal)
@@ -439,6 +491,7 @@ class BipedConfig:
     head_fwd: int = 1
     quiver: bool = False     # back-mounted quiver block (ranged silhouette cue)
     eye_px: int = 2          # bright eye pixels (art fix 3: 1-2 px, light step)
+    eye_shape: str = "round"  # 'round' (default block) | 'slit' (vertical reptilian)
     # --- per-unit shape-language (Part B). 'neutral' reproduces the pre-Part-B
     # rig BYTE-IDENTICALLY (FP units carry no build); the others reshape the
     # silhouette so different-named units stop being one body recolored.
@@ -585,7 +638,8 @@ class BipedTemplate:
         if anim == "idle":
             return [
                 {"legs": ("stand", 0), "arm": "idle", "prop": "idle"},
-                {"legs": ("stand", 0), "head": (0, 1), "arm": "idle_b", "prop": "idle_b"},
+                {"legs": ("stand", 0), "head": (0, 1), "squash": 1,
+                 "arm": "idle_b", "prop": "idle_b"},  # breathe: torso compresses, feet anchored
             ]
         if anim == "walk":
             return [{"legs": ("walk", i), "arm": "walk", "prop": "walk"} for i in range(4)]
@@ -631,6 +685,8 @@ class BipedTemplate:
         leg_top = GY - cfg.leg_h + 1
         ty1 = leg_top + 1 - lift
         ty0 = ty1 - cfg.torso_h + 1
+        ty0 += pose.get("squash", 0)  # squash-and-stretch: compress the torso TOP;
+                                      # feet (ty1 -> legs to GY) stay anchored (lint-safe)
         hdx, hdy = pose.get("head", (0, 0))
         hx0 = tx0 + (cfg.torso_w - cfg.head_w) // 2 + cfg.head_fwd + hdx
         hx1 = hx0 + cfg.head_w - 1
@@ -788,8 +844,14 @@ class BipedTemplate:
                           (tx0 - 1, ty0 + 1), skin[0], d, part="spike")
 
     def _draw_eye(self, buf, eye_x, eye_y, colors, eye_offset):
-        """1-2 bright eye pixels (art fix 3), position-adjustable per spec."""
+        """1-2 bright eye pixels (art fix 3), position-adjustable per spec.
+        eye_shape='slit' draws a 2px VERTICAL reptilian slit (identity accent);
+        'round' (default) keeps the horizontal run -- byte-identical."""
         ex, ey = eye_x + eye_offset[0], eye_y + eye_offset[1]
+        if getattr(self.cfg, "eye_shape", "round") == "slit":
+            buf.set_px(ex, ey, *colors["eye"], part="eye", no_outline=True)
+            buf.set_px(ex, ey + 1, *colors["eye"], part="eye", no_outline=True)
+            return
         for i in range(max(1, min(self.cfg.eye_px, 2))):
             buf.set_px(ex - i, ey, *colors["eye"], part="eye", no_outline=True)
 
@@ -1391,6 +1453,7 @@ class FlyerConfig:
     crest: str = "none"         # none | head (swept crest) | ridge (back spikes)
     fire_tail: bool = False     # ember flame cluster at the tail tip
     eye_px: int = 1             # 1 | 2 | 4 (4 = 2x2 block)
+    eye_shape: str = "round"    # 'round' (block) | 'slit' (vertical reptilian)
     boss: bool = False          # boss budget: idle 4 / fly 6 / attack 6 / death 6
     body_dx: int = 0            # absolute canvas shift (right-edge headroom)
     body_dy: int = 0
@@ -1402,6 +1465,18 @@ class FlyerConfig:
     body_plan: str = "drake"    # drake (default winged biped, byte-stable) | wyrm
                                 # (serpentine eastern dragon) | seraph (multi-wing) |
                                 # wisp (wingless mote-ring) | manta (sky-ray glider)
+
+
+def _flyer_eye(buf, ex, ey, colors, eye_px, shape="round"):
+    """Flyer eye accent: 'slit' = a 2px VERTICAL reptilian slit (identity accent);
+    'round' (default) = the eye_px block (1 | 2 | 4=2x2) -- byte-identical.
+    Whitelisted detail, no_outline (kept off the sel-out pass)."""
+    if shape == "slit":
+        buf.set_px(ex, ey, *colors["eye"], part="eye", no_outline=True)
+        buf.set_px(ex, ey + 1, *colors["eye"], part="eye", no_outline=True)
+        return
+    for dx_, dy_ in [(0, 0), (-1, 0), (0, 1), (-1, 1)][: max(1, min(eye_px, 4))]:
+        buf.set_px(ex + dx_, ey + dy_, *colors["eye"], part="eye", no_outline=True)
 
 
 def _insect_wing_pair(buf, root, wm, fill, part):
@@ -1641,6 +1716,7 @@ class AerialFlyerTemplate:
         bx = W // 2 - 1 + cfg.body_dx + R(bdx)
         by = H // 2 + R(1) + cfg.body_dy + R(bdy)
         wing_dy = R(pose.get("wing", -4))
+        far_wing_dy = R(pose.get("wing_lag", pose.get("wing", -4)))  # far wing trails 1 frame
         fold = pose.get("fold", False)
         mouth_open = pose.get("mouth_open")
 
@@ -1652,8 +1728,8 @@ class AerialFlyerTemplate:
                               (rf[0] - R(1), rf[1] + R(3.5)),
                               membrane[0], far_dark, part="back_wing")
         else:
-            tip_f = (rf[0] - R(12 * wm), rf[1] + wing_dy + R(1))
-            sc1_f = (rf[0] - R(7.5 * wm), rf[1] + wing_dy + R(4.6))
+            tip_f = (rf[0] - R(12 * wm), rf[1] + far_wing_dy + R(1))
+            sc1_f = (rf[0] - R(7.5 * wm), rf[1] + far_wing_dy + R(4.6))
             sc2_f = (rf[0] - R(2.5), rf[1] + R(3.2))
             if cfg.feather_wing:
                 _feather_wing_fill(buf, rf, tip_f, sc2_f,
@@ -1758,8 +1834,7 @@ class AerialFlyerTemplate:
 
         eo = unit.get("eye_offset", (0, 0))
         ex, ey = hx + R(0.6) + eo[0], hy - R(0.9) + eo[1]
-        for dx_, dy_ in [(0, 0), (-1, 0), (0, 1), (-1, 1)][: max(1, min(cfg.eye_px, 4))]:
-            buf.set_px(ex + dx_, ey + dy_, *colors["eye"], part="eye", no_outline=True)
+        _flyer_eye(buf, ex, ey, colors, cfg.eye_px, getattr(cfg, "eye_shape", "round"))
 
         # --- near wing: scalloped membrane + finger ridges ------------------
         rn = (bx + R(1.5), by - R(3))
@@ -1807,6 +1882,7 @@ class AerialFlyerTemplate:
         bx = W // 2 - 1 + cfg.body_dx + R(bdx)
         by = H // 2 + R(1) + cfg.body_dy + R(bdy)
         wing_dy = R(pose.get("wing", -4))
+        far_wing_dy = R(pose.get("wing_lag", pose.get("wing", -4)))  # far wing beats behind
         fold = pose.get("fold", False)
         crumple = pose.get("crumple", False)
         mouth_open = pose.get("mouth_open")
@@ -1819,7 +1895,7 @@ class AerialFlyerTemplate:
                               (rf[0] - R(1), rf[1] + R(3.2)),
                               membrane[0], far_dark, part="back_wing")
         else:
-            fw = int(round(wing_dy * 0.9)) - R(1)
+            fw = int(round(far_wing_dy * 0.9)) - R(1)
             tip_f = (rf[0] - R(12.0 * wm), rf[1] + fw)
             f1_f = (rf[0] - R(9.5 * wm), rf[1] + fw + R(3.4))
             f2_f = (rf[0] - R(3.4 * wm), rf[1] + R(2.0))
@@ -1945,8 +2021,7 @@ class AerialFlyerTemplate:
 
         eo = unit.get("eye_offset", (0, 0))
         ex, ey = hx + R(0.6) + eo[0], hy - R(0.7) + eo[1]
-        for dx_, dy_ in [(0, 0), (-1, 0), (0, 1), (-1, 1)][: max(1, min(cfg.eye_px, 4))]:
-            buf.set_px(ex + dx_, ey + dy_, *colors["eye"], part="eye", no_outline=True)
+        _flyer_eye(buf, ex, ey, colors, cfg.eye_px, getattr(cfg, "eye_shape", "round"))
 
         # --- near wing: 3-panel fan + wrist-radiating finger spars -----------
         rn = (bx + R(1.2), by - R(2.4))
@@ -2071,8 +2146,7 @@ class AerialFlyerTemplate:
                               (hx + R(2.2), hy + R(1.4)), skin[0], dark_skin, part="barbel")
         eo = unit.get("eye_offset", (0, 0))
         ex, ey = hx + R(0.2) + eo[0], hy - R(0.6) + eo[1]
-        for dx_, dy_ in [(0, 0), (-1, 0), (0, 1), (-1, 1)][: max(1, min(cfg.eye_px, 4))]:
-            buf.set_px(ex + dx_, ey + dy_, *colors["eye"], part="eye", no_outline=True)
+        _flyer_eye(buf, ex, ey, colors, cfg.eye_px, getattr(cfg, "eye_shape", "round"))
 
     # ------------------------------------------ seraph (multi-winged celestial)
     # A frontal, hovering luminous being: a slim glowing core, a halo, and THREE
@@ -2513,6 +2587,7 @@ def flyer_config_from_spec(spec: dict | None) -> FlyerConfig:
         crest=fl.get("crest", "none"),
         fire_tail=bool(fl.get("fire_tail", False)),
         eye_px=int(fl.get("eye_px", 1 if canvas[1] <= 32 else 2)),
+        eye_shape=str(fl.get("eye_shape", "round")),
         boss=bool(fl.get("boss", False)),
         body_dx=int(fl.get("body_dx", 0)),
         body_dy=int(fl.get("body_dy", 0)),
@@ -2553,6 +2628,8 @@ def _overlay_biped_config(base: BipedConfig, spec: dict | None) -> BipedConfig:
         # upper-body knob: pick a head independent of the typeclass default
         # (e.g. a hood on a wraith, a snout on a beast).
         over["head_style"] = spec["head_style"]
+    if spec.get("eye_shape"):
+        over["eye_shape"] = spec["eye_shape"]  # identity accent: slit (reptile) | round
     if spec.get("attack_pose"):
         # the archetype magic pose (cast/channel/body_strike) drives the arm via
         # ARM_POSES, overriding the typeclass's default weapon pose.
