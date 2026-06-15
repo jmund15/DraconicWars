@@ -445,6 +445,11 @@ class BipedConfig:
     seed: int = 0            # per-unit asymmetry seed (deterministic int; NEVER hash())
     scale: float = 1.0       # size-tier factor (canvas_h / base_canvas_h); 1.0 == byte-identical
     construct_style: str = "segmented"  # ConstructTemplate only: segmented (block grid) | crystalline (facets)
+    # Composition slot: the base/legs are a pluggable LocomotionPart. None ->
+    # HUMANOID_LEGS (the infantry default). This is the modular axis that lets any
+    # upper body (the rest of BipedConfig) sit on any base -- humanoid, ogre stumps,
+    # crystal shards, spider, wraith, flying mount -- without a subclass per combo.
+    locomotion: "LocomotionPart | None" = None
 
 
 # Round-2 calibration bodies: small ground units target a 24-28 px tall x
@@ -705,25 +710,13 @@ class BipedTemplate:
                       max(skin[1] - 1, 0), part="back_arm")
 
     def _draw_legs(self, buf, kind, phase, tx0, tx1, hip_y, GY, skin):
-        back_hip = tx0 + 1
-        front_hip = tx1 - 2
-        if kind == "stand":
-            stances = [(0, 0), (1, 0)]
-        elif kind == "lunge":
-            stances = [(-3, 0), (3, 0)]
-        elif kind == "kneel":
-            buf.fill_rect(back_hip - 1, GY - 2, back_hip + 2, GY, skin[0], max(skin[1] - 1, 0), part="back_leg")
-            buf.fill_rect(front_hip - 1, GY - 2, front_hip + 3, GY, skin[0], skin[1], part="front_leg")
-            return
-        else:  # walk
-            b = WALK_LEGS[phase % 4]
-            stances = [(b[0], b[1]), (b[2], b[3])]
-        for (fdx, flift), hip, part, didx in zip(
-                stances, (back_hip, front_hip), ("back_leg", "front_leg"),
-                (max(skin[1] - 1, 0), skin[1])):
-            foot_y = GY - flift
-            buf.limb(hip, hip_y, hip + fdx, foot_y, skin[0], didx, part=part, bend="vertical")
-            buf.set_px(hip + fdx + 2, foot_y, skin[0], didx, part=part)  # toe
+        # Composition seam (DR4): the base/legs are a pluggable LocomotionPart
+        # selected by config; None -> the default humanoid limbs. Subclasses no
+        # longer override this -- they pick a part instead (OgreStumps,
+        # SegmentedPillars, FloatingShards, ...), so any base composes with any
+        # upper body. See LOCOMOTION_PARTS + the *_config_from_spec resolvers.
+        (self.cfg.locomotion or HUMANOID_LEGS).draw(
+            self, buf, kind, phase, tx0, tx1, hip_y, GY, skin)
 
     def _draw_robe(self, buf, pose, tx0, tx1, ty1, GY, cloth):
         top_w = tx1 - tx0 - 2
@@ -874,7 +867,10 @@ class OgreTemplate(BipedTemplate):
     WHITELIST_ROLES = BipedTemplate.WHITELIST_ROLES
 
     def __init__(self, cfg: BipedConfig | None = None):
-        super().__init__(cfg or OGRE_CONFIG)
+        cfg = cfg or OGRE_CONFIG
+        if cfg.locomotion is None:
+            cfg = replace(cfg, locomotion=OGRE_STUMPS)
+        super().__init__(cfg)
 
     def _draw_torso(self, buf, bld, asym, tx0, ty0, tx1, ty1, cloth):
         # broad hunched slab: upper back/shoulders proud (the hunch), tapering to
@@ -916,24 +912,6 @@ class OgreTemplate(BipedTemplate):
         eye_x = hx1 - 3
         eye_y = hy0 + (hy1 - hy0) // 3 + 1
         self._draw_eye(buf, eye_x, eye_y, colors, eye_offset)
-
-    def _draw_legs(self, buf, kind, phase, tx0, tx1, hip_y, GY, skin):
-        # short thick stumps (the base draws thin limbs) -- planted ogre stance.
-        if kind == "kneel":
-            super()._draw_legs(buf, kind, phase, tx0, tx1, hip_y, GY, skin)
-            return
-        back = tx0 + 3
-        front = tx1 - 6
-        dx = 0
-        if kind == "lunge":
-            back -= 3
-            front += 3
-        elif kind == "walk":
-            dx = WALK_LEGS[phase % 4][0]
-        buf.fill_rect(back - 2 + dx, hip_y, back + 2 + dx, GY, skin[0],
-                      max(skin[1] - 1, 0), part="back_leg")
-        buf.fill_rect(front - 2, hip_y, front + 3, GY, skin[0], skin[1],
-                      part="front_leg")
 
     def _draw_arm(self, buf, shoulder, hand, skin):
         # the brute brawls (no weapon): a thick forearm + a BIG clenched fist.
@@ -1006,7 +984,10 @@ class ConstructTemplate(BipedTemplate):
     WHITELIST_ROLES = BipedTemplate.WHITELIST_ROLES
 
     def __init__(self, cfg: BipedConfig | None = None):
-        super().__init__(cfg or CONSTRUCT_CONFIG)
+        cfg = cfg or CONSTRUCT_CONFIG
+        if cfg.locomotion is None:
+            cfg = replace(cfg, locomotion=_default_construct_base(cfg.construct_style))
+        super().__init__(cfg)
 
     # ----------------------------------------------------------- block grid
     def _chunk(self) -> int:
@@ -1040,10 +1021,7 @@ class ConstructTemplate(BipedTemplate):
     def _diamond(self, buf, cx, top, bot, halfw, cr, lit, shadow, part="torso"):
         """A 4-point crystal split into a lit (left) and shadow (right) facet --
         all-diagonal edges, so no axis-aligned shaded band forms."""
-        midy = (top + bot) // 2
-        apex, base = (cx, top), (cx, bot)
-        buf.fill_triangle(apex, (cx - halfw, midy), base, cr, lit, part=part)
-        buf.fill_triangle(apex, (cx + halfw, midy), base, cr, shadow, part=part)
+        _diamond_facets(buf, cx, top, bot, halfw, cr, lit, shadow, part)
 
     def _draw_crystal_body(self, buf, asym, tx0, ty0, tx1, ty1, cr, ci):
         d = max(ci - 1, 0)
@@ -1099,37 +1077,95 @@ class ConstructTemplate(BipedTemplate):
         self._draw_block_grid(buf, hx0, hy0, hx1, hy1, sr, si, part="head")
         self._draw_eye(buf, hx1 - 2, cy, colors, eye_offset)
 
-    def _draw_legs(self, buf, kind, phase, tx0, tx1, hip_y, GY, skin):
+
+# ===========================================================================
+# Locomotion parts -- the composition base/legs slot (DR4)
+# ===========================================================================
+# Each part draws ONE creature's base region (the leg band, hip_y..GY) given the
+# same geometry the old _draw_legs received. Parts are stateless singletons, so a
+# unit = [an upper body (BipedConfig)] x [a LocomotionPart], selectable per spec
+# via the ``base`` key. The old subclass leg overrides (ogre stumps, segmented
+# pillars, crystalline legs) became parts verbatim -- byte-identical -- and the
+# new bases (floating shards, spider, wraith, mount) drop in without a subclass.
+
+
+def _diamond_facets(buf, cx, top, bot, halfw, cr, lit, shadow, part="torso"):
+    """A 4-point crystal split into a lit (left) and shadow (right) facet --
+    all-diagonal edges, so no axis-aligned shaded band forms. Shared by the
+    crystal body and the floating-shard base."""
+    midy = (top + bot) // 2
+    apex, base = (cx, top), (cx, bot)
+    buf.fill_triangle(apex, (cx - halfw, midy), base, cr, lit, part=part)
+    buf.fill_triangle(apex, (cx + halfw, midy), base, cr, shadow, part=part)
+
+
+class LocomotionPart(Protocol):
+    """The base/legs of one creature. ``draw`` paints the leg band (hip_y..GY)
+    for one pose frame; the template owns everything above the hip line."""
+
+    def draw(self, tmpl, buf, kind, phase, tx0, tx1, hip_y, GY, skin) -> None: ...
+
+
+class HumanoidLegs:
+    """Two organic limbs (vertical bend + toe pixel). The infantry default."""
+
+    def draw(self, tmpl, buf, kind, phase, tx0, tx1, hip_y, GY, skin):
+        back_hip = tx0 + 1
+        front_hip = tx1 - 2
+        if kind == "stand":
+            stances = [(0, 0), (1, 0)]
+        elif kind == "lunge":
+            stances = [(-3, 0), (3, 0)]
+        elif kind == "kneel":
+            buf.fill_rect(back_hip - 1, GY - 2, back_hip + 2, GY, skin[0], max(skin[1] - 1, 0), part="back_leg")
+            buf.fill_rect(front_hip - 1, GY - 2, front_hip + 3, GY, skin[0], skin[1], part="front_leg")
+            return
+        else:  # walk
+            b = WALK_LEGS[phase % 4]
+            stances = [(b[0], b[1]), (b[2], b[3])]
+        for (fdx, flift), hip, part, didx in zip(
+                stances, (back_hip, front_hip), ("back_leg", "front_leg"),
+                (max(skin[1] - 1, 0), skin[1])):
+            foot_y = GY - flift
+            buf.limb(hip, hip_y, hip + fdx, foot_y, skin[0], didx, part=part, bend="vertical")
+            buf.set_px(hip + fdx + 2, foot_y, skin[0], didx, part=part)  # toe
+
+
+class OgreStumps:
+    """Short thick planted stumps -- the ogre brute's base."""
+
+    def draw(self, tmpl, buf, kind, phase, tx0, tx1, hip_y, GY, skin):
         if kind == "kneel":
-            super()._draw_legs(buf, kind, phase, tx0, tx1, hip_y, GY, skin)
+            HUMANOID_LEGS.draw(tmpl, buf, kind, phase, tx0, tx1, hip_y, GY, skin)
+            return
+        back = tx0 + 3
+        front = tx1 - 6
+        dx = 0
+        if kind == "lunge":
+            back -= 3
+            front += 3
+        elif kind == "walk":
+            dx = WALK_LEGS[phase % 4][0]
+        buf.fill_rect(back - 2 + dx, hip_y, back + 2 + dx, GY, skin[0],
+                      max(skin[1] - 1, 0), part="back_leg")
+        buf.fill_rect(front - 2, hip_y, front + 3, GY, skin[0], skin[1],
+                      part="front_leg")
+
+
+def _band_limit(tmpl) -> int:
+    """Max same-ramp run before the banding lint trips, scaled to the canvas."""
+    return round(6 * (tmpl.cfg.canvas[1] / 32))
+
+
+class SegmentedPillars:
+    """Stocky stone pillar legs (< band_limit wide) -- segmented construct base."""
+
+    def draw(self, tmpl, buf, kind, phase, tx0, tx1, hip_y, GY, skin):
+        if kind == "kneel":
+            HUMANOID_LEGS.draw(tmpl, buf, kind, phase, tx0, tx1, hip_y, GY, skin)
             return
         sr, si = skin
-        if self.cfg.construct_style == "crystalline":
-            # thick (3px) WIDE-stance legs, rooted under the crystal's lower mass.
-            # A straight thick pillar bands (the idle frame has no foot offset to
-            # bend it), so a 2-row contrasting KNEE FACET splits every column into
-            # two sub-band_limit vertical segments -- it fractures the shading band
-            # regardless of stride AND reads as a faceted crystal joint.
-            cx = (tx0 + tx1) // 2
-            d = max(si - 1, 0)
-            if kind == "lunge":
-                stances = [(-2, 0), (3, 0)]
-            elif kind == "walk":
-                b = WALK_LEGS[phase % 4]
-                stances = [(b[0], b[1]), (b[2], b[3])]
-            else:
-                stances = [(0, 0), (1, 0)]
-            for (fdx, flift), hip, part, didx in zip(
-                    stances, (cx - 5, cx + 2), ("back_leg", "front_leg"), (d, si)):
-                foot = hip + fdx
-                base = GY - flift
-                mid = (hip_y + base) // 2
-                knee = max(didx - 1, 0)
-                buf.fill_rect(hip, hip_y, hip + 2, mid - 1, sr, didx, part=part)          # thigh 3px
-                buf.fill_rect(min(hip, foot), mid, max(hip, foot) + 2, mid + 1, sr, knee, part=part)  # knee facet
-                buf.fill_rect(foot, mid + 2, foot + 2, base, sr, didx, part=part)         # shin 3px
-            return
-        lw = max(2, self._chunk() // 2)          # segmented: stocky pillar legs, < band_limit wide
+        lw = max(2, max(3, _band_limit(tmpl) - 2) // 2)
         back = tx0 + 2
         front = tx1 - 2 - lw
         dx = 0
@@ -1140,6 +1176,98 @@ class ConstructTemplate(BipedTemplate):
             dx = WALK_LEGS[phase % 4][0]
         buf.fill_rect(back - lw + dx, hip_y, back + dx, GY, sr, max(si - 1, 0), part="back_leg")
         buf.fill_rect(front, hip_y, front + lw, GY, sr, si, part="front_leg")
+
+
+class CrystallineLegs:
+    """Thick wide-stance legs with a knee-facet band-breaker. Legacy crystalline
+    base, kept as a selectable archetype -- superseded as the crystalline DEFAULT
+    by FloatingShards (the legs read too humanoid; see the body-plan rework)."""
+
+    def draw(self, tmpl, buf, kind, phase, tx0, tx1, hip_y, GY, skin):
+        if kind == "kneel":
+            HUMANOID_LEGS.draw(tmpl, buf, kind, phase, tx0, tx1, hip_y, GY, skin)
+            return
+        sr, si = skin
+        cx = (tx0 + tx1) // 2
+        d = max(si - 1, 0)
+        if kind == "lunge":
+            stances = [(-2, 0), (3, 0)]
+        elif kind == "walk":
+            b = WALK_LEGS[phase % 4]
+            stances = [(b[0], b[1]), (b[2], b[3])]
+        else:
+            stances = [(0, 0), (1, 0)]
+        for (fdx, flift), hip, part, didx in zip(
+                stances, (cx - 5, cx + 2), ("back_leg", "front_leg"), (d, si)):
+            foot = hip + fdx
+            base = GY - flift
+            mid = (hip_y + base) // 2
+            knee = max(didx - 1, 0)
+            buf.fill_rect(hip, hip_y, hip + 2, mid - 1, sr, didx, part=part)
+            buf.fill_rect(min(hip, foot), mid, max(hip, foot) + 2, mid + 1, sr, knee, part=part)
+            buf.fill_rect(foot, mid + 2, foot + 2, base, sr, didx, part=part)
+
+
+class FloatingShards:
+    """Detached crystal shards levitating below the body -- a non-humanoid base for
+    crystal/gem constructs. N diamonds hover near the lane line with a clear GAP
+    above them (so the body reads as unmoored / floating), drifting on the walk
+    cycle. All-diagonal facet edges sidestep the axis-aligned banding lint, the
+    same trick the crystal body uses. Count auto-scales with body width unless
+    pinned. This is the thematic answer to 'crystal constructs read too humanoid':
+    the solution is a different base archetype, not repositioned legs."""
+
+    def __init__(self, count=None):
+        self.count = count          # None -> auto from body width
+
+    def draw(self, tmpl, buf, kind, phase, tx0, tx1, hip_y, GY, skin):
+        sr, si = skin
+        d = max(si - 1, 0)
+        cx = (tx0 + tx1) // 2
+        span = max(tx1 - tx0, 6)
+        bob = 0
+        if kind == "walk":
+            bob = (0, 1, 0, -1)[phase % 4]      # drift, as if unmoored
+        elif kind == "lunge":
+            bob = -1
+        region = GY - hip_y
+        gap = max(2, region // 4)               # floating gap between body and shards
+        top = hip_y + gap + bob
+        bot = GY - 1 + bob                       # hover 1px off the ground line
+        n = self.count or max(2, min(3, span // 10))
+        mid = n // 2
+        for i in range(n):
+            sx = cx if n == 1 else tx0 + round((i + 0.5) * span / n)
+            lit, shadow = (si, d) if (i % 2 == 0) else (d, d)
+            hw = max(2, span // (2 * n))
+            t = top if i == mid else top + 1     # centre shard tallest (cluster read)
+            w = hw if i == mid else max(2, hw - 1)
+            _diamond_facets(buf, sx, t, bot, w, sr, lit, shadow, part=f"shard_base_{i}")
+
+
+HUMANOID_LEGS = HumanoidLegs()
+OGRE_STUMPS = OgreStumps()
+SEGMENTED_PILLARS = SegmentedPillars()
+CRYSTALLINE_LEGS = CrystallineLegs()
+FLOATING_SHARDS = FloatingShards()
+
+# Spec ``base`` key -> part. Adding a base archetype = one entry here + the class.
+LOCOMOTION_PARTS = {
+    "humanoid": HUMANOID_LEGS,
+    "ogre_stumps": OGRE_STUMPS,
+    "segmented": SEGMENTED_PILLARS,
+    "crystalline_legs": CRYSTALLINE_LEGS,
+    "shards": FLOATING_SHARDS,
+}
+
+
+def _default_construct_base(style: str) -> LocomotionPart:
+    """The base a construct gets when its spec names no explicit ``base``.
+    Crystalline constructs float on detached shards (the legged version read too
+    humanoid -- the thematic fix is a different base archetype, not repositioned
+    legs); segmented stone constructs stand on stocky pillars. Either is still
+    overridable per-unit via the spec ``base`` key (e.g. ``crystalline_legs``)."""
+    return FLOATING_SHARDS if style == "crystalline" else SEGMENTED_PILLARS
 
 
 # ===========================================================================
@@ -1963,6 +2091,10 @@ def _overlay_biped_config(base: BipedConfig, spec: dict | None) -> BipedConfig:
         # the archetype magic pose (cast/channel/body_strike) drives the arm via
         # ARM_POSES, overriding the typeclass's default weapon pose.
         over["attack_style"] = spec["attack_pose"]
+    if spec.get("base"):
+        # explicit base archetype (composition slot) -- overrides the typeclass
+        # default base (e.g. a humanoid biped on a spider or flying-mount base).
+        over["locomotion"] = LOCOMOTION_PARTS[spec["base"]]
     if s != 1.0:
         over["canvas"] = target
         over["scale"] = s
@@ -1980,14 +2112,23 @@ def biped_config_from_spec(typeclass: str, spec: dict | None) -> BipedConfig:
 
 def ogre_config_from_spec(spec: dict | None) -> BipedConfig:
     """OGRE_CONFIG with the same optional per-unit overlay as the bipeds (seed
-    asymmetry, proportion tuning)."""
-    return _overlay_biped_config(OGRE_CONFIG, spec)
+    asymmetry, proportion tuning). Defaults the base to the ogre stumps unless the
+    spec names an explicit ``base``."""
+    cfg = _overlay_biped_config(OGRE_CONFIG, spec)
+    if cfg.locomotion is None:
+        cfg = replace(cfg, locomotion=OGRE_STUMPS)
+    return cfg
 
 
 def construct_config_from_spec(spec: dict | None) -> BipedConfig:
     """CONSTRUCT_CONFIG with the per-unit overlay (build/seed/proportions/scale)
-    plus the ``construct_style`` selector (segmented | crystalline)."""
-    return _overlay_biped_config(CONSTRUCT_CONFIG, spec)
+    plus the ``construct_style`` selector (segmented | crystalline). Defaults the
+    base per style (segmented -> pillars, crystalline -> see _default_construct_base)
+    unless the spec names an explicit ``base``."""
+    cfg = _overlay_biped_config(CONSTRUCT_CONFIG, spec)
+    if cfg.locomotion is None:
+        cfg = replace(cfg, locomotion=_default_construct_base(cfg.construct_style))
+    return cfg
 
 
 def make_template(typeclass: str, spec: dict | None = None):
