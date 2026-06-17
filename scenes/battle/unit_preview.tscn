@@ -1,0 +1,49 @@
+[gd_scene load_steps=7 format=3]
+
+[ext_resource type="Script" path="res://Game/Battle/UnitPreviewController.cs" id="1"]
+[ext_resource type="Texture2D" path="res://art_pipeline/output/backgrounds/cinderfell_sky.png" id="2"]
+[ext_resource type="Texture2D" path="res://art_pipeline/output/backgrounds/cinderfell_far.png" id="3"]
+[ext_resource type="Texture2D" path="res://art_pipeline/output/backgrounds/cinderfell_mid.png" id="4"]
+[ext_resource type="Texture2D" path="res://art_pipeline/output/backgrounds/cinderfell_ground.png" id="5"]
+
+[sub_resource type="Environment" id="Environment_glow"]
+background_mode = 4
+glow_enabled = true
+glow_intensity = 0.4
+glow_strength = 1.0
+glow_blend_mode = 2
+glow_hdr_threshold = 0.9
+
+[node name="UnitPreview" type="Node2D" node_paths=PackedStringArray("UnitLayer")]
+script = ExtResource("1")
+UnitLayer = NodePath("UnitLayer")
+
+[node name="WorldEnv" type="WorldEnvironment" parent="."]
+environment = SubResource("Environment_glow")
+
+[node name="Background" type="Node2D" parent="."]
+
+[node name="Sky" type="Sprite2D" parent="Background"]
+texture = ExtResource("2")
+centered = false
+
+[node name="Far" type="Sprite2D" parent="Background"]
+position = Vector2(0, 120)
+texture = ExtResource("3")
+centered = false
+
+[node name="Mid" type="Sprite2D" parent="Background"]
+position = Vector2(0, 180)
+texture = ExtResource("4")
+centered = false
+
+[node name="Ground" type="Sprite2D" parent="Background"]
+position = Vector2(0, 280)
+texture = ExtResource("5")
+centered = false
+
+[node name="UnitLayer" type="Node2D" parent="."]
+
+[node name="Camera" type="Camera2D" parent="."]
+position = Vector2(320, 204)
+zoom = Vector2(2.2, 2.2)
