@@ -35,6 +35,23 @@ The earlier "JS-gated, fetch manually" note was wrong — it failed only because
 never sent the CSRF token on the `download_url` POST. The license was *also*
 verified programmatically from the page (CC0 1.0, "No generative AI was used").
 
+### Cethiel — Dragon, Fully Animated
+| Field | Value |
+|---|---|
+| Source URL | https://opengameart.org/content/dragon-fully-animated |
+| Artist | Cethiel (https://opengameart.org/users/cethiel) |
+| License | Creative Commons Zero v1.0 Universal (CC0 1.0) — verbatim copy: `licenses/CC0-1.0.txt` |
+| License verified | 2026-06-16 — OGA page states *"CC0"* (public domain, no attribution required) |
+| Provenance | OGA submission dated 2019-04-15; rendered/animated dragon (not native pixel art) |
+| Source pack | `cethiel_dragon_pack.zip` (132.8 MB) — `sources/cethiel_dragon/`; 7 anim folders (Attack 1/2, Death, Hurt, Idle, Idle Battle, Walking), 1197 separate high-res frame PNGs |
+| Source git-status | **raw pack NOT committed** (132 MB) — re-fetchable from the Source URL; only the subsampled frame subset + the assembled grid sheet + mapping are checked in |
+| Download date | 2026-06-16 |
+| Conformed DW asset | `output/external/pyraxis_conform_sheet.png` + `.manifest.json` — **PASS [external]** (idle/fly/attack/death; fire + mauve_grey ramps; ticks 10/14 matching the pyraxis UnitDef). Pipeline: `assemble_external_frames.py` (subsample 6/6/7/8, H-flip to face right) → `conform_external.py`. Known DR6 per-animation scaling pulse left as a NOTED artifact (fix deferred unless conform wins a hero tier). |
+
+**Status — downloaded + conformed (strategy C).** Fetched non-interactively from the OGA
+direct file URL (`sites/default/files/Dragon%20-%20Fully%20Animated.zip`). CC0 →
+no attribution obligation, but recorded here per the standing license-hygiene rule.
+
 ## Adding a new external source
 1. Verify the license **on the asset's page at download time**; copy the full
    license text verbatim into `licenses/<NAME>.txt`.

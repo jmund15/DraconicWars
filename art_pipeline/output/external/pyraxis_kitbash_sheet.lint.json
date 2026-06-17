@@ -1,0 +1,134 @@
+{
+  "sheet": "art_pipeline\\output\\external\\pyraxis_kitbash_sheet.png",
+  "manifest": "art_pipeline\\output\\external\\pyraxis_kitbash.manifest.json",
+  "profile": "external",
+  "passed": true,
+  "checks": {
+    "on_palette": {
+      "passed": true,
+      "off_palette_colors": {},
+      "severity": "error"
+    },
+    "no_aa": {
+      "passed": true,
+      "semi_transparent_pixels": 0,
+      "samples": [],
+      "severity": "warning"
+    },
+    "orphan_pixels": {
+      "passed": true,
+      "count": 0,
+      "offenders": [],
+      "whitelist": [],
+      "severity": "error"
+    },
+    "outline_1px": {
+      "passed": false,
+      "boundary_dark_coverage": 0.47,
+      "light_boundary_samples": [
+        [
+          185,
+          32,
+          "f9c22b"
+        ],
+        [
+          186,
+          32,
+          "f9c22b"
+        ],
+        [
+          377,
+          32,
+          "f9c22b"
+        ],
+        [
+          378,
+          32,
+          "f9c22b"
+        ],
+        [
+          185,
+          33,
+          "f9c22b"
+        ],
+        [
+          186,
+          33,
+          "f9c22b"
+        ],
+        [
+          281,
+          33,
+          "f9c22b"
+        ],
+        [
+          282,
+          33,
+          "f9c22b"
+        ],
+        [
+          377,
+          33,
+          "f9c22b"
+        ],
+        [
+          378,
+          33,
+          "f9c22b"
+        ],
+        [
+          185,
+          34,
+          "f9c22b"
+        ],
+        [
+          186,
+          34,
+          "f9c22b"
+        ]
+      ],
+      "ink_2x2_blocks": [],
+      "severity": "warning"
+    },
+    "frames": {
+      "passed": true,
+      "failures": [],
+      "severity": "error"
+    },
+    "banding": {
+      "passed": true,
+      "max_run": 18,
+      "offenders": [],
+      "severity": "warning"
+    },
+    "manifest_contract": {
+      "passed": true,
+      "errors": [],
+      "severity": "error"
+    },
+    "body_size": {
+      "passed": true,
+      "errors": [],
+      "warnings": [
+        "body height 72 over target 60"
+      ],
+      "measured": {
+        "width": 96,
+        "height": 72,
+        "wingspan": 96
+      },
+      "rules": {
+        "min_h": 42,
+        "max_h": 60,
+        "min_wingspan": 72
+      },
+      "severity": "error"
+    },
+    "whitelist_cap": {
+      "passed": true,
+      "cap": 6,
+      "offenders": [],
+      "severity": "error"
+    }
+  }
+}

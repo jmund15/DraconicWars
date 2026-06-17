@@ -450,9 +450,10 @@ FP_BIPED_ANIMS = [AnimDef("idle", 2, 7, True), AnimDef("walk", 4, 10, True),
                   AnimDef("attack", 4, 12, False), AnimDef("death", 3, 10, False)]
 FP_AERIAL_ANIMS = [AnimDef("idle", 2, 7, True), AnimDef("fly", 6, 10, True),
                    AnimDef("attack", 4, 12, False), AnimDef("death", 3, 10, False)]
-# Boss budget (pyraxis): idle 4 / fly 6 / attack 6 / death 6.
-BOSS_AERIAL_ANIMS = [AnimDef("idle", 4, 7, True), AnimDef("fly", 6, 10, True),
-                     AnimDef("attack", 6, 12, False), AnimDef("death", 6, 10, False)]
+# Boss budget (pyraxis): idle 6 / fly 6 / attack 7 / death 8 = 27 (grander-boss
+# frame budget, Dragon Differentiation Fix target 26-30).
+BOSS_AERIAL_ANIMS = [AnimDef("idle", 6, 7, True), AnimDef("fly", 6, 10, True),
+                     AnimDef("attack", 7, 12, False), AnimDef("death", 8, 10, False)]
 
 
 def attack_pose_keys(contact_idx: int, frames: int = 4) -> list[str]:
@@ -1454,7 +1455,8 @@ class FlyerConfig:
     fire_tail: bool = False     # ember flame cluster at the tail tip
     eye_px: int = 1             # 1 | 2 | 4 (4 = 2x2 block)
     eye_shape: str = "round"    # 'round' (block) | 'slit' (vertical reptilian)
-    boss: bool = False          # boss budget: idle 4 / fly 6 / attack 6 / death 6
+    boss: bool = False          # boss budget: idle 6 / fly 6 / attack 7 / death 8
+    seed: int = 0               # per-unit asymmetry seed (0 = byte-stable default)
     body_dx: int = 0            # absolute canvas shift (right-edge headroom)
     body_dy: int = 0
     dragon: bool = False        # dedicated dragon anatomy (S-neck, fan wings)
@@ -1477,6 +1479,20 @@ def _flyer_eye(buf, ex, ey, colors, eye_px, shape="round"):
         return
     for dx_, dy_ in [(0, 0), (-1, 0), (0, 1), (-1, 1)][: max(1, min(eye_px, 4))]:
         buf.set_px(ex + dx_, ey + dy_, *colors["eye"], part="eye", no_outline=True)
+
+
+def _dragon_horns(hx, hy, R):
+    """Crowned dragon-horn geometry as (p0, apex, p2, part) triangles. Each apex
+    must RAKE BACK over the neck (apex.dx < 0, |dx| >= |dy|) so the pair reads as
+    heavy dragon horns, not upward-splaying deer antlers. Pure -> unit-tested
+    (test_templates.test_dragon_horns_backswept). R is the _draw_dragon scale fn."""
+    return [
+        # near horn -- chunky wedge raking back from the skull crown (wide base
+        # p0->p2 = thickness; apex p1 sweeps back so it reads horn, not antler)
+        ((hx + R(1.2), hy - R(0.6)), (hx - R(4.6), hy - R(2.8)), (hx - R(0.4), hy - R(3.0)), "horn"),
+        # far horn -- the depth pair, a touch higher + shorter behind the near horn
+        ((hx + R(0.6), hy - R(1.6)), (hx - R(3.4), hy - R(3.6)), (hx - R(0.2), hy - R(3.6)), "horn_far"),
+    ]
 
 
 def _insect_wing_pair(buf, root, wm, fill, part):
@@ -1538,7 +1554,8 @@ class AerialFlyerTemplate:
         if anim == "idle":
             if self.cfg.boss:
                 return [{"wing": -5, "body": (0, 0)}, {"wing": -3, "body": (0, 0)},
-                        {"wing": -2, "body": (0, 1)}, {"wing": -4, "body": (0, 1)}]
+                        {"wing": -1, "body": (0, 1)}, {"wing": -2, "body": (0, 1)},
+                        {"wing": -4, "body": (0, 1)}, {"wing": -5, "body": (0, 0)}]
             return [{"wing": -5, "body": (0, 0)}, {"wing": -2, "body": (0, 1)}]
         if anim == "fly":
             return [{"wing": FLY_WING_DY[i], "body": (0, FLY_BODY_DY[i])} for i in range(6)]
@@ -1552,16 +1569,18 @@ class AerialFlyerTemplate:
                 "settle": {"wing": -4, "body": (0, 0), "head": (0, 0)},
                 "settle2": {"wing": -5, "body": (0, 1), "head": (0, 1)},
             }
-            frames = 6 if self.cfg.boss else 4
+            frames = 7 if self.cfg.boss else 4
             return [dict(table[k]) for k in attack_pose_keys(contact_idx, frames)]
         if anim == "death":
             if self.cfg.boss:
                 return [
                     {"wing": 3, "body": (0, 1), "head": (0, 1)},
+                    {"wing": 4, "body": (0, 1), "head": (0, 2)},
                     {"wing": 5, "body": (0, 2), "head": (0, 3)},
-                    {"wing": 7, "body": (0, 3), "head": (1, 4), "fold": True},
-                    {"wing": 8, "body": (0, 4), "head": (1, 5), "fold": True},
+                    {"wing": 6, "body": (0, 3), "head": (1, 4), "fold": True},
+                    {"wing": 7, "body": (0, 4), "head": (1, 5), "fold": True},
                     {"wing": 8, "body": (0, 5), "head": (0, 6), "fold": True, "crumple": True},
+                    {"wing": 8, "body": (0, 5), "head": (0, 7), "fold": True, "crumple": True},
                     {"wing": 8, "body": (0, 5), "head": (0, 7), "fold": True, "crumple": True},
                 ]
             return [
@@ -1960,8 +1979,11 @@ class AerialFlyerTemplate:
                                   hot[0], hot[1], part=f"crest{ox}")
 
         # --- S-curve neck: three tapering segments climbing forward-up ------
-        hx = bx + R(6.4) + R(hdx)
-        hy = by - R(8.6) + R(hdy)
+        # per-seed asymmetry (reuses the shared _asym helper): a 1px head lean
+        # breaks the mechanical-symmetry "default-asset tell". seed 0 -> no shift.
+        asym = _asym(getattr(cfg, "seed", 0))
+        hx = bx + R(6.4) + R(hdx) + asym["head_dx"]
+        hy = by - R(8.6) + R(hdy) - asym["shoulder_up"]
         if crumple:
             # damped head drop: the pose-table dy is tuned for the 32px whelp;
             # at dragon scale the full offset sinks the head through the
@@ -2007,13 +2029,9 @@ class AerialFlyerTemplate:
             buf.fill_triangle((hx + R(1.0), hy - R(1.8)), (hx - R(0.8), hy - R(4.8)),
                               (hx + R(2.2), hy - R(1.6)), horn[0], horn[1], part="horn2")
         elif cfg.head_style == "crowned":
-            horn = colors["horn"]
-            buf.fill_triangle((hx - R(1.2), hy - R(1.4)), (hx - R(4.6), hy - R(4.0)),
-                              (hx + R(0.2), hy - R(1.8)), horn[0], horn[1], part="horn")
-            buf.fill_triangle((hx + R(0.2), hy - R(1.8)), (hx - R(1.2), hy - R(5.6)),
-                              (hx + R(1.4), hy - R(2.0)), horn[0], horn[1], part="horn2")
-            buf.fill_triangle((hx + R(1.4), hy - R(2.0)), (hx + R(1.4), hy - R(5.0)),
-                              (hx + R(2.6), hy - R(1.6)), horn[0], horn[1], part="horn3")
+            h = colors["horn"]
+            for p0, p1, p2, hpart in _dragon_horns(hx, hy, R):
+                buf.fill_triangle(p0, p1, p2, h[0], h[1], part=hpart)
         if cfg.crest == "head":
             hot = colors["hot"]
             buf.fill_triangle((hx - R(0.4), hy - R(1.8)), (hx - R(3.4), hy - R(3.8)),
@@ -2022,6 +2040,13 @@ class AerialFlyerTemplate:
         eo = unit.get("eye_offset", (0, 0))
         ex, ey = hx + R(0.6) + eo[0], hy - R(0.7) + eo[1]
         _flyer_eye(buf, ex, ey, colors, cfg.eye_px, getattr(cfg, "eye_shape", "round"))
+        # fire-ember identity accent (crowned hero only): a 2px brow ember in the
+        # whitelisted no_outline accent role -> blooms under signature_fire and
+        # stays within the 6px eye+accent cap (slit eye 2 + accent 2 = 4).
+        if cfg.head_style == "crowned":
+            acc = colors["accent"]
+            buf.set_px(ex - R(0.5), ey - R(0.7), acc[0], acc[1], part="accent", no_outline=True)
+            buf.set_px(ex + R(0.1), ey - R(0.7), acc[0], acc[1], part="accent", no_outline=True)
 
         # --- near wing: 3-panel fan + wrist-radiating finger spars -----------
         rn = (bx + R(1.2), by - R(2.4))
@@ -2589,6 +2614,7 @@ def flyer_config_from_spec(spec: dict | None) -> FlyerConfig:
         eye_px=int(fl.get("eye_px", 1 if canvas[1] <= 32 else 2)),
         eye_shape=str(fl.get("eye_shape", "round")),
         boss=bool(fl.get("boss", False)),
+        seed=int(fl.get("seed", 0)),
         body_dx=int(fl.get("body_dx", 0)),
         body_dy=int(fl.get("body_dy", 0)),
         dragon=bool(fl.get("dragon", False)),

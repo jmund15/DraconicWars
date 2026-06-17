@@ -203,5 +203,18 @@ class ConformExternalTest(unittest.TestCase):
                              json.loads(Path(r2["manifest"]).read_text()))
 
 
+class AssembleExternalFramesTest(unittest.TestCase):
+    """The frame assembler's deterministic subsample (Cethiel ships 161-301 frames
+    per anim; the DW pipeline needs ~6-8 evenly spaced, endpoints included)."""
+
+    def test_even_indices_endpoints_and_count(self):
+        from assemble_external_frames import even_indices
+        self.assertEqual(even_indices(161, 6), [0, 32, 64, 96, 128, 160])
+        self.assertEqual(even_indices(301, 8), [0, 43, 86, 129, 171, 214, 257, 300])
+        self.assertEqual(even_indices(5, 5), [0, 1, 2, 3, 4])
+        self.assertEqual(even_indices(3, 6), [0, 1, 2])   # k >= n -> all frames
+        self.assertEqual(even_indices(161, 1), [0])       # degenerate, no div-by-zero
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)

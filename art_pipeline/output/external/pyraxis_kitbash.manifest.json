@@ -1,8 +1,9 @@
 {
-  "name": "pyraxis",
+  "name": "pyraxis_kitbash",
   "typeclass": "aerial_flyer",
   "element": "fire",
   "size_class": "boss",
+  "source": "external",
   "frame_w": 96,
   "frame_h": 96,
   "animations": [
@@ -38,41 +39,25 @@
   ],
   "foreswing_ticks": 10,
   "backswing_ticks": 14,
-  "attack_pose": "aerial_flyer",
   "ramps_used": [
-    "fire",
-    "fire_dark",
-    "ink",
-    "mauve_grey"
+    "fire"
   ],
   "pivot": "bottom_center",
   "ground_y": 93,
   "facing": "right",
   "body_size": {
-    "width": 75,
-    "height": 62,
-    "wingspan": 75,
-    "head_w": 12,
-    "head_h": 12
+    "width": 96,
+    "height": 72,
+    "wingspan": 96
   },
   "lint": {
-    "whitelist_colors": [
-      "f79617",
-      "ffffff"
-    ],
+    "whitelist_colors": [],
     "prop_colors": [],
     "airborne_animations": [
       "idle",
       "fly",
       "attack",
       "death"
-    ],
-    "detail_exempt_colors": [
-      "2e222f",
-      "ae2334",
-      "b33831",
-      "e83b3b",
-      "fb6b1d"
     ]
   }
 }

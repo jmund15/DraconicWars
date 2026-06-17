@@ -1,0 +1,12 @@
+{
+  "zip": "cethiel_dragon_pack.zip",
+  "prefix": "Dragon - Fully Animated/",
+  "flip_h": true,
+  "out": "cethiel_dragon_source.png",
+  "rows": [
+    {"folder": "Idle",     "frames": 6},
+    {"folder": "Walking",  "frames": 6},
+    {"folder": "Attack 1", "frames": 7},
+    {"folder": "Death",    "frames": 8}
+  ]
+}

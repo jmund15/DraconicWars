@@ -169,11 +169,92 @@ def test_secondary_lag():
     check("one-shot lag trails elsewhere: frame 2 reads frame 1", clamp_p[2]["wing_lag"] == 3)
 
 
+def test_dragon_horns_backswept():
+    """Crowned dragon horns must RAKE BACK (apex.dx < 0 AND |dx| >= |dy|) so they
+    read as heavy dragon horns, not upward-splaying deer antlers. R = the boss
+    scale (3.2). The antler tells this rejects: an apex pointing up (|dy| > |dx|)
+    or forward (dx >= 0)."""
+    R = lambda v: round(v * 3.2)
+    hx, hy = 60, 30
+    for p0, p1, p2, part in skeletons._dragon_horns(hx, hy, R):
+        dx, dy = p1[0] - p0[0], p1[1] - p0[1]
+        check(f"crowned horn '{part}' apex rakes back (dx<0)", dx < 0)
+        check(f"crowned horn '{part}' backsweep dominates rise (|dx|>=|dy|)",
+              abs(dx) >= abs(dy))
+
+
+def _pyraxis_template(pal, seed=None):
+    """Build the crowned fire-boss dragon template + render context (the pyraxis
+    spec) for tests. Optional seed exercises the per-seed asymmetry path."""
+    import generate_unit
+    flyer = {"scale": 3.2, "wing_mult": 0.84, "tail_mult": 1.3, "head": "crowned",
+             "crest": "ridge", "fire_tail": True, "eye_px": 4, "eye_shape": "slit",
+             "boss": True, "body_dx": -10, "dragon": True}
+    if seed is not None:
+        flyer["seed"] = seed
+    spec = {"typeclass": "aerial_flyer", "canvas": "96x96", "flyer": flyer}
+    tmpl = skeletons.make_template("aerial_flyer", spec)
+    colors = generate_unit.resolve_colors(tmpl, "fire", None, pal)
+    unit = {"colors": colors, "props": [], "eye_offset": (0, 0)}
+    return tmpl, colors, unit
+
+
+def test_crowned_fire_accent():
+    """The crowned fire dragon carries a deliberate palette-locked ember accent
+    (the 'accent' role hex, no_outline so it blooms) -- present on a rendered
+    frame, with eye+accent staying within the 6px whitelist cap."""
+    pal = get_palette()
+    tmpl, colors, unit = _pyraxis_template(pal)
+    acc_hex = pal.hex_of(*colors["accent"])
+    eye_hex = pal.hex_of(*colors["eye"])
+    buf = skeletons.PixelBuffer(96, 96)
+    tmpl.draw_pose(buf, tmpl.poses("idle", 1)[0], unit, pal)
+    n_acc = sum(1 for c in buf.cells.values() if pal.hex_of(c.ramp, c.idx) == acc_hex)
+    n_eye = sum(1 for c in buf.cells.values() if pal.hex_of(c.ramp, c.idx) == eye_hex)
+    check("crowned dragon has >=1 ember accent px (identity accent present)", n_acc >= 1)
+    check("eye+accent whitelist within the 6px cap", n_acc + n_eye <= 6)
+
+
+def test_boss_frame_budget():
+    """A maxed boss dragon spends 26-30 animation frames (Dragon Differentiation
+    Fix); poses() must return exactly the AnimDef frame count per animation (the
+    two are a double source of truth that generate_unit cross-checks), and the
+    attack contact_frame stays in range across the bumped count."""
+    from generate_unit import contact_frame_index
+    pal = get_palette()
+    tmpl, colors, unit = _pyraxis_template(pal)
+    anims = tmpl.animations()
+    total = sum(a.frames for a in anims)
+    check(f"boss frame budget in [26,30] (got {total})", 26 <= total <= 30)
+    attack = next(a for a in anims if a.name == "attack")
+    contact = contact_frame_index(10, 14, attack.frames)
+    check("attack contact_frame in [0, attack.frames)", 0 <= contact < attack.frames)
+    for a in anims:
+        n = len(tmpl.poses(a.name, contact))
+        check(f"poses('{a.name}') count == AnimDef.frames ({a.frames})", n == a.frames)
+
+
+def test_flyer_seed_asymmetry():
+    """A nonzero FlyerConfig.seed breaks symmetry deterministically (reusing the
+    shared _asym helper): distinct seeds render distinct geometry, while seed 0
+    is the byte-stable no-asymmetry default (other flyers keep their bytes)."""
+    pal = get_palette()
+    def render(seed):
+        tmpl, colors, unit = _pyraxis_template(pal, seed=seed)
+        buf = skeletons.PixelBuffer(96, 96)
+        tmpl.draw_pose(buf, tmpl.poses("idle", 1)[0], unit, pal)
+        return {(xy, c.ramp, c.idx) for xy, c in buf.cells.items()}
+    a0, a5, a3 = render(0), render(5), render(3)
+    check("seed 5 differs from seed 0 (asymmetry applied)", a5 != a0)
+    check("seed 3 differs from seed 5 (distinct seeds -> distinct geometry)", a3 != a5)
+
+
 def main():
     print("test_templates.py")
     for fn in (test_make_template_resolves_all_typeclasses, test_contract_conformance,
                test_internal_volume, test_eye_shape, test_squash_breathe_anchors_feet,
-               test_secondary_lag):
+               test_secondary_lag, test_dragon_horns_backswept, test_crowned_fire_accent,
+               test_boss_frame_budget, test_flyer_seed_asymmetry):
         print(f"{fn.__name__}:")
         fn()
     print(f"\n{'PASS' if not check.failed else f'FAIL ({check.failed})'}")

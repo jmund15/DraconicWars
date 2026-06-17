@@ -167,7 +167,7 @@ BATCH: list[tuple[dict, str]] = [
         "flyer": {"scale": 3.2, "wing_mult": 0.84, "tail_mult": 1.3,
                   "head": "crowned", "crest": "ridge", "fire_tail": True,
                   "eye_px": 4, "eye_shape": "slit", "boss": True, "body_dx": -10,
-                  "dragon": True},
+                  "dragon": True, "seed": 5},
         "foreswing_ticks": 10,
         "backswing_ticks": 14,
     }, "always"),

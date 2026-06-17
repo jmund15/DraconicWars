@@ -1,0 +1,25 @@
+{
+  "name": "pyraxis_conform",
+  "typeclass": "aerial_flyer",
+  "element": "fire",
+  "size_class": "boss",
+  "canvas": "96x96",
+  "levels": 5,
+  "body_fill": 0.82,
+  "neutral_sat_max": 0.12,
+  "materials": [
+    { "ramp": "fire" },
+    { "ramp": "mauve_grey", "neutral": true }
+  ],
+  "airborne": true,
+  "source_sheet": "cethiel_dragon_source.png",
+  "source_grid": { "frame_w": 725, "frame_h": 445 },
+  "rows": [
+    { "animation": "idle",   "src_row": 0, "frames": 6, "fps": 7,  "loop": true },
+    { "animation": "fly",    "src_row": 1, "frames": 6, "fps": 10, "loop": true },
+    { "animation": "attack", "src_row": 2, "frames": 7, "fps": 12, "loop": false },
+    { "animation": "death",  "src_row": 3, "frames": 8, "fps": 10, "loop": false }
+  ],
+  "foreswing_ticks": 10,
+  "backswing_ticks": 14
+}

@@ -167,14 +167,14 @@
       "lint_pass": true,
       "failed_checks": [],
       "warnings": [
-        "body height 68 over target 60"
+        "body height 62 over target 60"
       ],
       "body_size": {
-        "width": 74,
-        "height": 68,
-        "wingspan": 74,
+        "width": 75,
+        "height": 62,
+        "wingspan": 75,
         "head_w": 12,
-        "head_h": 11
+        "head_h": 12
       },
       "contact_sheets": [
         "C:\\Users\\jmund\\Game_Dev\\Godot_Projects\\DraconicWars\\art_pipeline\\output\\contact_sheets\\pyraxis_contact_1x.png",
