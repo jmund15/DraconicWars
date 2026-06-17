@@ -6,6 +6,49 @@ Design surface: `art-pipeline-uplift.md` §"The Hero A/B/C Experiment & Evaluati
 
 ---
 
+## ⏸ EXECUTION RESULT — AWAITING YOUR VERDICT (recorded 2026-06-17)
+
+**Status:** Slices A–D shipped + committed (3 commits, **NOT pushed**). Slice E halts here — the rubric verdict is yours (it IS the Part's DoD, reserved by art-direction §162). Roadmap still `plan-pending`; the `/update_roadmap` flip waits on your call.
+
+### The three variants — all 96px, idle/fly/attack/death, lint-PASS, ticks 10/14
+| | Variant | Sheet | In-context render (VFX on) |
+|---|---|---|---|
+| **A** | procedural-maxed pyraxis | `art_pipeline/output/units/pyraxis_sheet.png` | `art_pipeline/output/previews/pyraxis_preview.png` |
+| **B** | hand-authored kit-bash | `art_pipeline/output/external/pyraxis_kitbash_sheet.png` | `.../previews/pyraxis_kitbash_preview.png` |
+| **C** | curated-conform (Cethiel CC0) | `art_pipeline/output/external/pyraxis_conform_sheet.png` | `.../previews/pyraxis_conform_preview.png` |
+
+**3-way in-context comparison image:** `art_pipeline/.review/bakeoff_incontext_3way.png`. All three rendered IN-ENGINE over the battle backdrop with the live signature_fire VFX (emissive bloom + ember aura + boss PointLight2D halo) via the new reusable harness `scenes/battle/unit_preview.tscn` + `Game/Battle/UnitPreviewController.cs`. Re-capture any time: `dotnet build`, then run that scene with `PREVIEW_DEF/DIR/SHEET/OUT` env vars (see the controller).
+
+### Rubric (mechanizable axes filled; ⟨obs⟩ = Claude's observation, NOT the verdict)
+| Criterion | A procedural | B kit-bash | C conform (CC0) |
+|---|---|---|---|
+| Palette cohesion (lint) | ✅ PASS (full) | ✅ PASS (ext) | ✅ PASS (ext) |
+| License | 🟢 fully original | 🟢 original | 🟡 CC0 — clean but a recognizable shared asset |
+| Production cost | 🟡 moderate (4 TDD gaps) | 🔴 high (parts+compositor, weak result) | 🟢 low (assemble+map+conform) |
+| Silhouette ⟨obs⟩ | clear wyvern | crude blob | detailed, busy-but-readable |
+| "Wow" ⟨obs⟩ | solid | low | **highest** (bloom → molten fire) |
+| Liveness ⟨obs⟩ | **best** (hand-tuned squash/lag/breathe) | minimal | smooth (but DR6 scaling-pulse) |
+| Uniqueness ⟨obs⟩ | **high** (bespoke) | high (original) | **low** (curated, "seen elsewhere") |
+
+Headline: the bake-off reproduced the design's core tension — **C buys the most "wow" for the least effort but spends uniqueness**; the live VFX amplified both ends (bloom ignited C's detail, washed out B's flat fill).
+
+### ❓ YOUR VERDICT — what to decide when back at your PC
+1. **Which strategy wins the HERO tier?** (+ your scoring of the subjective axes above)
+2. **Per-style guidance** — which sourcing strategy for which use (e.g. "procedural for roster, conform for boss spectacle, hand-author never")? This is the recorded output that feeds the [[GeneralGameDev]] methodology extraction (Part F).
+
+### Next steps the verdict unblocks
+- `/update_roadmap` flip Part → `complete` (deferred to post-verdict by design).
+- **IF C (conform) wins a hero tier** → the gated **DR6 per-animation scaling-pulse fix** becomes in-scope. Site pinpointed: `conform_external.py` `_conform_cell`, per-frame `scale = th/sh` (each frame scales to its own bbox → attack frames pulse). Fix = one consistent scale per animation.
+- **Unit Back-Light Shader** Part stays queued separately (arch-pending; the deferred rim).
+- Raw Cethiel pack (132 MB) is git-excluded + re-fetchable from the CREDITS ledger URL; only the assembled source + conformed output are committed.
+
+### Commits (banked, NOT pushed)
+- `27b672b` feat(art-pipeline): three fire-dragon variants (A/B/C)
+- `a69353d` feat(battle): in-context preview/capture harness + renders
+- `0d9e9dc` docs(plan): this plan
+
+---
+
 ## Decision Record
 
 - **DR1 — Forks resolved (user, this session):** Full **A/B/C** (all three variants); **full-Godot in-context render with live Signature VFX** (rubric-faithful, line 112); strategy-C source = **Cethiel "Dragon — Fully Animated"** (CC0, OpenGameArt) — downloaded, ledgered.
