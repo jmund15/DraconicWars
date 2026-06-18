@@ -28,6 +28,7 @@ public static class UnitCatalog
         ["quarry_slinger"] = Rarity.Uncommon,
         ["spark_courier"] = Rarity.Uncommon,
         ["skylance_emberknight"] = Rarity.Uncommon,
+        ["plaguecharger"] = Rarity.Uncommon,
         ["cinder_acolyte"] = Rarity.Rare,
         ["ash_revenant"] = Rarity.Rare,
         ["glacier_adept"] = Rarity.Rare,
@@ -528,6 +529,24 @@ public static class UnitCatalog
             ShelterDrPct = 0.35f,
             ShelterRegenPerTick = 2,
             ShelterRadius = 7f,
+        },
+
+        // New ground form (cavalry): an Uncommon Venom melee charger. "Ride It Into the
+        // Ground" — charges fast, then its first contact consumes the steed (a venom slow/chip
+        // wake) and it dismounts to a slower footman.
+        new UnitDef(
+            Id: "plaguecharger", DisplayName: "Plaguecharger", Tier: 2,
+            TypeClass: TypeClass.Melee, Element: Element.Venom,
+            MaxHp: 180, Damage: 20, ForeswingTicks: 6, BackswingTicks: 10,
+            Range: 1.0f, RangeMin: 0f, IsArea: false, MoveSpeed: 3.2f,
+            KnockbackCount: 2, DeployCost: 140, DeployCooldownTicks: 180,
+            Stratum: Stratum.Ground, CanTargetGround: true, CanTargetAir: false)
+        {
+            DismountSpeed = 1.4f,
+            ZoneRadius = 2f,
+            ZoneSlowPct = 0.35f,
+            ZoneDurationTicks = 180,
+            ZoneDamagePerTick = 1,
         },
     });
 

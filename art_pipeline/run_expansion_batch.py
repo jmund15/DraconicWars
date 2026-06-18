@@ -217,6 +217,22 @@ UNITS: list[dict] = [
                   "body_dx": -12, "seed": 15},
         "foreswing_ticks": 14, "backswing_ticks": 20,
     },
+    # --- New ground forms (Part 3): cavalry (Uncommon plaguecharger), naga (Rare rimecoil),
+    # burrower (Mythic the_tithe), monolith (Mythic sporekeep).
+    {
+        "name": "plaguecharger",
+        "typeclass": "melee_biped",
+        "base": "cavalry",
+        "head_style": "snout",
+        "element": "venom",
+        "canvas": "32x32",
+        "size_class": "small",
+        "props": ["spear"],
+        "build": "dangerous", "seed": 3,
+        "proportions": {"torso_w": 11, "torso_h": 10, "leg_h": 9, "head_w": 8, "head_h": 8},
+        "palette_overrides": {},
+        "foreswing_ticks": 6, "backswing_ticks": 10,
+    },
 ]
 
 

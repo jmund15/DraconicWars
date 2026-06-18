@@ -1400,6 +1400,45 @@ class FlyingMount:
         buf.fill_rect(cx - halfw + 1, GY, cx + halfw - 1, GY, sr, d, part="mount")
 
 
+class CavalrySteed:
+    """A quadruped war-beast the rider sits astride: a horizontal barrel on four thin legs,
+    a forward neck+head and a trailing tail. Band-safe — the barrel is overlapping ellipses
+    (cluster fill, never one wide gradient band) and the legs are 2px lines."""
+
+    def draw(self, tmpl, buf, kind, phase, tx0, tx1, hip_y, GY, skin):
+        sr, si = skin
+        d = max(si - 1, 0)
+        cx = (tx0 + tx1) // 2
+        span = max(tx1 - tx0, 8)
+        half = span // 2 + 2
+        # barrel sits just under the rider's seat, but never below the ground line (a
+        # death-frame body-drop must not push the steed past GY).
+        by = min(hip_y + 2, GY - 3)
+        # barrel body: two overlapping ellipses (lit body + shaded underline)
+        buf.fill_ellipse(cx - 1, by, half, 3, sr, si, part="barrel")
+        buf.fill_ellipse(cx - 1, by + 1, half - 1, 2, sr, d, part="barrelshade")
+        # forward neck + blunt head (the steed faces right, with the rider)
+        nx = cx + half - 1
+        buf.fill_rect(nx, by - 3, nx + 1, by, sr, si, part="neck")
+        buf.fill_ellipse(nx + 2, by - 3, 2, 2, sr, si, part="steedhead")
+        # trailing tail
+        buf.line(cx - half, by, cx - half - 3, by + 3, sr, d, part="tail")
+        # four thin legs (band-safe lines); gait shuffles on walk, plants on lunge
+        if kind == "walk":
+            gait = WALK_LEGS[phase % 4]
+            offs = (gait[0], gait[2], gait[0], gait[2])
+        elif kind == "lunge":
+            offs = (-2, -2, 3, 3)
+        else:
+            offs = (0, 0, 1, 1)
+        legxs = (cx - half + 2, cx - 1, cx + 1, cx + half - 3)
+        for i, lx in enumerate(legxs):
+            front = i >= 2
+            didx = si if front else d
+            buf.line(lx, by + 2, lx + offs[i], GY, sr, didx,
+                     part="front_leg" if front else "back_leg")
+
+
 HUMANOID_LEGS = HumanoidLegs()
 OGRE_STUMPS = OgreStumps()
 SEGMENTED_PILLARS = SegmentedPillars()
@@ -1408,6 +1447,7 @@ FLOATING_SHARDS = FloatingShards()
 SPIDER_LEGS = SpiderLegs()
 WRAITH_TAIL = WraithTail()
 FLYING_MOUNT = FlyingMount()
+CAVALRY_STEED = CavalrySteed()
 
 # Spec ``base`` key -> part. Adding a base archetype = one entry here + the class.
 LOCOMOTION_PARTS = {
@@ -1419,6 +1459,7 @@ LOCOMOTION_PARTS = {
     "spider": SPIDER_LEGS,
     "wraith": WRAITH_TAIL,
     "mount": FLYING_MOUNT,
+    "cavalry": CAVALRY_STEED,
 }
 
 

@@ -1267,6 +1267,12 @@ public sealed class BattleSim
 
     private void FinishContact(BattleState state, SimUnit attacker)
     {
+        // Two-phase sacrifice: the first contact consumes the steed (the wake was seeded in
+        // SeedZone while HasStruck was still false) and drops the rider to footman pace.
+        if (attacker.Def.DismountSpeed > 0f && !attacker.HasStruck)
+        {
+            attacker.MoveSpeedOverride = attacker.Def.DismountSpeed;
+        }
         attacker.HasStruck = true;
         if (attacker.Def.TollRampPct > 0f)
         {
@@ -1290,6 +1296,12 @@ public sealed class BattleSim
     private void SeedZone(BattleState state, SimUnit attacker, float impactX)
     {
         if (attacker.Def.ZoneRadius <= 0f)
+        {
+            return;
+        }
+        // A dismount unit's zone IS the one-time sacrifice wake — only on the first contact
+        // (HasStruck is still false here; FinishContact sets it after).
+        if (attacker.Def.DismountSpeed > 0f && attacker.HasStruck)
         {
             return;
         }

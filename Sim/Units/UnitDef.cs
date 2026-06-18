@@ -137,6 +137,11 @@ public sealed record UnitDef(
     /// <summary>Translates this far PAST its target when an attack cycle completes.</summary>
     public float StrafeDistance { get; init; }
 
+    /// <summary>&gt;0: on its FIRST contact the steed is consumed — the rider drops to this
+    /// move speed (footman pace) and seeds its venom wake zone once (plaguecharger's two-phase
+    /// sacrifice). Later contacts neither re-dismount nor re-seed.</summary>
+    public float DismountSpeed { get; init; }
+
     /// <summary>&gt;0: each contact seizes the FRONTMOST non-Unstaggerable enemy in band
     /// (the one most advanced toward this unit's spire) and teleports it this far back
     /// toward its OWN spire, self-stunning it for GrabStunTicks (crag_tyrant's Roc grab —

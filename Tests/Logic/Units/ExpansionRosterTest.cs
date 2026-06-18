@@ -154,6 +154,18 @@ public class ExpansionRosterTest
     }
 
     [TestCase]
+    public void PlaguechargerIsAnUncommonDismountingCharger()
+    {
+        var u = Find("plaguecharger");
+        AssertThat(u.Rarity).IsEqual(Rarity.Uncommon);
+        AssertThat(u.Element).IsEqual(Element.Venom);
+        AssertThat(u.TypeClass).IsEqual(TypeClass.Melee);
+        // Charges fast, dismounts slower, and leaves a venom wake on the sacrifice.
+        AssertThat(u.DismountSpeed > 0f && u.DismountSpeed < u.MoveSpeed).IsTrue();
+        AssertThat(u.ZoneRadius > 0f).IsTrue();
+    }
+
+    [TestCase]
     public void StormwrightIsAMythicLobbedSplashSiege()
     {
         var u = Find("stormwright");

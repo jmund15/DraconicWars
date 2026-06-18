@@ -79,6 +79,9 @@ public static class UnitLore
         ["frostbarge_cloudwhale"] = new(
             "The Frostbarge Cloudwhale",
             "It carries no weapons. It carries your army. The storm cannot reach its shadow."),
+        ["plaguecharger"] = new(
+            "Plaguecharger of the Drowned Tithe",
+            "The steed was already dying. It only had to die pointed the right way."),
         ["elder_drake"] = new(
             "Elder Drake — Court Rental",
             "On loan from the Wyrmcourt. Do read the damage clauses."),
