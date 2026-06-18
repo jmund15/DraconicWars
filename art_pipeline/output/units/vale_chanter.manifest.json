@@ -1,7 +1,7 @@
 {
   "name": "vale_chanter",
   "typeclass": "support_robed",
-  "element": "venom",
+  "element": "storm",
   "size_class": "small",
   "frame_w": 32,
   "frame_h": 32,
@@ -38,29 +38,32 @@
   ],
   "foreswing_ticks": 10,
   "backswing_ticks": 20,
+  "attack_pose": "staff",
   "ramps_used": [
     "ink",
     "leather",
     "mauve_grey",
-    "storm",
-    "venom"
+    "storm"
   ],
   "pivot": "bottom_center",
   "ground_y": 29,
   "facing": "right",
   "body_size": {
     "width": 16,
-    "height": 24
+    "height": 24,
+    "head_w": 8,
+    "head_h": 8
   },
   "lint": {
     "whitelist_colors": [
-      "1ebc73",
+      "d5e04b",
       "ffffff"
     ],
     "prop_colors": [
       "7f708a",
       "cd683d"
     ],
-    "airborne_animations": []
+    "airborne_animations": [],
+    "detail_exempt_colors": []
   }
 }

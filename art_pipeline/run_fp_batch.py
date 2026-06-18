@@ -63,7 +63,7 @@ BATCH: list[tuple[dict, str]] = [
     ({
         "name": "vale_chanter",
         "typeclass": "support_robed",
-        "element": "venom",
+        "element": "storm",
         "canvas": "32x32",
         "size_class": "small",
         "props": ["staff"],
@@ -74,7 +74,7 @@ BATCH: list[tuple[dict, str]] = [
     ({
         "name": "dune_marksman",
         "typeclass": "sniper_biped",
-        "element": "storm",
+        "element": "stone",
         "canvas": "48x64",
         "size_class": "small",
         "props": ["crossbow"],

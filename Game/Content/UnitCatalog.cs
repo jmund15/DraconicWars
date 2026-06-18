@@ -99,7 +99,7 @@ public static class UnitCatalog
             Stratum: Stratum.Ground, CanTargetGround: true, CanTargetAir: false),
         new UnitDef(
             Id: "vale_chanter", DisplayName: "Vale Chanter", Tier: 2,
-            TypeClass: TypeClass.Support, Element: Element.Venom,
+            TypeClass: TypeClass.Support, Element: Element.Storm,
             MaxHp: 90, Damage: 8, ForeswingTicks: 10, BackswingTicks: 20,
             Range: 5.0f, RangeMin: 0f, IsArea: true, MoveSpeed: 1.6f,
             KnockbackCount: 2, DeployCost: 130, DeployCooldownTicks: 180,
@@ -109,7 +109,7 @@ public static class UnitCatalog
         },
         new UnitDef(
             Id: "dune_marksman", DisplayName: "Dune Marksman", Tier: 2,
-            TypeClass: TypeClass.Sniper, Element: Element.Storm,
+            TypeClass: TypeClass.Sniper, Element: Element.Stone,
             MaxHp: 80, Damage: 30, ForeswingTicks: 14, BackswingTicks: 22,
             Range: 9.0f, RangeMin: 3.0f, IsArea: false, MoveSpeed: 1.5f,
             KnockbackCount: 1, DeployCost: 140, DeployCooldownTicks: 210,

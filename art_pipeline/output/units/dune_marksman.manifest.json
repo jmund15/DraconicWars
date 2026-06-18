@@ -1,7 +1,7 @@
 {
   "name": "dune_marksman",
   "typeclass": "sniper_biped",
-  "element": "storm",
+  "element": "stone",
   "size_class": "small",
   "frame_w": 48,
   "frame_h": 64,
@@ -38,11 +38,11 @@
   ],
   "foreswing_ticks": 14,
   "backswing_ticks": 22,
+  "attack_pose": "crossbow",
   "ramps_used": [
     "ink",
     "leather",
     "mauve_grey",
-    "storm",
     "tan"
   ],
   "pivot": "bottom_center",
@@ -50,17 +50,23 @@
   "facing": "right",
   "body_size": {
     "width": 19,
-    "height": 43
+    "height": 43,
+    "head_w": 11,
+    "head_h": 12
   },
   "lint": {
     "whitelist_colors": [
-      "d5e04b",
+      "e6904e",
       "ffffff"
     ],
     "prop_colors": [
       "7f708a",
       "cd683d"
     ],
-    "airborne_animations": []
+    "airborne_animations": [],
+    "detail_exempt_colors": [
+      "2e222f",
+      "7a3045"
+    ]
   }
 }
