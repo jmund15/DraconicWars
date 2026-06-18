@@ -1239,13 +1239,15 @@ public sealed class BattleSim
     }
 
     /// <summary>Best allied rally-damage aura (vale_chanter) covering this unit's position;
-    /// 0 when none. Non-stacking — the strongest overlapping aura wins.</summary>
+    /// 0 when none. Non-stacking — the strongest overlapping aura wins. Excludes the source
+    /// itself: a rally enables the warband, not the rallier.</summary>
     private static float RallyAuraPct(BattleState state, SimUnit unit)
     {
         var best = 0f;
         foreach (var other in state.Units)
         {
-            if (other.Side != unit.Side || !other.IsAlive || other.Def.RallyDamageAuraPct <= 0f)
+            if (ReferenceEquals(other, unit) || other.Side != unit.Side || !other.IsAlive
+                || other.Def.RallyDamageAuraPct <= 0f)
             {
                 continue;
             }
