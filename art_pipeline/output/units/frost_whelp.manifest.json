@@ -38,6 +38,7 @@
   ],
   "foreswing_ticks": 6,
   "backswing_ticks": 6,
+  "attack_pose": "aerial_flyer",
   "ramps_used": [
     "frost",
     "frost_teal",
@@ -50,7 +51,9 @@
   "body_size": {
     "width": 25,
     "height": 18,
-    "wingspan": 25
+    "wingspan": 25,
+    "head_w": 8,
+    "head_h": 5
   },
   "lint": {
     "whitelist_colors": [
@@ -63,6 +66,7 @@
       "fly",
       "attack",
       "death"
-    ]
+    ],
+    "detail_exempt_colors": []
   }
 }

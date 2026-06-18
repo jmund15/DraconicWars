@@ -565,6 +565,10 @@ def roster_distinctness(units: list[dict], iou_max: float = IOU_MAX,
             continue
         bs = u.get("body_size", {})
         bh = bs.get("height", 0)
+        # Headless body_plans (the manta sky-ray, the wisp mote) draw no head mass, so there
+        # is no head-proportion to band — skip them, same as the NO_HEAD_CLASSES forms.
+        if bs.get("head_h", 0) == 0:
+            continue
         ratio = (bs.get("head_h", 0) / bh) if bh else 0.0
         entry = {"name": u["name"], "ratio": round(ratio, 3), "band": list(band)}
         measured.append(entry)

@@ -38,6 +38,7 @@
   ],
   "foreswing_ticks": 6,
   "backswing_ticks": 12,
+  "attack_pose": "bow",
   "ramps_used": [
     "ink",
     "leather",
@@ -50,7 +51,9 @@
   "facing": "right",
   "body_size": {
     "width": 16,
-    "height": 27
+    "height": 27,
+    "head_w": 12,
+    "head_h": 11
   },
   "lint": {
     "whitelist_colors": [
@@ -61,6 +64,7 @@
       "7f708a",
       "cd683d"
     ],
-    "airborne_animations": []
+    "airborne_animations": [],
+    "detail_exempt_colors": []
   }
 }

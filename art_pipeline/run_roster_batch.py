@@ -35,8 +35,9 @@ SHEETS_DIR = OUT / "contact_sheets"
 BATCH: list[tuple[dict, str]] = [
     ({
         "name": "cinder_acolyte",
-        "build": "sturdy", "seed": 9,
-        "proportions": {"torso_w": 14, "torso_h": 12, "leg_h": 9, "head_w": 8, "head_h": 8},
+        "build": "agile", "seed": 9,
+        # tall + slim lobber silhouette vs the broad vale_chanter robe (roster distinctness)
+        "proportions": {"torso_w": 10, "torso_h": 15, "leg_h": 12, "head_w": 8, "head_h": 8},
         "typeclass": "support_robed",      # robed lobber -- "she lobs prayers"
         "element": "fire",
         "canvas": "32x32",
@@ -157,7 +158,9 @@ BATCH: list[tuple[dict, str]] = [
     ({
         "name": "quarry_slinger",
         "seed": 5,
-        "proportions": {"head_fwd": 2},
+        # lean, tall silhouette vs the broad dune_marksman + wedge ember_arbalest snipers
+        "build": "agile",
+        "proportions": {"head_fwd": 2, "torso_w": 13, "torso_h": 14, "leg_h": 22},
         "typeclass": "sniper_biped",
         "element": "stone",
         "canvas": "48x64",
@@ -274,9 +277,23 @@ def run(only: str | None = None) -> int:
     if not only:
         strip_paths = contact_sheet.make_silhouette_strip(
             strip_inputs, SHEETS_DIR, name="roster_silhouette_strip")
-        # cross-unit silhouette distinctness -> the C# art-contract gate reads
-        # this report (RosterArtContractTest.RosterSilhouettesAreDistinct).
-        dist_report = lint.roster_distinctness(dist_units)
+        # cross-unit silhouette distinctness -> the C# art-contract gate reads this report
+        # (RosterArtContractTest.RosterSilhouettesAreDistinct). It must cover the WHOLE roster
+        # on disk (every rendered silhouette), not just this batch — a 13-unit slice gave false
+        # confidence while the full 40-unit roster had uncaught collisions.
+        all_dist = []
+        for sil in sorted(UNITS_DIR.glob("*.silhouette.png")):
+            uname = sil.name[: -len(".silhouette.png")]
+            man = UNITS_DIR / f"{uname}.manifest.json"
+            if not man.exists():
+                continue
+            with Image.open(sil) as im:
+                mask = lint.silhouette_mask(im)
+            with open(man, "r", encoding="utf-8") as f:
+                mdata = json.load(f)
+            all_dist.append({"name": uname, "typeclass": mdata["typeclass"],
+                             "mask": mask, "body_size": mdata.get("body_size", {})})
+        dist_report = lint.roster_distinctness(all_dist)
         dp = REPORTS_DIR / "roster_distinctness.json"
         with open(dp, "w", encoding="utf-8") as f:
             json.dump(dist_report, f, indent=2)

@@ -2522,9 +2522,10 @@ class AerialFlyerTemplate:
         # fat fuselage (skin) with a shaded underbelly band
         buf.fill_ellipse(cx, cy, R(8), R(4.5), skin[0], skin[1], part="body")
         buf.fill_ellipse(cx, cy + R(2), R(6.5), R(2.4), skin[0], dark_skin, part="bodyshade")
-        # blunt head at the front (facing right)
+        # blunt head at the front (facing right) — a low oval so the head-to-body proportion
+        # stays inside the aerial band on the fat fuselage
         hx, hy = cx + R(7) + R(hdx), cy - R(1) + R(hdy)
-        buf.fill_ellipse(hx, hy, R(3.4), R(3.0), skin[0], skin[1], part="head")
+        buf.fill_ellipse(hx, hy, R(3.0), R(2.0), skin[0], skin[1], part="head")
         # slung ordnance pod (belly) under the fuselage
         if not crumple:
             buf.fill_ellipse(cx - R(1), cy + R(5), R(3.6), R(2.4), belly[0], belly[1], part="pod")

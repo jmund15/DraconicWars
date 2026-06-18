@@ -51,9 +51,9 @@
   "facing": "right",
   "body_size": {
     "width": 19,
-    "height": 43,
-    "head_w": 11,
-    "head_h": 12
+    "height": 48,
+    "head_w": 9,
+    "head_h": 9
   },
   "lint": {
     "whitelist_colors": [

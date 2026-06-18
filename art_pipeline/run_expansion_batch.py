@@ -55,7 +55,10 @@ UNITS: list[dict] = [
         "size_class": "small",
         "props": ["crossbow"],
         "seed": 11,
-        "proportions": {"head_fwd": 2},
+        # distinct shape-language vs the other sniper_bipeds (quarry/dune): a lean,
+        # tall, wedge-headed silhouette so the roster distinctness gate clears 0.77.
+        "build": "dangerous",
+        "proportions": {"torso_w": 13, "torso_h": 19, "leg_h": 20, "head_w": 9, "head_h": 9},
         "palette_overrides": {},
         "foreswing_ticks": 14, "backswing_ticks": 24,
     },
@@ -189,7 +192,7 @@ UNITS: list[dict] = [
         "canvas": "48x48",
         "size_class": "medium",
         "props": [],
-        "flyer": {"body_plan": "ordnance", "scale": 1.5, "wing_mult": 1.1, "eye_px": 2},
+        "flyer": {"body_plan": "ordnance", "scale": 1.5, "wing_mult": 2.3, "eye_px": 2},
         "foreswing_ticks": 14, "backswing_ticks": 28,
     },
     {
@@ -199,7 +202,7 @@ UNITS: list[dict] = [
         "canvas": "64x48",
         "size_class": "large",
         "props": [],
-        "flyer": {"body_plan": "leviathan", "scale": 1.5, "wing_mult": 1.2, "eye_px": 2,
+        "flyer": {"body_plan": "leviathan", "scale": 1.5, "wing_mult": 1.9, "eye_px": 2,
                   "body_dy": -3},
         # Frost accent_index (4) collides with the 'hot' step — move accent off it.
         "palette_overrides": {"accent": ["frost", 3]},
@@ -256,6 +259,10 @@ UNITS: list[dict] = [
         "size_class": "small",
         "props": [],
         "seed": 5,
+        # broad, blocky obelisk silhouette (vs the slim vale_chanter robe) so the roster
+        # distinctness gate clears 0.77 despite sharing the support_robed template.
+        "build": "sturdy",
+        "proportions": {"torso_w": 17, "torso_h": 18, "leg_h": 9, "head_w": 7, "head_h": 7},
         "palette_overrides": {},
         "foreswing_ticks": 12, "backswing_ticks": 20,
     },

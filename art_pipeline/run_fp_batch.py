@@ -41,6 +41,7 @@ BATCH: list[tuple[dict, str]] = [
         "element": "stone",
         "canvas": "32x32",
         "size_class": "small",
+        "build": "sturdy",                 # broad tank silhouette (roster distinctness)
         "props": ["sword", "shield"],      # LARGE round shield = class identity
         # wood -> stone ramp: a leather-faced shield blends into the leather
         # torso (class identity lost) AND the default face (leather[3])
@@ -55,6 +56,7 @@ BATCH: list[tuple[dict, str]] = [
         "element": "storm",
         "canvas": "32x32",
         "size_class": "small",
+        "build": "agile",                  # lithe, fast silhouette (roster distinctness)
         "props": ["quarterstaff"],
         "palette_overrides": {},
         "foreswing_ticks": 4,
@@ -77,11 +79,12 @@ BATCH: list[tuple[dict, str]] = [
         "element": "stone",
         "canvas": "48x64",
         "size_class": "small",
+        "build": "sturdy",                 # broad silhouette vs the lean ember/quarry snipers
         "props": ["crossbow"],
         "palette_overrides": {"skin": ["tan", 1]},
         "foreswing_ticks": 14,
         "backswing_ticks": 22,
-    }, "ticks"),
+    }, "always"),
     ({
         "name": "forest_archer",
         "typeclass": "ranged_biped",
@@ -99,12 +102,14 @@ BATCH: list[tuple[dict, str]] = [
         "element": "fire",
         "canvas": "32x32",
         "size_class": "small",
+        "build": "dangerous",      # fierce wedge silhouette, distinct from the other melee bipeds
+        "proportions": {"torso_w": 12, "torso_h": 11, "leg_h": 12, "head_w": 9, "head_h": 9},
         "eye_shape": "slit",       # reptilian kobold -- vertical slit pupil
         "props": ["spear", "small_shield"],
         "palette_overrides": {"cloth": ["leather", 1]},
         "foreswing_ticks": 4,
         "backswing_ticks": 8,
-    }, "ticks"),
+    }, "always"),
     ({
         "name": "frost_whelp",
         "typeclass": "aerial_flyer",

@@ -49,9 +49,9 @@
   "ground_y": 45,
   "facing": "right",
   "body_size": {
-    "width": 51,
+    "width": 64,
     "height": 27,
-    "wingspan": 51,
+    "wingspan": 64,
     "head_w": 13,
     "head_h": 11
   },
