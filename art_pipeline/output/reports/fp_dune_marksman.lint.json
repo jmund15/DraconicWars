@@ -20,7 +20,7 @@
       "count": 0,
       "offenders": [],
       "whitelist": [
-        "d5e04b",
+        "e6904e",
         "ffffff"
       ],
       "severity": "error"
@@ -54,7 +54,9 @@
       "warnings": [],
       "measured": {
         "width": 19,
-        "height": 43
+        "height": 42,
+        "head_w": 11,
+        "head_h": 12
       },
       "rules": {
         "min_h": 40,

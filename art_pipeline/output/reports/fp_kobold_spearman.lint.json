@@ -51,10 +51,14 @@
     "body_size": {
       "passed": true,
       "errors": [],
-      "warnings": [],
+      "warnings": [
+        "body height 30 over target 28"
+      ],
       "measured": {
-        "width": 16,
-        "height": 26
+        "width": 17,
+        "height": 30,
+        "head_w": 12,
+        "head_h": 9
       },
       "rules": {
         "min_h": 24,

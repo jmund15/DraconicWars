@@ -55,7 +55,9 @@
       "measured": {
         "width": 25,
         "height": 18,
-        "wingspan": 25
+        "wingspan": 25,
+        "head_w": 8,
+        "head_h": 5
       },
       "rules": {
         "min_h": 14,
