@@ -144,7 +144,10 @@ public static class UnitCatalog
             MaxHp: 1600, Damage: 90, ForeswingTicks: 10, BackswingTicks: 14,
             Range: 2.8f, RangeMin: 0f, IsArea: true, MoveSpeed: 1.8f,
             KnockbackCount: 6, DeployCost: 0, DeployCooldownTicks: 0,
-            Stratum: Stratum.Air, CanTargetGround: true, CanTargetAir: true),
+            Stratum: Stratum.Air, CanTargetGround: true, CanTargetAir: true)
+        {
+            StrongVsElement = Element.Venom, // counter wheel: Fire burns the rot
+        },
     });
 
     /// <summary>The rental dragon every loadout fields until a real dragon is bonded.</summary>
@@ -441,6 +444,7 @@ public static class UnitCatalog
             ProjectilePierces = true,
             ManaRefundPerKill = 8,
             ManaRefundCapPerShot = 24,
+            StrongVsElement = Element.Frost, // counter wheel: lightning shatters ice
             Attack = new AttackArchetype(AttackClass.Magic, AttackPose.Cast, AttackForm.Ball),
         },
 
@@ -459,6 +463,7 @@ public static class UnitCatalog
             VigilDrMaxPct = 0.4f,
             ShockwaveDamage = 60,
             ShockwaveRange = 6f,
+            StrongVsElement = Element.Storm, // counter wheel: earth grounds the lightning
         },
 
         // Glacereth (Frost) — "Stay a While." Seeds lingering frost fields that slow + chip,
@@ -477,6 +482,7 @@ public static class UnitCatalog
             ZoneDamagePerTick = 2,
             ZoneFreezeDwellTicks = 40,
             ZoneFreezeTicks = 60,
+            StrongVsElement = Element.Fire, // counter wheel: the long winter quenches fire
             Attack = new AttackArchetype(AttackClass.Magic, AttackPose.Cast, AttackForm.Shard),
         },
 
@@ -494,6 +500,7 @@ public static class UnitCatalog
             PoisonDamagePerTick = 6,
             ContagionRadius = 3f,
             ContagionDepthBonus = 0.4f,
+            StrongVsElement = Element.Stone, // counter wheel: the rot corrodes stone
             Attack = new AttackArchetype(AttackClass.Magic, AttackPose.Cast, AttackForm.Ball),
         },
 
@@ -565,6 +572,7 @@ public static class UnitCatalog
             ProjectileSpeed = 3.5f,
             ProjectileFreezeTicks = 24,
             BonusVsImpairedPct = 0.5f,
+            StrongVsElement = Element.Fire, // anti-fire freeze-sniper; pays off mossmite's mark
             Attack = new AttackArchetype(AttackClass.Magic, AttackPose.Shoot, AttackForm.Shard),
         },
 

@@ -54,6 +54,31 @@ public class FullRosterTest
     }
 
     [TestCase]
+    public void EveryDragonDeclaresACounter()
+    {
+        // The apex matchup wheel is seeded (roster-expansion-40.md §7, Q3): each dragon
+        // dominates one element. Catches accidental loss of the wheel.
+        foreach (var id in new[] { "pyraxis", "voltherax", "glacereth", "sythraal", "terravossk" })
+        {
+            AssertThat(UnitCatalog.FullRoster.First(d => d.Id == id).StrongVsElement)
+                .OverrideFailureMessage($"{id} declares no counter").IsNotNull();
+        }
+    }
+
+    [TestCase]
+    public void MossmitesMarkHasARosterPayoff()
+    {
+        // Resolves Q3: mossmite's counter-flip is no longer inert — at least one allied unit
+        // counters the element it imprints, so the mark sets up real bonus damage.
+        var mark = UnitCatalog.FullRoster.First(d => d.Id == "mossmite").OverrideTargetElement;
+        AssertThat(mark).IsNotNull();
+        var counterers = UnitCatalog.FullRoster.Count(
+            d => d.StrongVsElement == mark || d.MassiveVsElement == mark);
+        AssertThat(counterers > 0)
+            .OverrideFailureMessage($"no unit counters mossmite's mark ({mark})").IsTrue();
+    }
+
+    [TestCase]
     public void EveryElementHasALowRarityAntiAirUnit()
     {
         var lowRarityAaElements = Roster40()
