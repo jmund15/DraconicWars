@@ -115,6 +115,15 @@ public sealed record UnitDef(
     /// <summary>Combat knockback never moves or interrupts it; Wrath still does.</summary>
     public bool Unstaggerable { get; init; }
 
+    /// <summary>&gt;0: allies within ShelterRadius take this fraction less incoming damage
+    /// (a defensive lee). 0..1. frostbarge_cloudwhale's shelter aura.</summary>
+    public float ShelterDrPct { get; init; }
+
+    /// <summary>&gt;0: allies within ShelterRadius regenerate this much HP per tick.</summary>
+    public int ShelterRegenPerTick { get; init; }
+
+    public float ShelterRadius { get; init; }
+
     /// <summary>&gt;0: when this unit's Vigil DR-ramp reaches its cap, the charge releases as a
     /// lane shockwave dealing this much damage to every enemy within ShockwaveRange, then the
     /// ramp resets to charge again (Terravossk — "the wall hits back").</summary>

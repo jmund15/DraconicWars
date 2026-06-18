@@ -154,6 +154,32 @@ public class ExpansionRosterTest
     }
 
     [TestCase]
+    public void StormwrightIsAMythicLobbedSplashSiege()
+    {
+        var u = Find("stormwright");
+        AssertThat(u.Rarity).IsEqual(Rarity.Mythic);
+        AssertThat(u.Element).IsEqual(Element.Storm);
+        AssertThat(u.TypeClass).IsEqual(TypeClass.Siege);
+        AssertThat(u.Tier).IsEqual(3);
+        // A dodgeable/blockable lobbed shell with splash — its counterplay window.
+        AssertThat(u.ProjectileSpeed > 0f).IsTrue();
+        AssertThat(u.ProjectileSplashRadius > 0f).IsTrue();
+    }
+
+    [TestCase]
+    public void CloudwhaleIsAMythicShelterBarge()
+    {
+        var u = Find("frostbarge_cloudwhale");
+        AssertThat(u.Rarity).IsEqual(Rarity.Mythic);
+        AssertThat(u.Element).IsEqual(Element.Frost);
+        AssertThat(u.Tier).IsEqual(3);
+        AssertThat(u.Unstaggerable).IsTrue();
+        // A pure enabler: shelter aura, zero offense.
+        AssertThat(u.ShelterDrPct > 0f && u.ShelterRegenPerTick > 0).IsTrue();
+        AssertThat(u.Damage).IsEqual(0);
+    }
+
+    [TestCase]
     public void AllFiveDragonsAreDraconic()
     {
         foreach (var id in new[] { "pyraxis", "voltherax", "glacereth", "sythraal", "terravossk" })

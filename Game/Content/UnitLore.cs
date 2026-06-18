@@ -73,6 +73,12 @@ public static class UnitLore
         ["sythraal"] = new(
             "Sythraal, the Spreading Rot",
             "Cut down the poisoned, and the rot only finds new lungs. There is always more."),
+        ["stormwright"] = new(
+            "The Stormwright",
+            "It announces every shell. The announcement is not mercy. It is contempt."),
+        ["frostbarge_cloudwhale"] = new(
+            "The Frostbarge Cloudwhale",
+            "It carries no weapons. It carries your army. The storm cannot reach its shadow."),
         ["elder_drake"] = new(
             "Elder Drake — Court Rental",
             "On loan from the Wyrmcourt. Do read the damage clauses."),

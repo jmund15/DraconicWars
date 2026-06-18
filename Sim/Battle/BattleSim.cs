@@ -103,6 +103,7 @@ public sealed class BattleSim
         ProcessProjectiles(state);
         ProcessFieldEffects(state);
         ProcessContagion(state);
+        ProcessShelter(state);
         ProcessSummons(state);
         ProcessTurrets(state);
         ProcessEdicts(state);
@@ -267,6 +268,12 @@ public sealed class BattleSim
                 defender.Def.VigilDrMaxPct,
                 defender.VigilTicks / (float)_config.TickRate * defender.Def.VigilDrPerSecond);
             damage = (int)MathF.Round(damage * (1f - vigilDr));
+        }
+
+        var shelterDr = ShelterDrFor(state, defender);
+        if (shelterDr > 0f)
+        {
+            damage = (int)MathF.Round(damage * (1f - shelterDr));
         }
 
         defender.Hp -= damage;
@@ -1385,6 +1392,47 @@ public sealed class BattleSim
                 continue;
             }
             ApplyDirectDamage(state, source.Side, other, source.Def.ShockwaveDamage);
+        }
+    }
+
+    /// <summary>Best allied shelter-aura damage reduction covering this unit (cloudwhale).
+    /// Non-stacking — the strongest overlapping lee wins. 0 when uncovered.</summary>
+    private static float ShelterDrFor(BattleState state, SimUnit defender)
+    {
+        var best = 0f;
+        foreach (var ally in state.Units)
+        {
+            if (ally.Side != defender.Side || !ally.IsAlive || ally.Def.ShelterDrPct <= 0f)
+            {
+                continue;
+            }
+            if (MathF.Abs(ally.X - defender.X) <= ally.Def.ShelterRadius
+                && ally.Def.ShelterDrPct > best)
+            {
+                best = ally.Def.ShelterDrPct;
+            }
+        }
+        return best;
+    }
+
+    /// <summary>cloudwhale's lee: allies within an allied shelter aura regenerate each tick.</summary>
+    private void ProcessShelter(BattleState state)
+    {
+        foreach (var shelterer in state.Units)
+        {
+            if (!shelterer.IsAlive || shelterer.Def.ShelterRegenPerTick <= 0)
+            {
+                continue;
+            }
+            foreach (var ally in state.Units)
+            {
+                if (ally.Side != shelterer.Side || !ally.IsAlive
+                    || MathF.Abs(ally.X - shelterer.X) > shelterer.Def.ShelterRadius)
+                {
+                    continue;
+                }
+                ally.Hp = Math.Min(ally.Def.MaxHp, ally.Hp + shelterer.Def.ShelterRegenPerTick);
+            }
         }
     }
 

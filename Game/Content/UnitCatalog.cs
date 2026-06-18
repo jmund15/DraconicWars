@@ -39,6 +39,8 @@ public static class UnitCatalog
         ["deepway_bulwark"] = Rarity.Epic,
         ["crag_tyrant"] = Rarity.Epic,
         ["tempest_choir"] = Rarity.Epic,
+        ["stormwright"] = Rarity.Mythic,
+        ["frostbarge_cloudwhale"] = Rarity.Mythic,
     };
 
     private static IReadOnlyList<UnitDef> ApplyRarity(IReadOnlyList<UnitDef> defs)
@@ -489,6 +491,43 @@ public static class UnitCatalog
             ContagionRadius = 3f,
             ContagionDepthBonus = 0.4f,
             Attack = new AttackArchetype(AttackClass.Magic, AttackPose.Cast, AttackForm.Ball),
+        },
+
+        // --- Mythic apex warband (Tier III, mastery-unlocked, max 1 per loadout). Power is
+        // the mechanic, not the numbers; each carries built-in counterplay + a drawback.
+
+        // Stormwright (Storm, ordnance-flyer) — "You Had Time To Move." Lobs a slow shell to
+        // the farthest enemy (90 + splash). The shell is body-blockable AND dodgeable (a real
+        // projectile); low HP + long backswing are its drawbacks.
+        new UnitDef(
+            Id: "stormwright", DisplayName: "The Stormwright", Tier: 3,
+            TypeClass: TypeClass.Siege, Element: Element.Storm,
+            MaxHp: 220, Damage: 90, ForeswingTicks: 14, BackswingTicks: 28,
+            Range: 9f, RangeMin: 2f, IsArea: false, MoveSpeed: 1.0f,
+            KnockbackCount: 1, DeployCost: 300, DeployCooldownTicks: 400,
+            Stratum: Stratum.Air, CanTargetGround: true, CanTargetAir: false)
+        {
+            ProjectileSpeed = 2f,
+            ProjectileSplashRadius = 3f,
+            PrefersFarthestTarget = true,
+            Attack = new AttackArchetype(AttackClass.Magic, AttackPose.Cast, AttackForm.Ball),
+        },
+
+        // Frostbarge Cloudwhale (Frost, leviathan) — "The Slow Boat." An advancing
+        // Unstaggerable shelter-barge: allies fight in its lee (damage reduction + regen)
+        // while it walls the lane forward. Zero offense; dies to anti-air.
+        new UnitDef(
+            Id: "frostbarge_cloudwhale", DisplayName: "The Frostbarge Cloudwhale", Tier: 3,
+            TypeClass: TypeClass.Support, Element: Element.Frost,
+            MaxHp: 900, Damage: 0, ForeswingTicks: 10, BackswingTicks: 16,
+            Range: 1.5f, RangeMin: 0f, IsArea: false, MoveSpeed: 0.8f,
+            KnockbackCount: 0, DeployCost: 320, DeployCooldownTicks: 420,
+            Stratum: Stratum.Air, CanTargetGround: false, CanTargetAir: false)
+        {
+            Unstaggerable = true,
+            ShelterDrPct = 0.35f,
+            ShelterRegenPerTick = 2,
+            ShelterRadius = 7f,
         },
     });
 
