@@ -925,6 +925,13 @@ public sealed class BattleSim
                 }
             }
 
+            if (unit.StunTicks > 0)
+            {
+                // Frozen: tick the timer but advance no attack phase this tick.
+                unit.StunTicks--;
+                continue;
+            }
+
             if (unit.AttackPhase == AttackPhase.None && HasAnyTargetInBand(state, unit))
             {
                 unit.AttackPhase = AttackPhase.Foreswing;
@@ -1433,7 +1440,7 @@ public sealed class BattleSim
     {
         foreach (var unit in state.Units)
         {
-            if (!unit.IsAlive || unit.AttackPhase != AttackPhase.None)
+            if (!unit.IsAlive || unit.AttackPhase != AttackPhase.None || unit.StunTicks > 0)
             {
                 continue;
             }

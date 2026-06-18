@@ -26,6 +26,12 @@ public sealed class SimUnit
 
     public float SlowPct { get; set; }
 
+    /// <summary>Self-suppression timer (freeze): while &gt;0 the unit neither attacks nor
+    /// moves; ticks down like SlowTicks. Set by stun-dive / freeze kits and by the
+    /// teleport+self-stun relocate pattern (Roc grab, Cloudwhale ferry) — no cross-unit
+    /// ownership link.</summary>
+    public int StunTicks { get; set; }
+
     public bool IsAlive => Hp > 0;
 
     public Stratum Stratum => Def.Stratum;
