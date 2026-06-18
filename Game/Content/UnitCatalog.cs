@@ -72,7 +72,7 @@ public static class UnitCatalog
             MaxHp: 70, Damage: 10, ForeswingTicks: 6, BackswingTicks: 12,
             Range: 6.5f, RangeMin: 0f, IsArea: false, MoveSpeed: 1.8f,
             KnockbackCount: 2, DeployCost: 60, DeployCooldownTicks: 90,
-            Stratum: Stratum.Ground, CanTargetGround: true, CanTargetAir: true)
+            Stratum: Stratum.Ground, CanTargetGround: true, CanTargetAir: false)
         {
             Attack = new AttackArchetype(AttackClass.Physical, AttackPose.Shoot, AttackForm.Arrow),
         },
@@ -103,8 +103,10 @@ public static class UnitCatalog
             MaxHp: 90, Damage: 8, ForeswingTicks: 10, BackswingTicks: 20,
             Range: 5.0f, RangeMin: 0f, IsArea: true, MoveSpeed: 1.6f,
             KnockbackCount: 2, DeployCost: 130, DeployCooldownTicks: 180,
-            Stratum: Stratum.Ground, CanTargetGround: true, CanTargetAir: true)
+            Stratum: Stratum.Ground, CanTargetGround: true, CanTargetAir: false)
         {
+            RallyDamageAuraPct = 0.12f,
+            RallyDamageAuraRadius = 5f,
             Attack = new AttackArchetype(AttackClass.Magic, AttackPose.Channel, AttackForm.Ball),
         },
         new UnitDef(
@@ -174,7 +176,7 @@ public static class UnitCatalog
             MaxHp: 80, Damage: 12, ForeswingTicks: 8, BackswingTicks: 12,
             Range: 5.5f, RangeMin: 0f, IsArea: false, MoveSpeed: 1.7f,
             KnockbackCount: 2, DeployCost: 70, DeployCooldownTicks: 90,
-            Stratum: Stratum.Ground, CanTargetGround: true, CanTargetAir: true)
+            Stratum: Stratum.Ground, CanTargetGround: true, CanTargetAir: false)
         {
             PrefersFarthestTarget = true,
             Attack = new AttackArchetype(AttackClass.Magic, AttackPose.Cast, AttackForm.Ball),
@@ -230,7 +232,7 @@ public static class UnitCatalog
             MaxHp: 150, Damage: 16, ForeswingTicks: 10, BackswingTicks: 16,
             Range: 6f, RangeMin: 0f, IsArea: true, MoveSpeed: 1.6f,
             KnockbackCount: 2, DeployCost: 160, DeployCooldownTicks: 240,
-            Stratum: Stratum.Ground, CanTargetGround: true, CanTargetAir: true)
+            Stratum: Stratum.Ground, CanTargetGround: true, CanTargetAir: false)
         {
             ZoneRadius = 2f,
             ZoneSlowPct = 0.4f,
@@ -268,7 +270,7 @@ public static class UnitCatalog
             MaxHp: 300, Damage: 28, ForeswingTicks: 12, BackswingTicks: 22,
             Range: 7f, RangeMin: 2f, IsArea: true, MoveSpeed: 1.0f,
             KnockbackCount: 3, DeployCost: 340, DeployCooldownTicks: 330,
-            Stratum: Stratum.Ground, CanTargetGround: true, CanTargetAir: true)
+            Stratum: Stratum.Ground, CanTargetGround: true, CanTargetAir: false)
         {
             TollRampPct = 0.12f,
             TollRampCap = 1f,
@@ -281,7 +283,7 @@ public static class UnitCatalog
             MaxHp: 130, Damage: 34, ForeswingTicks: 13, BackswingTicks: 20,
             Range: 8.5f, RangeMin: 0f, IsArea: false, MoveSpeed: 1.5f,
             KnockbackCount: 2, DeployCost: 170, DeployCooldownTicks: 240,
-            Stratum: Stratum.Ground, CanTargetGround: true, CanTargetAir: true)
+            Stratum: Stratum.Ground, CanTargetGround: true, CanTargetAir: false)
         {
             BonusVsHighHpPct = 0.5f,
             HighHpThreshold = 300,
@@ -446,7 +448,7 @@ public static class UnitCatalog
         new UnitDef(
             Id: "voltherax", DisplayName: "Voltherax, the Late Thunder", Tier: 4,
             TypeClass: TypeClass.Aerial, Element: Element.Storm,
-            MaxHp: 1400, Damage: 70, ForeswingTicks: 8, BackswingTicks: 12,
+            MaxHp: 1400, Damage: 70, ForeswingTicks: 3, BackswingTicks: 12,
             Range: 7f, RangeMin: 0f, IsArea: false, MoveSpeed: 1.8f,
             KnockbackCount: 4, DeployCost: 0, DeployCooldownTicks: 0,
             Stratum: Stratum.Air, CanTargetGround: true, CanTargetAir: true)

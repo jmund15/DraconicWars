@@ -155,7 +155,9 @@ UNITS: list[dict] = [
         "flyer": {"scale": 3.2, "wing_mult": 1.2, "head": "beaked", "crest": "ridge",
                   "feather_wing": True, "eye_px": 4, "eye_shape": "slit", "boss": True,
                   "dragon": True, "seed": 12},
-        "foreswing_ticks": 8, "backswing_ticks": 12,
+        # skip-windup ("You Heard It Late"): a near-instant strike — the bolt lands before
+        # its telegraph; the contact frame sits early in the attack.
+        "foreswing_ticks": 3, "backswing_ticks": 12,
     },
     {
         "name": "glacereth",

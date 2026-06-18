@@ -1238,6 +1238,26 @@ public sealed class BattleSim
         return best;
     }
 
+    /// <summary>Best allied rally-damage aura (vale_chanter) covering this unit's position;
+    /// 0 when none. Non-stacking — the strongest overlapping aura wins.</summary>
+    private static float RallyAuraPct(BattleState state, SimUnit unit)
+    {
+        var best = 0f;
+        foreach (var other in state.Units)
+        {
+            if (other.Side != unit.Side || !other.IsAlive || other.Def.RallyDamageAuraPct <= 0f)
+            {
+                continue;
+            }
+            if (MathF.Abs(other.X - unit.X) <= other.Def.RallyDamageAuraRadius
+                && other.Def.RallyDamageAuraPct > best)
+            {
+                best = other.Def.RallyDamageAuraPct;
+            }
+        }
+        return best;
+    }
+
     private void ResolveContact(BattleState state, SimUnit attacker)
     {
         var targets = EnemiesInBand(state, attacker).ToList();
@@ -1682,6 +1702,8 @@ public sealed class BattleSim
         {
             multiplier += attacker.Def.BonusVsImpairedPct;
         }
+
+        multiplier += RallyAuraPct(state, attacker);
 
         if (attacker.Def.Element == Element.Fire)
         {

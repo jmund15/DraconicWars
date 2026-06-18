@@ -171,6 +171,13 @@ public sealed record UnitDef(
 
     public float HasteHaloRadius { get; init; }
 
+    /// <summary>&gt;0: allies within RallyDamageAuraRadius deal this damage fraction more (fed
+    /// into the shared ScaledDamage multiplier — non-stacking, best aura wins). vale_chanter's
+    /// rally. See roster-expansion-40.md §4.</summary>
+    public float RallyDamageAuraPct { get; init; }
+
+    public float RallyDamageAuraRadius { get; init; }
+
     /// <summary>&gt;0: attacks loose a real traveling projectile at this speed (units/tick)
     /// instead of resolving hitscan — body-blockable + dodgeable. Damage/element snapshot
     /// at spawn. See roster-expansion-40.md §5.</summary>

@@ -26,7 +26,7 @@
       "frames": 7,
       "fps": 12,
       "loop": false,
-      "contact_frame": 2
+      "contact_frame": 1
     },
     {
       "name": "death",
@@ -36,7 +36,7 @@
       "loop": false
     }
   ],
-  "foreswing_ticks": 8,
+  "foreswing_ticks": 3,
   "backswing_ticks": 12,
   "attack_pose": "aerial_flyer",
   "ramps_used": [
