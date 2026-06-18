@@ -99,6 +99,7 @@ public sealed class BattleSim
         ProcessLastStand(state);
         TickEconomy(state);
         ProcessCombat(state);
+        ProcessProjectiles(state);
         ProcessFieldEffects(state);
         ProcessTurrets(state);
         ProcessEdicts(state);
@@ -1058,6 +1059,13 @@ public sealed class BattleSim
         var targets = EnemiesInBand(state, attacker).ToList();
         if (targets.Count > 0)
         {
+            if (attacker.Def.ProjectileSpeed > 0f)
+            {
+                SpawnProjectile(state, attacker,
+                    attacker.Def.PrefersFarthestTarget ? targets[^1] : targets[0]);
+                FinishContact(attacker);
+                return;
+            }
             if (attacker.Def.IsArea)
             {
                 foreach (var target in targets)
@@ -1143,6 +1151,99 @@ public sealed class BattleSim
             other.VigilTicks = 0;
             other.TollCount = 0;
         }
+    }
+
+    private void SpawnProjectile(BattleState state, SimUnit attacker, SimUnit target)
+    {
+        state.Projectiles.Add(new SimProjectile
+        {
+            InstanceId = state.NextInstanceId++,
+            Side = attacker.Side,
+            X = attacker.X,
+            VelocityPerTick = Direction(attacker.Side) * attacker.Def.ProjectileSpeed,
+            Damage = ScaledDamage(state, attacker, target),
+            Element = attacker.Def.Element,
+            Pierces = attacker.Def.ProjectilePierces,
+            SplashRadius = attacker.Def.ProjectileSplashRadius,
+            HitGround = attacker.Def.CanTargetGround,
+            HitAir = attacker.Def.CanTargetAir,
+        });
+    }
+
+    /// <summary>Real-projectile phase: sweep each shot from its old X to its new X, hitting
+    /// the first enemy body crossed (body-blockable). Pierce hits every body in the path;
+    /// splash applies an AoE at the impact. Despawns on hit (non-pierce) or at lane bounds.</summary>
+    private void ProcessProjectiles(BattleState state)
+    {
+        for (var i = state.Projectiles.Count - 1; i >= 0; i--)
+        {
+            var proj = state.Projectiles[i];
+            var oldX = proj.X;
+            var newX = oldX + proj.VelocityPerTick;
+            var lo = MathF.Min(oldX, newX);
+            var hi = MathF.Max(oldX, newX);
+
+            SimUnit? firstHit = null;
+            var firstDist = float.MaxValue;
+            foreach (var unit in state.Units)
+            {
+                if (unit.Side == proj.Side || !unit.IsAlive || !ProjectileCanHit(proj, unit))
+                {
+                    continue;
+                }
+                if (unit.X < lo || unit.X > hi || proj.AlreadyHit.Contains(unit.InstanceId))
+                {
+                    continue;
+                }
+                if (proj.Pierces)
+                {
+                    proj.AlreadyHit.Add(unit.InstanceId);
+                    ApplyDirectDamage(state, proj.Side, unit, proj.Damage);
+                    continue;
+                }
+                var dist = MathF.Abs(unit.X - oldX);
+                if (dist < firstDist)
+                {
+                    firstDist = dist;
+                    firstHit = unit;
+                }
+            }
+
+            if (!proj.Pierces && firstHit is not null)
+            {
+                ApplyDirectDamage(state, proj.Side, firstHit, proj.Damage);
+                if (proj.SplashRadius > 0f)
+                {
+                    foreach (var unit in state.Units)
+                    {
+                        if (unit.Side == proj.Side || !unit.IsAlive
+                            || ReferenceEquals(unit, firstHit) || !ProjectileCanHit(proj, unit))
+                        {
+                            continue;
+                        }
+                        if (MathF.Abs(unit.X - firstHit.X) <= proj.SplashRadius)
+                        {
+                            ApplyDirectDamage(state, proj.Side, unit, proj.Damage);
+                        }
+                    }
+                }
+                state.Projectiles.RemoveAt(i);
+                continue;
+            }
+
+            proj.X = newX;
+            if (newX < 0f || newX > _config.LaneLength)
+            {
+                state.Projectiles.RemoveAt(i);
+            }
+        }
+
+        state.Units.RemoveAll(unit => !unit.IsAlive);
+    }
+
+    private static bool ProjectileCanHit(SimProjectile proj, SimUnit unit)
+    {
+        return unit.Stratum == Stratum.Ground ? proj.HitGround : proj.HitAir;
     }
 
     private static int ScaledDamage(BattleState state, SimUnit attacker, SimUnit? defender = null)

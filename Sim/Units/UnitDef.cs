@@ -103,4 +103,16 @@ public sealed record UnitDef(
 
     /// <summary>Translates this far PAST its target when an attack cycle completes.</summary>
     public float StrafeDistance { get; init; }
+
+    /// <summary>&gt;0: attacks loose a real traveling projectile at this speed (units/tick)
+    /// instead of resolving hitscan — body-blockable + dodgeable. Damage/element snapshot
+    /// at spawn. See roster-expansion-40.md §5.</summary>
+    public float ProjectileSpeed { get; init; }
+
+    /// <summary>Projectile passes through and damages every enemy body in its path instead
+    /// of stopping at the first.</summary>
+    public bool ProjectilePierces { get; init; }
+
+    /// <summary>&gt;0: a non-pierce projectile applies an AoE of this radius at its impact.</summary>
+    public float ProjectileSplashRadius { get; init; }
 }

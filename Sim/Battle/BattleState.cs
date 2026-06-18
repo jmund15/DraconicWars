@@ -24,6 +24,10 @@ public sealed class BattleState
     /// their own clock, persist past their caster's death by design.</summary>
     public List<LaneZone> Zones { get; } = new();
 
+    /// <summary>Real in-flight projectiles (roster-expansion-40.md §5): travel the lane,
+    /// snapshot damage at spawn, hit the first body swept over. Outlive their caster.</summary>
+    public List<SimProjectile> Projectiles { get; } = new();
+
     public required SimRng PactRng { get; init; }
 
     /// <summary>Shared pre-rolled tier sequence; each side consumes it at its own
