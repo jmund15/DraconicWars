@@ -115,6 +115,47 @@
       },
       "key_takeaway": "Differentiate creatures at the body-plan/silhouette level, not surface trim (wing-fill). Viewing the rendered PNG is non-negotiable — lint passes art that reads wrong (fire caterpillar vs eastern dragon). Element palette silently trips the whitelist cap when accent/hot collides with a major body color (venom skin==accent, frost hot==accent).",
       "notes": "Post-compaction continued session, run as two /goals + a /session_end. Opened by addressing a Stop-hook gap (delivering per-task ideal-workflow recommendations the prior turn had executed-but-not-articulated). Goal = flyer creative uniqueness (prior wing-trim approach was insufficient) + grander/bigger dragons. Delivered: FlyerConfig.body_plan axis (drake/wyrm/seraph/wisp/manta), cinder_wyrmling->wyrm in-roster, elder_drake->80px + grander _draw_dragon; then user-authorized (AskUserQuestion) fixing 3 pre-existing ground-unit lint failures (FloatingShards grounding, SpiderLegs/bog_stalker height, boreal crystal-spike clamp). Verified byte-identity (only 6 intended sheets changed), all batches lint-clean, distinctness PASS, 13 python self-tests PASS, C# RosterArtContractTest PASS. CBPT Part marked complete on roadmap (hand-edited — /update_roadmap cannot reach the vault-located roadmap from the repo cwd). Self-caught a doc error during the critique pass: had drafted wing-type-first as the ideal workflow (the rejected approach) and inverted it to body-plan-first."
+    },
+    {
+      "session_id": "0f28a424-bc1e-42b5-90c6-e0422874ad0c",
+      "id": 4,
+      "title": "Roster expansion to 40 units + adversarial-review remediation (3 rounds)",
+      "date": "2026-06-18",
+      "outcome": "clean",
+      "pattern": null,
+      "domains": [
+        "combat",
+        "sim",
+        "testing",
+        "data-files",
+        "art-pipeline",
+        "refactoring",
+        "meta",
+        "roster"
+      ],
+      "corrections": [],
+      "skills_used": [
+        "testing",
+        "regression_gate",
+        "session_audit",
+        "autolearn",
+        "game_vision",
+        "architecture_philosophy",
+        "update_roadmap"
+      ],
+      "memory_searches": 2,
+      "memory_hits": [
+        "feedback_separate_preexisting_changes_before_commit (drove the two-commit split: leftover art-report regen vs Round 3)",
+        "gotcha_workflow_args_generation_fidelity + workflow_fanout_search_false_absence (drove CONTEXT-via-scratch-file audit dispatch)",
+        "arch_rule_resource_config_runtime_split / shelter-aura ReferenceEquals precedent (informed rally self-exclusion fix)"
+      ],
+      "tests": {
+        "written": 4,
+        "total_passing": 291,
+        "tdd_followed": true
+      },
+      "key_takeaway": "The multi-agent QA loop is the real safety net for self-introduced regressions in large content-expansion sessions: adversarial review caught 4 sim bugs in Round 1 and a scoped session_audit caught rally-aura self-boost + an untested non-stacking invariant — all on code that the green regression gate alone passed. Scope the audit to the un-reviewed delta so it complements (not re-treads) the earlier review.",
+      "notes": "Mega-session (1656 msgs / 265 tool calls, 1 compaction). 40-unit roster + 6 forms + 11 sim primitives + rarity model + balance, then 23-finding adversarial review remediated over 3 rounds. Outcome 'clean' re USER corrections (none); quality issues were all self-caught by review/audit. TDD honored: rally aura and its self-exclusion fix were both RED->GREEN. memory_searches=2 is the post-compaction-window count (lower bound for the full session). Autolearn write landed in the PushinPotions auto-memory store (cross-project memory-dir misconfig already tracked in worklog)."
     }
   ]
 }
