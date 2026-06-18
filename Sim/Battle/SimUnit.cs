@@ -37,6 +37,10 @@ public sealed class SimUnit
     /// unit's pace (e.g. plaguecharger's dismount) write it here.</summary>
     public float? MoveSpeedOverride { get; set; }
 
+    /// <summary>False while burrowed/submerged (the_tithe): invisible to all enemy
+    /// targeting and immune to damage, zone-slows, shoves, and projectiles. Default true.</summary>
+    public bool Targetable { get; set; } = true;
+
     public bool IsAlive => Hp > 0;
 
     public Stratum Stratum => Def.Stratum;

@@ -253,6 +253,11 @@ public sealed class BattleSim
             return defender.IsAlive;
         }
 
+        if (!defender.Targetable)
+        {
+            return defender.IsAlive;
+        }
+
         if (defender.Def.VigilDrMaxPct > 0f && defender.VigilTicks > 0)
         {
             var vigilDr = MathF.Min(
@@ -1020,7 +1025,7 @@ public sealed class BattleSim
             zone.TicksLeft--;
             foreach (var unit in state.Units.ToList())
             {
-                if (unit.Side == zone.Side || !unit.IsAlive
+                if (unit.Side == zone.Side || !unit.IsAlive || !unit.Targetable
                     || MathF.Abs(unit.X - zone.X) > zone.Radius)
                 {
                     continue;
@@ -1152,7 +1157,8 @@ public sealed class BattleSim
         var dir = Direction(attacker.Side);
         foreach (var other in state.Units)
         {
-            if (other.Side == attacker.Side || !other.IsAlive || other.Def.Unstaggerable)
+            if (other.Side == attacker.Side || !other.IsAlive || other.Def.Unstaggerable
+                || !other.Targetable)
             {
                 continue;
             }
@@ -1204,7 +1210,8 @@ public sealed class BattleSim
             var firstDist = float.MaxValue;
             foreach (var unit in state.Units)
             {
-                if (unit.Side == proj.Side || !unit.IsAlive || !ProjectileCanHit(proj, unit))
+                if (unit.Side == proj.Side || !unit.IsAlive || !unit.Targetable
+                    || !ProjectileCanHit(proj, unit))
                 {
                     continue;
                 }
@@ -1530,7 +1537,7 @@ public sealed class BattleSim
     private static IEnumerable<SimUnit> EnemiesInBand(BattleState state, SimUnit unit)
     {
         return state.Units
-            .Where(other => other.Side != unit.Side && other.IsAlive)
+            .Where(other => other.Side != unit.Side && other.IsAlive && other.Targetable)
             .Where(other => CanTarget(unit, other))
             .Select(other => (Unit: other, Distance: MathF.Abs(other.X - unit.X)))
             .Where(pair => pair.Distance >= unit.Def.RangeMin && pair.Distance <= unit.Def.Range)
@@ -1605,7 +1612,7 @@ public sealed class BattleSim
         float? nearest = null;
         foreach (var other in state.Units)
         {
-            if (other.Side == unit.Side || !other.IsAlive)
+            if (other.Side == unit.Side || !other.IsAlive || !other.Targetable)
             {
                 continue;
             }
