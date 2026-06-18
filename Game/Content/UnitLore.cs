@@ -40,6 +40,9 @@ public static class UnitLore
         ["storm_gryphon"] = new(
             "Gryphon of the High Reaches",
             "Hunts in the half-second between thunder and light."),
+        ["skylance_emberknight"] = new(
+            "Emberknight of the Skylance",
+            "Knighted on a drake too young to land; both still learning the fall."),
         ["elder_drake"] = new(
             "Elder Drake — Court Rental",
             "On loan from the Wyrmcourt. Do read the damage clauses."),

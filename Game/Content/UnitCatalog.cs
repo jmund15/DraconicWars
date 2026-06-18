@@ -23,6 +23,7 @@ public static class UnitCatalog
         ["rime_sentry"] = Rarity.Uncommon,
         ["quarry_slinger"] = Rarity.Uncommon,
         ["spark_courier"] = Rarity.Uncommon,
+        ["skylance_emberknight"] = Rarity.Uncommon,
         ["cinder_acolyte"] = Rarity.Rare,
         ["ash_revenant"] = Rarity.Rare,
         ["glacier_adept"] = Rarity.Rare,
@@ -298,8 +299,29 @@ public static class UnitCatalog
         },
     });
 
-    /// <summary>FirstPlayable + the expansion — the complete v1 muster roll.</summary>
+    /// <summary>Roster expansion to 40 (roster-expansion-40.md) — NEW units beyond the
+    /// original 24, authored on the complete sim-primitive foundation. Grows as their art
+    /// renders land (run_expansion_batch.py); ticks here mirror the rendered manifests.</summary>
+    public static readonly IReadOnlyList<UnitDef> RosterExpansionTo40 = ApplyRarity(new[]
+    {
+        // Graduated demo form (FlyingMount): a Dragonlord lieutenant whose lance is a real
+        // projectile (ProjectileSpeed → the sim's interceptable-projectile seam).
+        new UnitDef(
+            Id: "skylance_emberknight", DisplayName: "Skylance Emberknight", Tier: 2,
+            TypeClass: TypeClass.Aerial, Element: Element.Fire,
+            MaxHp: 210, Damage: 26, ForeswingTicks: 8, BackswingTicks: 12,
+            Range: 6f, RangeMin: 0f, IsArea: false, MoveSpeed: 2.7f,
+            KnockbackCount: 2, DeployCost: 175, DeployCooldownTicks: 230,
+            Stratum: Stratum.Air, CanTargetGround: true, CanTargetAir: true)
+        {
+            ProjectileSpeed = 3f,
+        },
+    });
+
+    /// <summary>FirstPlayable + both expansions — the complete muster roll.</summary>
     public static readonly IReadOnlyList<UnitDef> FullRoster =
         System.Linq.Enumerable.ToList(
-            System.Linq.Enumerable.Concat(FirstPlayable, RosterExpansion));
+            System.Linq.Enumerable.Concat(
+                System.Linq.Enumerable.Concat(FirstPlayable, RosterExpansion),
+                RosterExpansionTo40));
 }

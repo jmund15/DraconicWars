@@ -45,7 +45,9 @@ public class RosterRarityTest
     [TestCase]
     public void RarityDistributionMatchesTheShippedRoster()
     {
-        var counts = UnitCatalog.FullRoster
+        // The original 24-unit baseline (FirstPlayable + RosterExpansion); stays stable as
+        // RosterExpansionTo40 grows. Expansion units are pinned in ExpansionRosterTest.
+        var counts = UnitCatalog.FirstPlayable.Concat(UnitCatalog.RosterExpansion)
             .GroupBy(d => d.Rarity)
             .ToDictionary(g => g.Key, g => g.Count());
 
