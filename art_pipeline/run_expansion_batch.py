@@ -122,6 +122,23 @@ UNITS: list[dict] = [
         "palette_overrides": {},
         "foreswing_ticks": 10, "backswing_ticks": 16,
     },
+    {
+        # Mossmite: graduated demo form (aerial_flyer insect_wing, proven by demo_faerie).
+        # Rare Venom counter-flipper — a winged spore-mite (distinct from spore_wisp's
+        # formless mote) that marks an enemy's defensive element so allied counters land.
+        "name": "mossmite",
+        "typeclass": "aerial_flyer",
+        "element": "venom",
+        "canvas": "32x32",
+        "size_class": "small",
+        "props": [],
+        "flyer": {"head": "wyvern", "wing_mult": 1.3, "insect_wing": True, "eye_px": 2},
+        # Venom's accent_index (2) equals the skin index, so the accent hex == the body
+        # fill and the whole body counts as whitelisted detail (blows the 6px cap). Move
+        # accent to a free venom step (3) — distinct from skin (2) and hot (4).
+        "palette_overrides": {"accent": ["venom", 3]},
+        "foreswing_ticks": 6, "backswing_ticks": 12,
+    },
 ]
 
 

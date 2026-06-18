@@ -73,4 +73,39 @@ public class CounterMatrixTest
         var withOverride = HpDrop(attackerStrongVs: Element.Fire, defenderElement: Element.Frost, overrideToFire: true);
         AssertThat(withOverride > noOverride).IsTrue();
     }
+
+    [TestCase]
+    public void OverrideTargetElementMarksTheDefenderOnContact()
+    {
+        // mossmite's counter-flip: contact stamps the target's defensive element (no need to
+        // set ElementOverride by hand — the kit field applies it through DealDamage).
+        var marker = TestUnits.Grunt("marker") with
+        {
+            MoveSpeed = 0f, Range = 30f, Damage = 10, ForeswingTicks = 2, BackswingTicks = 2,
+            KnockbackCount = 0, OverrideTargetElement = Element.Fire, OverrideTargetTicks = 60,
+        };
+        var defender = TestUnits.Grunt("defender") with
+        {
+            MoveSpeed = 0f, MaxHp = 100000, KnockbackCount = 0, Element = Element.Frost,
+        };
+        var sim = new BattleSim(BattleConfig.Default, new[] { marker, defender });
+        var state = sim.CreateInitialState(1UL);
+        state.Left.Mana = 5000f;
+        state.Right.Mana = 5000f;
+        sim.Advance(state, new List<SimCommand>
+        {
+            SimCommand.Deploy(PlayerSide.Left, "marker"),
+            SimCommand.Deploy(PlayerSide.Right, "defender"),
+        });
+        state.Units[0].X = 5f;
+        state.Units[1].X = 8f;
+
+        AssertThat(state.Units[1].ElementOverride).IsNull(); // starts on its native element
+        for (var i = 0; i < 10; i++)
+        {
+            sim.Advance(state, SimCommand.None);
+        }
+        AssertThat(state.Units[1].ElementOverride).IsEqual(Element.Fire);
+        AssertThat(state.Units[1].ElementOverrideTicks > 0).IsTrue();
+    }
 }

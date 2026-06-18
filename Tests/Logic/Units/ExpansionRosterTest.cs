@@ -90,4 +90,17 @@ public class ExpansionRosterTest
         AssertThat(u.ConduitManaPerSecond > 0f).IsTrue();
         AssertThat(u.HasteHaloSpeedPct > 0f && u.HasteHaloRadius > 0f).IsTrue();
     }
+
+    [TestCase]
+    public void MossmiteIsARareCounterFlipper()
+    {
+        var u = Find("mossmite");
+        AssertThat(u.TypeClass).IsEqual(TypeClass.Ranged);
+        AssertThat(u.Element).IsEqual(Element.Venom);
+        AssertThat(u.Rarity).IsEqual(Rarity.Rare);
+        AssertThat(u.CanTargetAir).IsTrue();
+        // The mark is its kit: it rewrites the target's defensive element for a window.
+        AssertThat(u.OverrideTargetElement).IsNotNull();
+        AssertThat(u.OverrideTargetTicks > 0).IsTrue();
+    }
 }

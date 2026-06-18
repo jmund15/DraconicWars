@@ -30,6 +30,7 @@ public static class UnitCatalog
         ["bog_stalker"] = Rarity.Rare,
         ["plague_bell"] = Rarity.Rare,
         ["gale_harrier"] = Rarity.Rare,
+        ["mossmite"] = Rarity.Rare,
         ["boreal_colossus"] = Rarity.Epic,
         ["deepway_bulwark"] = Rarity.Epic,
         ["crag_tyrant"] = Rarity.Epic,
@@ -394,6 +395,23 @@ public static class UnitCatalog
             HasteHaloSpeedPct = 0.25f,
             HasteHaloRadius = 5f,
             Attack = new AttackArchetype(AttackClass.Magic, AttackPose.Channel, AttackForm.Ball),
+        },
+
+        // Graduated demo form (aerial_flyer insect_wing): a Rare Venom counter-flipper. Each
+        // hit marks the target's DEFENSIVE element (OverrideTargetElement) for 90t so allied
+        // counters land. Full payoff scales with how many allies declare counters (see the
+        // roster counter-declaration pass) — the kit + primitive are complete here.
+        new UnitDef(
+            Id: "mossmite", DisplayName: "Mossmite", Tier: 2,
+            TypeClass: TypeClass.Ranged, Element: Element.Venom,
+            MaxHp: 90, Damage: 10, ForeswingTicks: 6, BackswingTicks: 12,
+            Range: 5.5f, RangeMin: 0f, IsArea: false, MoveSpeed: 2.4f,
+            KnockbackCount: 2, DeployCost: 150, DeployCooldownTicks: 180,
+            Stratum: Stratum.Air, CanTargetGround: true, CanTargetAir: true)
+        {
+            OverrideTargetElement = Element.Fire,
+            OverrideTargetTicks = 90,
+            Attack = new AttackArchetype(AttackClass.Magic, AttackPose.Cast, AttackForm.Ball),
         },
     });
 

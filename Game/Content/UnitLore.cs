@@ -58,6 +58,9 @@ public static class UnitLore
         ["tempest_choir"] = new(
             "Choir of the Loosed Sky",
             "It sings the storm into your veins. You were never the one it sang to."),
+        ["mossmite"] = new(
+            "Spore-Mite of the Drowned Tithe",
+            "It paints a weakness on you in spores. The next blow finds it."),
         ["elder_drake"] = new(
             "Elder Drake — Court Rental",
             "On loan from the Wyrmcourt. Do read the damage clauses."),
