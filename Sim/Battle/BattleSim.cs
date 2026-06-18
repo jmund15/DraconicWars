@@ -1516,6 +1516,7 @@ public sealed class BattleSim
             HitAir = attacker.Def.CanTargetAir,
             ManaRefundPerKill = attacker.Def.ManaRefundPerKill,
             ManaRefundCapPerShot = attacker.Def.ManaRefundCapPerShot,
+            FreezeTicks = attacker.Def.ProjectileFreezeTicks,
         });
     }
 
@@ -1568,6 +1569,10 @@ public sealed class BattleSim
                 {
                     proj.AlreadyHit.Add(unit.InstanceId);
                     var pierceSurvived = ApplyDirectDamage(state, proj.Side, unit, proj.Damage);
+                    if (pierceSurvived && proj.FreezeTicks > 0)
+                    {
+                        unit.StunTicks = Math.Max(unit.StunTicks, proj.FreezeTicks);
+                    }
                     RefundOnProjectileKill(state, proj, pierceSurvived);
                     continue;
                 }
@@ -1581,8 +1586,12 @@ public sealed class BattleSim
 
             if (!proj.Pierces && firstHit is not null)
             {
-                RefundOnProjectileKill(
-                    state, proj, ApplyDirectDamage(state, proj.Side, firstHit, proj.Damage));
+                var firstSurvived = ApplyDirectDamage(state, proj.Side, firstHit, proj.Damage);
+                if (firstSurvived && proj.FreezeTicks > 0)
+                {
+                    firstHit.StunTicks = Math.Max(firstHit.StunTicks, proj.FreezeTicks);
+                }
+                RefundOnProjectileKill(state, proj, firstSurvived);
                 if (proj.SplashRadius > 0f)
                 {
                     foreach (var unit in state.Units)
@@ -1635,6 +1644,11 @@ public sealed class BattleSim
             && defender.Def.MaxHp >= attacker.Def.HighHpThreshold)
         {
             multiplier += attacker.Def.BonusVsHighHpPct;
+        }
+        if (attacker.Def.BonusVsImpairedPct > 0f && defender is not null
+            && (defender.StunTicks > 0 || defender.SlowTicks > 0))
+        {
+            multiplier += attacker.Def.BonusVsImpairedPct;
         }
 
         if (attacker.Def.Element == Element.Fire)

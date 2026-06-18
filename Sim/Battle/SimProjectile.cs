@@ -41,6 +41,9 @@ public sealed class SimProjectile
     /// <summary>Running total refunded by this shot, so the per-shot cap holds across a pierce.</summary>
     public int ManaRefundedThisShot { get; set; }
 
+    /// <summary>&gt;0: each body this shot hits is frozen for this many ticks (rimecoil).</summary>
+    public int FreezeTicks { get; init; }
+
     /// <summary>Pierce bookkeeping: bodies already struck, so a lingering sweep never
     /// double-hits the same unit.</summary>
     public HashSet<int> AlreadyHit { get; } = new();

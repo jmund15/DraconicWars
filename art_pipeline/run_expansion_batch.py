@@ -233,6 +233,19 @@ UNITS: list[dict] = [
         "palette_overrides": {},
         "foreswing_ticks": 6, "backswing_ticks": 10,
     },
+    {
+        "name": "rimecoil",
+        "typeclass": "sniper_biped",
+        "base": "naga",
+        "element": "frost",
+        "canvas": "48x64",
+        "size_class": "small",
+        "props": ["crossbow"],
+        "seed": 7,
+        "proportions": {"head_fwd": 2},
+        "palette_overrides": {},
+        "foreswing_ticks": 12, "backswing_ticks": 20,
+    },
 ]
 
 

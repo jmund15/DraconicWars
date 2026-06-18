@@ -82,6 +82,9 @@ public static class UnitLore
         ["plaguecharger"] = new(
             "Plaguecharger of the Drowned Tithe",
             "The steed was already dying. It only had to die pointed the right way."),
+        ["rimecoil"] = new(
+            "Rimecoil of the Still Word",
+            "It does not need you dead. It needs you still. The two tend to follow."),
         ["elder_drake"] = new(
             "Elder Drake — Court Rental",
             "On loan from the Wyrmcourt. Do read the damage clauses."),

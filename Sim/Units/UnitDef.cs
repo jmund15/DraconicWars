@@ -112,6 +112,10 @@ public sealed record UnitDef(
 
     public int HighHpThreshold { get; init; }
 
+    /// <summary>Bonus damage fraction against targets that are frozen (StunTicks) or slowed
+    /// (SlowTicks) — rimecoil capitalizing on its own freeze.</summary>
+    public float BonusVsImpairedPct { get; init; }
+
     /// <summary>Combat knockback never moves or interrupts it; Wrath still does.</summary>
     public bool Unstaggerable { get; init; }
 
@@ -180,6 +184,10 @@ public sealed record UnitDef(
     public int ManaRefundPerKill { get; init; }
 
     public int ManaRefundCapPerShot { get; init; }
+
+    /// <summary>&gt;0: the projectile freezes the body it hits for this many ticks
+    /// (StunTicks) — rimecoil's freeze bolt.</summary>
+    public int ProjectileFreezeTicks { get; init; }
 
     /// <summary>&gt;0: each contact drains this much mana from the enemy player's wallet
     /// (the_tithe's siphon). See roster-expansion-40.md §5.</summary>

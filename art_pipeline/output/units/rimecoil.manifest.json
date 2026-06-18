@@ -1,0 +1,73 @@
+{
+  "name": "rimecoil",
+  "typeclass": "sniper_biped",
+  "element": "frost",
+  "size_class": "small",
+  "frame_w": 48,
+  "frame_h": 64,
+  "animations": [
+    {
+      "name": "idle",
+      "row": 0,
+      "frames": 2,
+      "fps": 7,
+      "loop": true
+    },
+    {
+      "name": "walk",
+      "row": 1,
+      "frames": 4,
+      "fps": 10,
+      "loop": true
+    },
+    {
+      "name": "attack",
+      "row": 2,
+      "frames": 4,
+      "fps": 12,
+      "loop": false,
+      "contact_frame": 1
+    },
+    {
+      "name": "death",
+      "row": 3,
+      "frames": 3,
+      "fps": 10,
+      "loop": false
+    }
+  ],
+  "foreswing_ticks": 12,
+  "backswing_ticks": 20,
+  "attack_pose": "crossbow",
+  "ramps_used": [
+    "frost",
+    "frost_teal",
+    "ink",
+    "leather",
+    "mauve_grey"
+  ],
+  "pivot": "bottom_center",
+  "ground_y": 61,
+  "facing": "right",
+  "body_size": {
+    "width": 21,
+    "height": 43,
+    "head_w": 11,
+    "head_h": 12
+  },
+  "lint": {
+    "whitelist_colors": [
+      "8fd3ff",
+      "ffffff"
+    ],
+    "prop_colors": [
+      "7f708a",
+      "cd683d"
+    ],
+    "airborne_animations": [],
+    "detail_exempt_colors": [
+      "2e222f",
+      "323353"
+    ]
+  }
+}

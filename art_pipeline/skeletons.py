@@ -1439,6 +1439,38 @@ class CavalrySteed:
                      part="front_leg" if front else "back_leg")
 
 
+class NagaCoil:
+    """A coiled serpent base: the upright torso rises on a thick trunk out of a piled coil.
+    Built from STACKED overlapping ellipse loops (cluster fill) — the earlier wide single-fill
+    coil banded; segmented piling is the fix (same trick as the leviathan hull)."""
+
+    def draw(self, tmpl, buf, kind, phase, tx0, tx1, hip_y, GY, skin):
+        sr, si = skin
+        d = max(si - 1, 0)
+        cx = (tx0 + tx1) // 2
+        span = max(tx1 - tx0, 8)
+        half = span // 2 + 1
+        sway = 0
+        if kind == "walk":
+            sway = (-1, 0, 1, 0)[phase % 4]
+        elif kind == "lunge":
+            sway = 2
+        base_y = GY - 2  # the lowest loop's radius reaches exactly to the ground line
+        # piled coil: overlapping ellipse loops, widest at the base, narrowing upward
+        loops = [
+            (cx + sway, base_y, half, 2, si),
+            (cx - 1 + sway, base_y - 3, half - 1, 2, d),
+            (cx + 1 + sway, base_y - 5, max(half - 3, 2), 2, si),
+        ]
+        for i, (lx, ly, rw, rh, idx) in enumerate(loops):
+            buf.fill_ellipse(lx, ly, rw, rh, sr, idx, part=f"coil{i}")
+        # thick trunk rising from the top loop to the rider's seat
+        top = base_y - 6
+        buf.fill_rect(cx - 1 + sway, hip_y, cx + 1 + sway, top, sr, si, part="trunk")
+        # tail tip curling out of the base coil
+        buf.line(cx + half + sway, base_y, cx + half + 3 + sway, base_y - 2, sr, d, part="tail")
+
+
 HUMANOID_LEGS = HumanoidLegs()
 OGRE_STUMPS = OgreStumps()
 SEGMENTED_PILLARS = SegmentedPillars()
@@ -1448,6 +1480,7 @@ SPIDER_LEGS = SpiderLegs()
 WRAITH_TAIL = WraithTail()
 FLYING_MOUNT = FlyingMount()
 CAVALRY_STEED = CavalrySteed()
+NAGA_COIL = NagaCoil()
 
 # Spec ``base`` key -> part. Adding a base archetype = one entry here + the class.
 LOCOMOTION_PARTS = {
@@ -1460,6 +1493,7 @@ LOCOMOTION_PARTS = {
     "wraith": WRAITH_TAIL,
     "mount": FLYING_MOUNT,
     "cavalry": CAVALRY_STEED,
+    "naga": NAGA_COIL,
 }
 
 

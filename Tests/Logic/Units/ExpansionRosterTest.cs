@@ -154,6 +154,18 @@ public class ExpansionRosterTest
     }
 
     [TestCase]
+    public void RimecoilIsARareFreezeSniper()
+    {
+        var u = Find("rimecoil");
+        AssertThat(u.Rarity).IsEqual(Rarity.Rare);
+        AssertThat(u.Element).IsEqual(Element.Frost);
+        AssertThat(u.TypeClass).IsEqual(TypeClass.Sniper);
+        AssertThat(u.ProjectileSpeed > 0f).IsTrue();
+        AssertThat(u.ProjectileFreezeTicks > 0).IsTrue();
+        AssertThat(u.BonusVsImpairedPct > 0f).IsTrue();
+    }
+
+    [TestCase]
     public void PlaguechargerIsAnUncommonDismountingCharger()
     {
         var u = Find("plaguecharger");

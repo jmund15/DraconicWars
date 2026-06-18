@@ -36,6 +36,7 @@ public static class UnitCatalog
         ["plague_bell"] = Rarity.Rare,
         ["gale_harrier"] = Rarity.Rare,
         ["mossmite"] = Rarity.Rare,
+        ["rimecoil"] = Rarity.Rare,
         ["boreal_colossus"] = Rarity.Epic,
         ["deepway_bulwark"] = Rarity.Epic,
         ["crag_tyrant"] = Rarity.Epic,
@@ -547,6 +548,22 @@ public static class UnitCatalog
             ZoneSlowPct = 0.35f,
             ZoneDurationTicks = 180,
             ZoneDamagePerTick = 1,
+        },
+
+        // New ground form (naga): a Rare Frost freeze-sniper. "Hold Still" — its real frost
+        // bolt freezes the body it hits, and it deals +50% against frozen/slowed targets.
+        new UnitDef(
+            Id: "rimecoil", DisplayName: "Rimecoil", Tier: 2,
+            TypeClass: TypeClass.Sniper, Element: Element.Frost,
+            MaxHp: 110, Damage: 30, ForeswingTicks: 12, BackswingTicks: 20,
+            Range: 8f, RangeMin: 2.5f, IsArea: false, MoveSpeed: 1.4f,
+            KnockbackCount: 1, DeployCost: 160, DeployCooldownTicks: 220,
+            Stratum: Stratum.Ground, CanTargetGround: true, CanTargetAir: false)
+        {
+            ProjectileSpeed = 3.5f,
+            ProjectileFreezeTicks = 24,
+            BonusVsImpairedPct = 0.5f,
+            Attack = new AttackArchetype(AttackClass.Magic, AttackPose.Shoot, AttackForm.Shard),
         },
     });
 
