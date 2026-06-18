@@ -101,6 +101,7 @@ public sealed class BattleSim
         ProcessCombat(state);
         ProcessProjectiles(state);
         ProcessFieldEffects(state);
+        ProcessSummons(state);
         ProcessTurrets(state);
         ProcessEdicts(state);
         ProcessAscension(state);
@@ -410,14 +411,69 @@ public sealed class BattleSim
         var spawnX = side == PlayerSide.Left
             ? _config.DeploySpawnOffset
             : _config.LaneLength - _config.DeploySpawnOffset;
+        SpawnUnit(state, side, def, spawnX);
+    }
+
+    private void SpawnUnit(BattleState state, PlayerSide side, UnitDef def, float x)
+    {
         state.Units.Add(new SimUnit
         {
             InstanceId = state.NextInstanceId++,
             Def = def,
             Side = side,
-            X = spawnX,
+            X = x,
             Hp = def.MaxHp,
+            SpawnTimer = def.SpawnCadenceTicks,
         });
+    }
+
+    /// <summary>Deferred-spawn phase: spawner units periodically birth chaff at their own X,
+    /// capped at SpawnCap live spawns per side. Spawns are queued and appended AFTER the loop
+    /// so the unit list is never mutated mid-iteration; chaff carries no SpawnDefId, so it
+    /// never recurses. See roster-expansion-40.md §5.</summary>
+    private void ProcessSummons(BattleState state)
+    {
+        List<(PlayerSide Side, UnitDef Def, float X)>? pending = null;
+        foreach (var unit in state.Units)
+        {
+            if (!unit.IsAlive || unit.Def.SpawnDefId is null || unit.Def.SpawnCadenceTicks <= 0)
+            {
+                continue;
+            }
+            unit.SpawnTimer--;
+            if (unit.SpawnTimer > 0)
+            {
+                continue;
+            }
+            unit.SpawnTimer = unit.Def.SpawnCadenceTicks;
+            if (!_defs.TryGetValue(unit.Def.SpawnDefId, out var spawnDef))
+            {
+                continue;
+            }
+            var liveCount = 0;
+            foreach (var other in state.Units)
+            {
+                if (other.Side == unit.Side && other.IsAlive
+                    && other.Def.Id == unit.Def.SpawnDefId)
+                {
+                    liveCount++;
+                }
+            }
+            if (liveCount >= unit.Def.SpawnCap)
+            {
+                continue;
+            }
+            pending ??= new List<(PlayerSide, UnitDef, float)>();
+            pending.Add((unit.Side, spawnDef, unit.X));
+        }
+        if (pending is null)
+        {
+            return;
+        }
+        foreach (var spawn in pending)
+        {
+            SpawnUnit(state, spawn.Side, spawn.Def, spawn.X);
+        }
     }
 
     private void TryChannelMana(BattleState state, PlayerSide side, int amount)

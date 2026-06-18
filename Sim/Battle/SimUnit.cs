@@ -41,6 +41,9 @@ public sealed class SimUnit
     /// targeting and immune to damage, zone-slows, shoves, and projectiles. Default true.</summary>
     public bool Targetable { get; set; } = true;
 
+    /// <summary>Counts down to the next deferred spawn (spawner units only).</summary>
+    public int SpawnTimer { get; set; }
+
     public bool IsAlive => Hp > 0;
 
     public Stratum Stratum => Def.Stratum;

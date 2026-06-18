@@ -123,4 +123,13 @@ public sealed record UnitDef(
     /// <summary>&gt;0: each contact sets the enemy's escrow-stall timer to at least this
     /// many ticks, freezing their Dragon-summoning channel (the_tithe).</summary>
     public int EscrowStallOnContact { get; init; }
+
+    /// <summary>Non-null: this unit births SpawnDefId chaff every SpawnCadenceTicks at its
+    /// own position, capped at SpawnCap live spawns on its side (sporekeep, Sythraal). Chaff
+    /// carries no SpawnDefId, so it never recurses.</summary>
+    public string? SpawnDefId { get; init; }
+
+    public int SpawnCadenceTicks { get; init; }
+
+    public int SpawnCap { get; init; }
 }
