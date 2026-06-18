@@ -1171,6 +1171,7 @@ public sealed class BattleSim
             }
             SeedZone(state, attacker, targets[0].X);
             ApplyShove(state, attacker);
+            ApplyGrab(state, attacker);
             FinishContact(state, attacker);
             return;
         }
@@ -1256,6 +1257,46 @@ public sealed class BattleSim
             other.VigilTicks = 0;
             other.TollCount = 0;
         }
+    }
+
+    /// <summary>Roc "Return To Sender": seizes the frontmost non-Unstaggerable enemy in band
+    /// (most advanced toward the grabber's spire) and teleports it back toward its OWN spire
+    /// by GrabThrowDistance, self-stunning + resetting it. Self-contained: no ownership link,
+    /// the throw is a one-shot position+stun write (per roster-expansion-40.md §5).</summary>
+    private void ApplyGrab(BattleState state, SimUnit attacker)
+    {
+        if (attacker.Def.GrabThrowDistance <= 0f)
+        {
+            return;
+        }
+        var grabberSpireX = attacker.Side == PlayerSide.Left ? 0f : _config.LaneLength;
+        SimUnit? grabbed = null;
+        var mostAdvanced = float.MaxValue;
+        foreach (var other in EnemiesInBand(state, attacker))
+        {
+            if (other.Def.Unstaggerable)
+            {
+                continue;
+            }
+            var distToGrabberSpire = MathF.Abs(other.X - grabberSpireX);
+            if (distToGrabberSpire < mostAdvanced)
+            {
+                mostAdvanced = distToGrabberSpire;
+                grabbed = other;
+            }
+        }
+        if (grabbed is null)
+        {
+            return;
+        }
+        var dir = Direction(attacker.Side);
+        grabbed.X = Math.Clamp(
+            grabbed.X + dir * attacker.Def.GrabThrowDistance, 0f, _config.LaneLength);
+        grabbed.StunTicks = Math.Max(grabbed.StunTicks, attacker.Def.GrabStunTicks);
+        grabbed.AttackPhase = AttackPhase.None;
+        grabbed.PhaseTicksLeft = 0;
+        grabbed.VigilTicks = 0;
+        grabbed.TollCount = 0;
     }
 
     private void SpawnProjectile(BattleState state, SimUnit attacker, SimUnit target)

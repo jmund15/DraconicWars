@@ -32,6 +32,7 @@ public static class UnitCatalog
         ["gale_harrier"] = Rarity.Rare,
         ["boreal_colossus"] = Rarity.Epic,
         ["deepway_bulwark"] = Rarity.Epic,
+        ["crag_tyrant"] = Rarity.Epic,
     };
 
     private static IReadOnlyList<UnitDef> ApplyRarity(IReadOnlyList<UnitDef> defs)
@@ -359,6 +360,21 @@ public static class UnitCatalog
             PhaseCadenceTicks = 90,
             PhaseDurationTicks = 18,
             Attack = new AttackArchetype(AttackClass.Magic, AttackPose.Cast, AttackForm.Ball),
+        },
+
+        // Colossal feather_wing preset (demo_phoenix rig family, ~2x scale): an Epic Stone
+        // Roc. "Return To Sender" — each contact seizes the frontmost non-Unstaggerable
+        // enemy and throws it back toward its own spire, stunned (GrabThrowDistance/Ticks).
+        new UnitDef(
+            Id: "crag_tyrant", DisplayName: "Crag Tyrant", Tier: 3,
+            TypeClass: TypeClass.Aerial, Element: Element.Stone,
+            MaxHp: 600, Damage: 28, ForeswingTicks: 12, BackswingTicks: 16,
+            Range: 5f, RangeMin: 0f, IsArea: false, MoveSpeed: 2.0f,
+            KnockbackCount: 2, DeployCost: 300, DeployCooldownTicks: 360,
+            Stratum: Stratum.Air, CanTargetGround: true, CanTargetAir: true)
+        {
+            GrabThrowDistance = 6f,
+            GrabStunTicks = 24,
         },
     });
 

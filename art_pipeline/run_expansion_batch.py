@@ -92,6 +92,21 @@ UNITS: list[dict] = [
         "palette_overrides": {},
         "foreswing_ticks": 6, "backswing_ticks": 10,
     },
+    {
+        # Crag Tyrant (Roc): colossal feather_wing preset (same rig family as demo_phoenix
+        # / gale_harrier, scaled up ~2x). Epic Stone aerial that grabs the frontmost enemy
+        # and throws it back (sim GrabThrowDistance). A giant stone eagle — beaked, ridged
+        # crest, broad feather wings; no fire tail.
+        "name": "crag_tyrant",
+        "typeclass": "aerial_flyer",
+        "element": "stone",
+        "canvas": "64x64",
+        "size_class": "colossal",
+        "props": [],
+        "flyer": {"scale": 2.0, "wing_mult": 1.2, "head": "beaked", "crest": "ridge",
+                  "feather_wing": True, "eye_px": 3, "seed": 9},
+        "foreswing_ticks": 12, "backswing_ticks": 16,
+    },
 ]
 
 

@@ -65,4 +65,17 @@ public class ExpansionRosterTest
         AssertThat(u.PhaseCadenceTicks > 0).IsTrue();
         AssertThat(u.PhaseDurationTicks > 0 && u.PhaseDurationTicks < u.PhaseCadenceTicks).IsTrue();
     }
+
+    [TestCase]
+    public void CragTyrantIsAnEpicGrabbingRoc()
+    {
+        var u = Find("crag_tyrant");
+        AssertThat(u.TypeClass).IsEqual(TypeClass.Aerial);
+        AssertThat(u.Element).IsEqual(Element.Stone);
+        AssertThat(u.Rarity).IsEqual(Rarity.Epic);
+        AssertThat(u.CanTargetAir).IsTrue();
+        // The grab is its kit: it throws AND stuns, not just nudges.
+        AssertThat(u.GrabThrowDistance > 0f).IsTrue();
+        AssertThat(u.GrabStunTicks > 0).IsTrue();
+    }
 }

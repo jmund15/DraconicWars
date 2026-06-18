@@ -115,6 +115,14 @@ public sealed record UnitDef(
     /// <summary>Translates this far PAST its target when an attack cycle completes.</summary>
     public float StrafeDistance { get; init; }
 
+    /// <summary>&gt;0: each contact seizes the FRONTMOST non-Unstaggerable enemy in band
+    /// (the one most advanced toward this unit's spire) and teleports it this far back
+    /// toward its OWN spire, self-stunning it for GrabStunTicks (crag_tyrant's Roc grab —
+    /// teleport + self-stun, no ownership link).</summary>
+    public float GrabThrowDistance { get; init; }
+
+    public int GrabStunTicks { get; init; }
+
     /// <summary>&gt;0: attacks loose a real traveling projectile at this speed (units/tick)
     /// instead of resolving hitscan — body-blockable + dodgeable. Damage/element snapshot
     /// at spawn. See roster-expansion-40.md §5.</summary>
