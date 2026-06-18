@@ -139,6 +139,59 @@ UNITS: list[dict] = [
         "palette_overrides": {"accent": ["venom", 3]},
         "foreswing_ticks": 6, "backswing_ticks": 12,
     },
+    # --- The 4 new Draconic dragons (one per remaining element). Boss-tier aerials on the
+    # pyraxis rig family; each given a DISTINCT silhouette (head/crest/scale; Sythraal uses
+    # the serpentine wyrm body_plan) so they stay pairwise-distinct from pyraxis + each other.
+    {
+        "name": "voltherax",
+        "typeclass": "aerial_flyer",
+        "element": "storm",
+        "canvas": "96x96",
+        "size_class": "boss",
+        "props": [],
+        "flyer": {"scale": 3.2, "wing_mult": 1.2, "head": "beaked", "crest": "ridge",
+                  "feather_wing": True, "eye_px": 4, "eye_shape": "slit", "boss": True,
+                  "dragon": True, "seed": 12},
+        "foreswing_ticks": 8, "backswing_ticks": 12,
+    },
+    {
+        "name": "glacereth",
+        "typeclass": "aerial_flyer",
+        "element": "frost",
+        "canvas": "96x96",
+        "size_class": "boss",
+        "props": [],
+        "flyer": {"scale": 3.0, "wing_mult": 1.0, "head": "horned", "crest": "head",
+                  "eye_px": 4, "boss": True, "dragon": True, "seed": 13},
+        # Frost accent_index (4) collides with the 'hot' step (frost[4]) — move accent off it.
+        "palette_overrides": {"accent": ["frost", 3]},
+        "foreswing_ticks": 12, "backswing_ticks": 18,
+    },
+    {
+        "name": "sythraal",
+        "typeclass": "aerial_flyer",
+        "element": "venom",
+        "canvas": "96x96",
+        "size_class": "boss",
+        "props": [],
+        "flyer": {"body_plan": "wyrm", "scale": 2.8, "eye_px": 4, "boss": True,
+                  "dragon": True, "seed": 14},
+        # Venom accent_index (2) equals the skin index — move accent to a free step.
+        "palette_overrides": {"accent": ["venom", 3]},
+        "foreswing_ticks": 10, "backswing_ticks": 14,
+    },
+    {
+        "name": "terravossk",
+        "typeclass": "aerial_flyer",
+        "element": "stone",
+        "canvas": "96x96",
+        "size_class": "boss",
+        "props": [],
+        "flyer": {"scale": 3.6, "wing_mult": 0.9, "head": "crowned", "crest": "head",
+                  "eye_px": 4, "eye_shape": "slit", "boss": True, "dragon": True,
+                  "body_dx": -12, "seed": 15},
+        "foreswing_ticks": 14, "backswing_ticks": 20,
+    },
 ]
 
 

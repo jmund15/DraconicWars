@@ -61,6 +61,9 @@ public static class UnitLore
         ["mossmite"] = new(
             "Spore-Mite of the Drowned Tithe",
             "It paints a weakness on you in spores. The next blow finds it."),
+        ["voltherax"] = new(
+            "Voltherax, the Late Thunder",
+            "By the time the thunder reaches you, the bolt has already chosen."),
         ["elder_drake"] = new(
             "Elder Drake — Court Rental",
             "On loan from the Wyrmcourt. Do read the damage clauses."),

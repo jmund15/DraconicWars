@@ -32,6 +32,15 @@ public sealed class SimProjectile
 
     public required bool HitAir { get; init; }
 
+    /// <summary>Mana returned to the owner per kill this shot scores, capped at
+    /// ManaRefundCapPerShot for the shot's life (Voltherax). 0 = no refund.</summary>
+    public int ManaRefundPerKill { get; init; }
+
+    public int ManaRefundCapPerShot { get; init; }
+
+    /// <summary>Running total refunded by this shot, so the per-shot cap holds across a pierce.</summary>
+    public int ManaRefundedThisShot { get; set; }
+
     /// <summary>Pierce bookkeeping: bodies already struck, so a lingering sweep never
     /// double-hits the same unit.</summary>
     public HashSet<int> AlreadyHit { get; } = new();

@@ -103,4 +103,17 @@ public class ExpansionRosterTest
         AssertThat(u.OverrideTargetElement).IsNotNull();
         AssertThat(u.OverrideTargetTicks > 0).IsTrue();
     }
+
+    [TestCase]
+    public void VoltheraxIsADraconicPiercingStormDragon()
+    {
+        var u = Find("voltherax");
+        AssertThat(u.Rarity).IsEqual(Rarity.Draconic);
+        AssertThat(u.Element).IsEqual(Element.Storm);
+        AssertThat(u.Tier).IsEqual(4);
+        AssertThat(u.ProjectilePierces).IsTrue();
+        AssertThat(u.ManaRefundPerKill > 0).IsTrue();
+        // Escrow-summoned crescendo, not mana-deployed.
+        AssertThat(u.DeployCost).IsEqual(0);
+    }
 }

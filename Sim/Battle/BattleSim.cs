@@ -1345,7 +1345,28 @@ public sealed class BattleSim
             SplashRadius = attacker.Def.ProjectileSplashRadius,
             HitGround = attacker.Def.CanTargetGround,
             HitAir = attacker.Def.CanTargetAir,
+            ManaRefundPerKill = attacker.Def.ManaRefundPerKill,
+            ManaRefundCapPerShot = attacker.Def.ManaRefundCapPerShot,
         });
+    }
+
+    /// <summary>Voltherax refund: when a projectile hit killed its target, return mana to the
+    /// shot's owner, honoring the per-shot cap accumulated across a pierce.</summary>
+    private void RefundOnProjectileKill(BattleState state, SimProjectile proj, bool targetSurvived)
+    {
+        if (targetSurvived || proj.ManaRefundPerKill <= 0)
+        {
+            return;
+        }
+        var give = proj.ManaRefundCapPerShot > 0
+            ? Math.Min(proj.ManaRefundPerKill, proj.ManaRefundCapPerShot - proj.ManaRefundedThisShot)
+            : proj.ManaRefundPerKill;
+        if (give <= 0)
+        {
+            return;
+        }
+        proj.ManaRefundedThisShot += give;
+        AddMana(state.Player(proj.Side), give);
     }
 
     /// <summary>Real-projectile phase: sweep each shot from its old X to its new X, hitting
@@ -1377,7 +1398,8 @@ public sealed class BattleSim
                 if (proj.Pierces)
                 {
                     proj.AlreadyHit.Add(unit.InstanceId);
-                    ApplyDirectDamage(state, proj.Side, unit, proj.Damage);
+                    var pierceSurvived = ApplyDirectDamage(state, proj.Side, unit, proj.Damage);
+                    RefundOnProjectileKill(state, proj, pierceSurvived);
                     continue;
                 }
                 var dist = MathF.Abs(unit.X - oldX);
@@ -1390,7 +1412,8 @@ public sealed class BattleSim
 
             if (!proj.Pierces && firstHit is not null)
             {
-                ApplyDirectDamage(state, proj.Side, firstHit, proj.Damage);
+                RefundOnProjectileKill(
+                    state, proj, ApplyDirectDamage(state, proj.Side, firstHit, proj.Damage));
                 if (proj.SplashRadius > 0f)
                 {
                     foreach (var unit in state.Units)
@@ -1402,7 +1425,8 @@ public sealed class BattleSim
                         }
                         if (MathF.Abs(unit.X - firstHit.X) <= proj.SplashRadius)
                         {
-                            ApplyDirectDamage(state, proj.Side, unit, proj.Damage);
+                            RefundOnProjectileKill(
+                                state, proj, ApplyDirectDamage(state, proj.Side, unit, proj.Damage));
                         }
                     }
                 }

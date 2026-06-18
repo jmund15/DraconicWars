@@ -16,6 +16,10 @@ public static class UnitCatalog
     {
         ["elder_drake"] = Rarity.Draconic,
         ["pyraxis"] = Rarity.Draconic,
+        ["voltherax"] = Rarity.Draconic,
+        ["glacereth"] = Rarity.Draconic,
+        ["sythraal"] = Rarity.Draconic,
+        ["terravossk"] = Rarity.Draconic,
         ["stone_ram"] = Rarity.Uncommon,
         ["storm_gryphon"] = Rarity.Uncommon,
         ["cinder_wyrmling"] = Rarity.Uncommon,
@@ -411,6 +415,26 @@ public static class UnitCatalog
         {
             OverrideTargetElement = Element.Fire,
             OverrideTargetTicks = 90,
+            Attack = new AttackArchetype(AttackClass.Magic, AttackPose.Cast, AttackForm.Ball),
+        },
+
+        // --- The 4 new Draconic dragons (escrow-summoned crescendo, 1/element). DeployCost 0
+        // (summoned, not deployed); Tier 4 (Dragon). Each on its own rendered boss silhouette.
+
+        // Voltherax (Storm) — "You Heard It Late." Skip-windup piercing lightning bolt that
+        // refunds mana per kill (capped per shot).
+        new UnitDef(
+            Id: "voltherax", DisplayName: "Voltherax, the Late Thunder", Tier: 4,
+            TypeClass: TypeClass.Aerial, Element: Element.Storm,
+            MaxHp: 1400, Damage: 70, ForeswingTicks: 8, BackswingTicks: 12,
+            Range: 7f, RangeMin: 0f, IsArea: false, MoveSpeed: 1.8f,
+            KnockbackCount: 4, DeployCost: 0, DeployCooldownTicks: 0,
+            Stratum: Stratum.Air, CanTargetGround: true, CanTargetAir: true)
+        {
+            ProjectileSpeed = 5f,
+            ProjectilePierces = true,
+            ManaRefundPerKill = 8,
+            ManaRefundCapPerShot = 24,
             Attack = new AttackArchetype(AttackClass.Magic, AttackPose.Cast, AttackForm.Ball),
         },
     });
