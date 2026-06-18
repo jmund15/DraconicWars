@@ -123,6 +123,18 @@ public sealed record UnitDef(
 
     public int GrabStunTicks { get; init; }
 
+    /// <summary>&gt;0: while alive this unit feeds its owner's wallet this much mana per
+    /// second (tempest_choir's living conduit). Only ConduitContributeCap of them count.</summary>
+    public float ConduitManaPerSecond { get; init; }
+
+    public int ConduitContributeCap { get; init; }
+
+    /// <summary>&gt;0: allies within HasteHaloRadius gain this attack-speed fraction (fed into
+    /// the shared ScaledTicks channel — non-stacking, best halo wins). tempest_choir's halo.</summary>
+    public float HasteHaloSpeedPct { get; init; }
+
+    public float HasteHaloRadius { get; init; }
+
     /// <summary>&gt;0: attacks loose a real traveling projectile at this speed (units/tick)
     /// instead of resolving hitscan — body-blockable + dodgeable. Damage/element snapshot
     /// at spawn. See roster-expansion-40.md §5.</summary>

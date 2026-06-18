@@ -33,6 +33,7 @@ public static class UnitCatalog
         ["boreal_colossus"] = Rarity.Epic,
         ["deepway_bulwark"] = Rarity.Epic,
         ["crag_tyrant"] = Rarity.Epic,
+        ["tempest_choir"] = Rarity.Epic,
     };
 
     private static IReadOnlyList<UnitDef> ApplyRarity(IReadOnlyList<UnitDef> defs)
@@ -375,6 +376,24 @@ public static class UnitCatalog
         {
             GrabThrowDistance = 6f,
             GrabStunTicks = 24,
+        },
+
+        // Graduated demo form (aerial_flyer seraph): an Epic Storm support. "Pays For
+        // Itself" — a living mana-conduit (+4/s, max 2 contributing) projecting a haste-halo
+        // that speeds nearby allies' attacks (~foreswing -20%). Weak on its own.
+        new UnitDef(
+            Id: "tempest_choir", DisplayName: "Tempest Choir", Tier: 3,
+            TypeClass: TypeClass.Support, Element: Element.Storm,
+            MaxHp: 260, Damage: 10, ForeswingTicks: 10, BackswingTicks: 16,
+            Range: 5f, RangeMin: 0f, IsArea: false, MoveSpeed: 1.6f,
+            KnockbackCount: 2, DeployCost: 280, DeployCooldownTicks: 330,
+            Stratum: Stratum.Air, CanTargetGround: true, CanTargetAir: true)
+        {
+            ConduitManaPerSecond = 4f,
+            ConduitContributeCap = 2,
+            HasteHaloSpeedPct = 0.25f,
+            HasteHaloRadius = 5f,
+            Attack = new AttackArchetype(AttackClass.Magic, AttackPose.Channel, AttackForm.Ball),
         },
     });
 

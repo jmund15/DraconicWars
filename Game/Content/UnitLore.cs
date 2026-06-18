@@ -55,6 +55,9 @@ public static class UnitLore
         ["crag_tyrant"] = new(
             "Roc of the Quarried Oath",
             "It carries you exactly as far as you came. Then it lets go."),
+        ["tempest_choir"] = new(
+            "Choir of the Loosed Sky",
+            "It sings the storm into your veins. You were never the one it sang to."),
         ["elder_drake"] = new(
             "Elder Drake — Court Rental",
             "On loan from the Wyrmcourt. Do read the damage clauses."),

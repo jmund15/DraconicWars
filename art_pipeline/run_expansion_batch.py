@@ -107,6 +107,21 @@ UNITS: list[dict] = [
                   "feather_wing": True, "eye_px": 3, "seed": 9},
         "foreswing_ticks": 12, "backswing_ticks": 16,
     },
+    {
+        # Tempest Choir: graduated demo form (aerial_flyer seraph body_plan, proven by
+        # demo_seraph). Epic Storm support — a radiant golden seraph that acts as a living
+        # mana-conduit and projects a haste-halo. Frontal celestial: glowing core + halo +
+        # symmetric wing-pairs.
+        "name": "tempest_choir",
+        "typeclass": "aerial_flyer",
+        "element": "storm",
+        "canvas": "48x48",
+        "size_class": "medium",
+        "props": [],
+        "flyer": {"body_plan": "seraph", "eye_px": 1, "wing_mult": 1.0},
+        "palette_overrides": {},
+        "foreswing_ticks": 10, "backswing_ticks": 16,
+    },
 ]
 
 

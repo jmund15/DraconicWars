@@ -923,6 +923,17 @@ public sealed class BattleSim
                 - player.Buffs.DripPricePerSecond);
             AddMana(player, dripPerSecond / _config.TickRate * multiplier);
 
+            // Living conduits (tempest_choir): flat structure income, not crescendo-scaled.
+            // Only ConduitContributeCap of them count toward the wallet.
+            var conduits = state.Units.Where(u => u.IsAlive && u.Side == side
+                && u.Def.ConduitManaPerSecond > 0f).ToList();
+            if (conduits.Count > 0)
+            {
+                var cap = conduits[0].Def.ConduitContributeCap;
+                var contributors = cap > 0 ? Math.Min(conduits.Count, cap) : conduits.Count;
+                AddMana(player, conduits[0].Def.ConduitManaPerSecond * contributors / _config.TickRate);
+            }
+
             var breathRegenPerTick = _config.BreathMaxSeconds
                 / _config.BreathRechargeSeconds / _config.TickRate
                 * (1f + player.Buffs.BreathRegenPct);
@@ -1140,11 +1151,32 @@ public sealed class BattleSim
             speedPct += ElementSynergies.StormAttackSpeedPct[
                 ElementSynergies.TierFor(state, unit.Side, Element.Storm)];
         }
+        speedPct += HasteHaloPct(state, unit);
         if (speedPct <= 0f || baseTicks <= 0)
         {
             return baseTicks;
         }
         return Math.Max(1, (int)MathF.Round(baseTicks / (1f + speedPct)));
+    }
+
+    /// <summary>Best allied haste-halo (tempest_choir) covering this unit's position;
+    /// 0 when none. Non-stacking — the strongest overlapping halo wins.</summary>
+    private static float HasteHaloPct(BattleState state, SimUnit unit)
+    {
+        var best = 0f;
+        foreach (var other in state.Units)
+        {
+            if (other.Side != unit.Side || !other.IsAlive || other.Def.HasteHaloSpeedPct <= 0f)
+            {
+                continue;
+            }
+            if (MathF.Abs(other.X - unit.X) <= other.Def.HasteHaloRadius
+                && other.Def.HasteHaloSpeedPct > best)
+            {
+                best = other.Def.HasteHaloSpeedPct;
+            }
+        }
+        return best;
     }
 
     private void ResolveContact(BattleState state, SimUnit attacker)

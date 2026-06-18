@@ -78,4 +78,16 @@ public class ExpansionRosterTest
         AssertThat(u.GrabThrowDistance > 0f).IsTrue();
         AssertThat(u.GrabStunTicks > 0).IsTrue();
     }
+
+    [TestCase]
+    public void TempestChoirIsAnEpicConduitHasteSupport()
+    {
+        var u = Find("tempest_choir");
+        AssertThat(u.TypeClass).IsEqual(TypeClass.Support);
+        AssertThat(u.Element).IsEqual(Element.Storm);
+        AssertThat(u.Rarity).IsEqual(Rarity.Epic);
+        // Both auras present: living conduit + haste-halo with a real radius.
+        AssertThat(u.ConduitManaPerSecond > 0f).IsTrue();
+        AssertThat(u.HasteHaloSpeedPct > 0f && u.HasteHaloRadius > 0f).IsTrue();
+    }
 }
