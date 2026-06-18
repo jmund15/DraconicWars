@@ -1600,6 +1600,10 @@ class AerialFlyerTemplate:
             self._draw_wisp(buf, pose, unit, pal)
         elif bp == "manta":
             self._draw_manta(buf, pose, unit, pal)
+        elif bp == "ordnance":
+            self._draw_ordnance(buf, pose, unit, pal)
+        elif bp == "leviathan":
+            self._draw_leviathan(buf, pose, unit, pal)
         elif self.cfg.dragon:
             self._draw_dragon(buf, pose, unit, pal)
         elif self.cfg.s < 1.5:
@@ -2370,6 +2374,136 @@ class AerialFlyerTemplate:
             buf.line(tail_base[0], tail_base[1], tx, ty, skin[0], dark_skin,
                      part="tail", width=2)
             buf.set_px(tx - 1, ty + 1, skin[0], dark_skin, part="tail")
+
+    # ------------------------------------------- ordnance-flyer (heavy bomber)
+    # A bulky winged bomber: fat fuselage body, blunt head, short swept wings
+    # (wide enough to clear the aerial wingspan floor), and a slung ordnance pod
+    # beneath. The attack pose lights a bombsight glow under the payload.
+
+    def _draw_ordnance(self, buf: PixelBuffer, pose: dict, unit: dict, pal: Palette) -> None:
+        cfg = self.cfg
+        s = cfg.s
+
+        def R(v):
+            return int(round(v * s))
+
+        colors = unit["colors"]
+        skin, belly, membrane = colors["skin"], colors["belly"], colors["membrane"]
+        dark_skin = max(skin[1] - 1, 0)
+        hot = colors["hot"]
+        W, H = cfg.canvas
+        wm = cfg.wing_mult
+        bdx, bdy = pose.get("body", (0, 0))
+        hdx, hdy = pose.get("head", (0, 0))
+        wing = pose.get("wing", -4)
+        fold = pose.get("fold", False)
+        crumple = pose.get("crumple", False)
+        mouth_open = pose.get("mouth_open")
+        cx = W // 2 - 1 + cfg.body_dx + R(bdx)
+        cy = H // 2 - R(1) + cfg.body_dy + R(bdy)
+        dying = fold or crumple
+        beat = 0 if dying else int(round(R(wing) * 0.35))
+
+        # short swept wings (membrane) — span clears the aerial wingspan floor
+        if dying:
+            for sgn, part in ((-1, "back_wing"), (1, "wing")):
+                root = (cx + sgn * R(2), cy + R(1))
+                buf.fill_triangle(root, (root[0] + sgn * R(6), root[1] + R(3)),
+                                  (root[0] + sgn * R(1), root[1] + R(4)),
+                                  membrane[0], max(membrane[1] - 1, 0), part=part)
+        else:
+            for sgn, part, shade in ((-1, "back_wing", 1), (1, "wing", 0)):
+                root = (cx + sgn * R(3), cy - R(1))
+                tip = (cx + sgn * R(13 * wm), cy + R(2) + beat)
+                trail = (cx + sgn * R(4), cy + R(4))
+                buf.fill_triangle(root, tip, trail, membrane[0],
+                                  max(membrane[1] - shade, 0), part=part)
+
+        # fat fuselage (skin) with a shaded underbelly band
+        buf.fill_ellipse(cx, cy, R(8), R(4.5), skin[0], skin[1], part="body")
+        buf.fill_ellipse(cx, cy + R(2), R(6.5), R(2.4), skin[0], dark_skin, part="bodyshade")
+        # blunt head at the front (facing right)
+        hx, hy = cx + R(7) + R(hdx), cy - R(1) + R(hdy)
+        buf.fill_ellipse(hx, hy, R(3.4), R(3.0), skin[0], skin[1], part="head")
+        # slung ordnance pod (belly) under the fuselage
+        if not crumple:
+            buf.fill_ellipse(cx - R(1), cy + R(5), R(3.6), R(2.4), belly[0], belly[1], part="pod")
+        if mouth_open:
+            buf.fill_rect(cx - R(1.6), cy + R(6.5), cx + R(1.6), cy + R(8.4),
+                          hot[0], hot[1], part="payload")
+        eo = unit.get("eye_offset", (0, 0))
+        buf.set_px(hx + R(1) + eo[0], hy - R(0.6) + eo[1], *colors["eye"],
+                   part="eye", no_outline=True)
+        # blunt tail fin at the rear
+        if not dying:
+            buf.fill_triangle((cx - R(8), cy - R(1)), (cx - R(11), cy - R(5)),
+                              (cx - R(6), cy + R(1)), skin[0], dark_skin, part="tailfin")
+
+    # ------------------------------------------- leviathan (slow flying barge)
+    # A vast slow cetacean barge: a long deep fuselage hull, a broad blunt head,
+    # small stabilizer fins (kept wide enough for the wingspan floor), and a
+    # flat dorsal deck. Built from stacked ellipses so the huge hull never bands.
+
+    def _draw_leviathan(self, buf: PixelBuffer, pose: dict, unit: dict, pal: Palette) -> None:
+        cfg = self.cfg
+        s = cfg.s
+
+        def R(v):
+            return int(round(v * s))
+
+        colors = unit["colors"]
+        skin, belly, membrane = colors["skin"], colors["belly"], colors["membrane"]
+        dark_skin = max(skin[1] - 1, 0)
+        hot = colors["hot"]
+        W, H = cfg.canvas
+        wm = cfg.wing_mult
+        bdx, bdy = pose.get("body", (0, 0))
+        hdx, hdy = pose.get("head", (0, 0))
+        wing = pose.get("wing", -4)
+        fold = pose.get("fold", False)
+        crumple = pose.get("crumple", False)
+        mouth_open = pose.get("mouth_open")
+        cx = W // 2 - 1 + cfg.body_dx + R(bdx)
+        cy = H // 2 + cfg.body_dy + R(bdy)
+        dying = fold or crumple
+        beat = 0 if dying else int(round(R(wing) * 0.3))
+
+        # stabilizer fins (membrane) — small but span the wingspan floor
+        if not dying:
+            for sgn, part, shade in ((-1, "back_wing", 1), (1, "wing", 0)):
+                root = (cx + sgn * R(5), cy + R(1))
+                tip = (cx + sgn * R(14 * wm), cy + R(4) + beat)
+                trail = (cx + sgn * R(6), cy + R(5))
+                buf.fill_triangle(root, tip, trail, membrane[0],
+                                  max(membrane[1] - shade, 0), part=part)
+
+        # long deep hull: overlapping ellipses (no single huge flat fill -> no band)
+        buf.fill_ellipse(cx, cy, R(12), R(5), skin[0], skin[1], part="body")
+        buf.fill_ellipse(cx + R(4), cy, R(8), R(4.4), skin[0], skin[1], part="body2")
+        buf.fill_ellipse(cx, cy + R(2.5), R(11), R(2.6), skin[0], dark_skin, part="hullshade")
+        # dorsal deck + tower: a barge superstructure that adds height UPWARD (away from
+        # the ground line), so a wide flat hull still clears the aerial body-height floor.
+        if not dying:
+            buf.fill_ellipse(cx - R(2), cy - R(6), R(7), R(2.4), skin[0], skin[1], part="deck")
+            buf.fill_ellipse(cx - R(3), cy - R(9), R(2.6), R(2.4), skin[0], dark_skin, part="tower")
+        # pale waterline belly band
+        if not crumple:
+            buf.fill_ellipse(cx, cy + R(3.5), R(9), R(1.6), belly[0], belly[1], part="belly")
+        # broad blunt head at the front
+        hx, hy = cx + R(11) + R(hdx), cy - R(1) + R(hdy)
+        buf.fill_ellipse(hx, hy, R(4), R(3.4), skin[0], skin[1], part="head")
+        if mouth_open:
+            buf.fill_rect(hx - R(1.0), hy + R(1.2), hx + R(3.0), hy + R(2.6),
+                          hot[0], hot[1], part="maw")
+        eo = unit.get("eye_offset", (0, 0))
+        buf.set_px(hx + R(1.4) + eo[0], hy - R(0.4) + eo[1], *colors["eye"],
+                   part="eye", no_outline=True)
+        # blunt flukes at the rear
+        if not dying:
+            buf.fill_triangle((cx - R(12), cy), (cx - R(15), cy - R(4)),
+                              (cx - R(10), cy + R(1)), skin[0], dark_skin, part="flukeU")
+            buf.fill_triangle((cx - R(12), cy + R(1)), (cx - R(15), cy + R(5)),
+                              (cx - R(10), cy + R(2)), skin[0], dark_skin, part="flukeL")
 
 
 # ===========================================================================

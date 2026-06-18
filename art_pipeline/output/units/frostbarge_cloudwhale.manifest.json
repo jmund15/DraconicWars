@@ -1,0 +1,77 @@
+{
+  "name": "frostbarge_cloudwhale",
+  "typeclass": "aerial_flyer",
+  "element": "frost",
+  "size_class": "large",
+  "frame_w": 64,
+  "frame_h": 48,
+  "animations": [
+    {
+      "name": "idle",
+      "row": 0,
+      "frames": 2,
+      "fps": 7,
+      "loop": true
+    },
+    {
+      "name": "fly",
+      "row": 1,
+      "frames": 6,
+      "fps": 10,
+      "loop": true
+    },
+    {
+      "name": "attack",
+      "row": 2,
+      "frames": 4,
+      "fps": 12,
+      "loop": false,
+      "contact_frame": 1
+    },
+    {
+      "name": "death",
+      "row": 3,
+      "frames": 3,
+      "fps": 10,
+      "loop": false
+    }
+  ],
+  "foreswing_ticks": 10,
+  "backswing_ticks": 16,
+  "attack_pose": "aerial_flyer",
+  "ramps_used": [
+    "frost",
+    "frost_teal",
+    "ink",
+    "mauve_grey"
+  ],
+  "pivot": "bottom_center",
+  "ground_y": 45,
+  "facing": "right",
+  "body_size": {
+    "width": 51,
+    "height": 27,
+    "wingspan": 51,
+    "head_w": 13,
+    "head_h": 11
+  },
+  "lint": {
+    "whitelist_colors": [
+      "4d9be6",
+      "ffffff"
+    ],
+    "prop_colors": [],
+    "airborne_animations": [
+      "idle",
+      "fly",
+      "attack",
+      "death"
+    ],
+    "detail_exempt_colors": [
+      "2e222f",
+      "323353",
+      "484a77",
+      "4d65b4"
+    ]
+  }
+}

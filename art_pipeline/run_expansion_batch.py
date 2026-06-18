@@ -180,6 +180,31 @@ UNITS: list[dict] = [
         "palette_overrides": {"accent": ["venom", 3]},
         "foreswing_ticks": 10, "backswing_ticks": 14,
     },
+    # --- New air forms (Part 3): ordnance-flyer (Mythic stormwright) + leviathan (Mythic
+    # cloudwhale). Both extend AerialFlyerTemplate via a new body_plan.
+    {
+        "name": "stormwright",
+        "typeclass": "aerial_flyer",
+        "element": "storm",
+        "canvas": "48x48",
+        "size_class": "medium",
+        "props": [],
+        "flyer": {"body_plan": "ordnance", "scale": 1.5, "wing_mult": 1.1, "eye_px": 2},
+        "foreswing_ticks": 14, "backswing_ticks": 28,
+    },
+    {
+        "name": "frostbarge_cloudwhale",
+        "typeclass": "aerial_flyer",
+        "element": "frost",
+        "canvas": "64x48",
+        "size_class": "large",
+        "props": [],
+        "flyer": {"body_plan": "leviathan", "scale": 1.5, "wing_mult": 1.2, "eye_px": 2,
+                  "body_dy": -3},
+        # Frost accent_index (4) collides with the 'hot' step — move accent off it.
+        "palette_overrides": {"accent": ["frost", 3]},
+        "foreswing_ticks": 10, "backswing_ticks": 16,
+    },
     {
         "name": "terravossk",
         "typeclass": "aerial_flyer",
