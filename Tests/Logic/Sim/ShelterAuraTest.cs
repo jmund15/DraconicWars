@@ -70,6 +70,46 @@ public class ShelterAuraTest
         AssertThat(sheltered < plain).IsTrue();
     }
 
+    // Same 3-unit structure each time; only the shelter's distance from the ally changes.
+    private static int AllyDamageWithShelterAt(float shelterX)
+    {
+        var ally = TestUnits.Grunt("ally") with { MoveSpeed = 0f, MaxHp = 100000, KnockbackCount = 0 };
+        var attacker = TestUnits.Grunt("attacker") with
+        {
+            MoveSpeed = 0f, Range = 2f, Damage = 40, ForeswingTicks = 2, BackswingTicks = 2,
+            KnockbackCount = 0,
+        };
+        var shelter = TestUnits.Grunt("shelter") with
+        {
+            MoveSpeed = 0f, Damage = 0, DeployCost = 0, CanTargetGround = false, CanTargetAir = false,
+            ShelterDrPct = 0.5f, ShelterRadius = 6f,
+        };
+        var sim = new BattleSim(BattleConfig.Default, new[] { ally, attacker, shelter });
+        var state = sim.CreateInitialState(1UL);
+        state.Left.Mana = 100000f;
+        state.Right.Mana = 100000f;
+        sim.Advance(state, new List<SimCommand>
+        {
+            SimCommand.Deploy(PlayerSide.Left, "ally"),
+            SimCommand.Deploy(PlayerSide.Right, "attacker"),
+            SimCommand.Deploy(PlayerSide.Left, "shelter"),
+        });
+        var allyUnit = state.Units.First(u => u.Def.Id == "ally");
+        allyUnit.X = 5f;
+        state.Units.First(u => u.Def.Id == "attacker").X = 6f;
+        state.Units.First(u => u.Def.Id == "shelter").X = shelterX;
+        AdvanceTicks(sim, state, 40);
+        return allyUnit.Def.MaxHp - allyUnit.Hp;
+    }
+
+    [TestCase]
+    public void ShelterDoesNotReachAlliesBeyondRadius()
+    {
+        var inRange = AllyDamageWithShelterAt(4f);            // dist 1 — within radius 6, DR applies
+        var outOfRange = AllyDamageWithShelterAt(5f + 6f + 2f); // dist 8 — beyond radius, no DR
+        AssertThat(outOfRange > inRange).IsTrue(); // the distance gate bounds the lee
+    }
+
     [TestCase]
     public void ShelterRegeneratesNearbyAllies()
     {

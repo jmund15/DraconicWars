@@ -74,6 +74,59 @@ public class CounterMatrixTest
         AssertThat(withOverride > noOverride).IsTrue();
     }
 
+    // Like HpDrop but exercises Massive (x3) and Resistant (x0.25) instead of only Strong.
+    private static int HpDropTuned(Element? strongVs, Element? massiveVs, Element? resistantVs,
+        Element attackerElement, Element defenderElement)
+    {
+        var attacker = TestUnits.Grunt("attacker") with
+        {
+            MoveSpeed = 0f, Range = 30f, Damage = 100, ForeswingTicks = 2, BackswingTicks = 2,
+            Element = attackerElement, StrongVsElement = strongVs, MassiveVsElement = massiveVs,
+        };
+        var defender = TestUnits.Grunt("defender") with
+        {
+            MoveSpeed = 0f, MaxHp = 1000000, KnockbackCount = 0, Element = defenderElement,
+            ResistantVsElement = resistantVs,
+        };
+        var sim = new BattleSim(BattleConfig.Default, new[] { attacker, defender });
+        var state = sim.CreateInitialState(1UL);
+        state.Left.Mana = 5000f;
+        state.Right.Mana = 5000f;
+        sim.Advance(state, new List<SimCommand>
+        {
+            SimCommand.Deploy(PlayerSide.Left, "attacker"),
+            SimCommand.Deploy(PlayerSide.Right, "defender"),
+        });
+        state.Units[0].X = 5f;
+        state.Units[1].X = 8f;
+        var start = state.Units[1].Hp;
+        for (var i = 0; i < 40; i++)
+        {
+            sim.Advance(state, SimCommand.None);
+        }
+        return start - state.Units[1].Hp;
+    }
+
+    [TestCase]
+    public void MassiveVsOutdamagesStrongVsOutdamagesPlain()
+    {
+        var plain = HpDropTuned(null, null, null, Element.Storm, Element.Fire);
+        var strong = HpDropTuned(Element.Fire, null, null, Element.Storm, Element.Fire);
+        var massive = HpDropTuned(null, Element.Fire, null, Element.Storm, Element.Fire);
+        AssertThat(strong > plain).IsTrue();
+        AssertThat(massive > strong).IsTrue(); // x3 beats x1.5
+    }
+
+    [TestCase]
+    public void ResistantVsElementReducesIncomingOfThatElement()
+    {
+        // A Frost defender resistant to Fire takes less from a Fire attacker than a
+        // non-resistant Frost defender does.
+        var plain = HpDropTuned(null, null, null, Element.Fire, Element.Frost);
+        var resisted = HpDropTuned(null, null, Element.Fire, Element.Fire, Element.Frost);
+        AssertThat(resisted < plain).IsTrue();
+    }
+
     [TestCase]
     public void OverrideTargetElementMarksTheDefenderOnContact()
     {

@@ -66,6 +66,42 @@ public class FullRosterTest
     }
 
     [TestCase]
+    public void DragonCounterWheelDirectionsArePinned()
+    {
+        // The apex 5-cycle (each dragon dominates one element). Pins the directions so a
+        // silent flip is caught, not just that some counter exists.
+        var wheel = new Dictionary<string, Element>
+        {
+            ["pyraxis"] = Element.Venom,
+            ["sythraal"] = Element.Stone,
+            ["terravossk"] = Element.Storm,
+            ["voltherax"] = Element.Frost,
+            ["glacereth"] = Element.Fire,
+        };
+        foreach (var (id, expected) in wheel)
+        {
+            AssertThat(UnitCatalog.FullRoster.First(d => d.Id == id).StrongVsElement)
+                .OverrideFailureMessage($"{id} counter direction drifted").IsEqual(expected);
+        }
+    }
+
+    [TestCase]
+    public void WarbandTypeClassDistributionMatchesDesign()
+    {
+        // roster-expansion-40.md §4: Melee 11 / Ranged 6 / Sniper 4 / Aerial 7 / Siege 3 /
+        // Support 4 over the 35 warband (excludes the 5 dragons + the rental).
+        var warband = Roster40().Where(d => d.Rarity != Rarity.Draconic).ToList();
+        var byClass = warband.GroupBy(d => d.TypeClass).ToDictionary(g => g.Key, g => g.Count());
+        AssertThat(warband.Count).IsEqual(35);
+        AssertThat(byClass.GetValueOrDefault(TypeClass.Melee)).IsEqual(11);
+        AssertThat(byClass.GetValueOrDefault(TypeClass.Ranged)).IsEqual(6);
+        AssertThat(byClass.GetValueOrDefault(TypeClass.Sniper)).IsEqual(4);
+        AssertThat(byClass.GetValueOrDefault(TypeClass.Aerial)).IsEqual(7);
+        AssertThat(byClass.GetValueOrDefault(TypeClass.Siege)).IsEqual(3);
+        AssertThat(byClass.GetValueOrDefault(TypeClass.Support)).IsEqual(4);
+    }
+
+    [TestCase]
     public void MossmitesMarkHasARosterPayoff()
     {
         // Resolves Q3: mossmite's counter-flip is no longer inert — at least one allied unit

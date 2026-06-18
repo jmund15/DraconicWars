@@ -54,6 +54,41 @@ public class ShockwaveDischargeTest
     }
 
     [TestCase]
+    public void ShockwaveSparesEnemiesBeyondItsRange()
+    {
+        var terra = TestUnits.Grunt("terra") with
+        {
+            MoveSpeed = 0f, Range = 1f, Damage = 1, ForeswingTicks = 2, BackswingTicks = 2,
+            KnockbackCount = 0, Unstaggerable = true,
+            VigilDrPerSecond = 0.1f, VigilDrMaxPct = 0.4f,
+            ShockwaveDamage = 50, ShockwaveRange = 6f,
+        };
+        var meleeTarget = TestUnits.Grunt("melee") with { MoveSpeed = 0f, MaxHp = 100000, KnockbackCount = 0 };
+        var farEnemy = TestUnits.Grunt("far") with { MoveSpeed = 0f, MaxHp = 100000, KnockbackCount = 0 };
+        var sim = new BattleSim(BattleConfig.Default, new[] { terra, meleeTarget, farEnemy });
+        var state = sim.CreateInitialState(1UL);
+        state.Left.Mana = 100000f;
+        state.Right.Mana = 100000f;
+        sim.Advance(state, new List<SimCommand>
+        {
+            SimCommand.Deploy(PlayerSide.Left, "terra"),
+            SimCommand.Deploy(PlayerSide.Right, "melee"),
+            SimCommand.Deploy(PlayerSide.Right, "far"),
+        });
+        state.Units[0].X = 5f;
+        state.Units[1].X = 5.5f;  // in melee range, keeps terra engaged
+        state.Units[2].X = 5f + 6f + 2f; // beyond ShockwaveRange (6)
+        var farUnit = state.Units.First(u => u.Def.Id == "far");
+
+        for (var i = 0; i < 200; i++)
+        {
+            sim.Advance(state, SimCommand.None);
+        }
+
+        AssertThat(farUnit.Hp).IsEqual(farUnit.Def.MaxHp); // the range gate spared it
+    }
+
+    [TestCase]
     public void NoShockwaveWithoutTheKit()
     {
         var plain = TestUnits.Grunt("plain") with
