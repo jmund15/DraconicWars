@@ -246,6 +246,19 @@ UNITS: list[dict] = [
         "palette_overrides": {},
         "foreswing_ticks": 12, "backswing_ticks": 20,
     },
+    {
+        "name": "sporekeep_monolith",
+        "typeclass": "support_robed",
+        "base": "root",
+        "head_style": "hood",
+        "element": "venom",
+        "canvas": "32x32",
+        "size_class": "small",
+        "props": [],
+        "seed": 5,
+        "palette_overrides": {},
+        "foreswing_ticks": 12, "backswing_ticks": 20,
+    },
 ]
 
 

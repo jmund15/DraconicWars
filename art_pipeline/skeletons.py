@@ -1471,6 +1471,29 @@ class NagaCoil:
         buf.line(cx + half + sway, base_y, cx + half + 3 + sway, base_y - 2, sr, d, part="tail")
 
 
+class RootLegs:
+    """A rooted base: a central trunk splaying into several tapering roots that grip the lane
+    line. Near-static (the monolith barely crawls, anchors when rooted). Band-safe — a thin
+    trunk + tapering root lines, never a wide fill."""
+
+    def draw(self, tmpl, buf, kind, phase, tx0, tx1, hip_y, GY, skin):
+        sr, si = skin
+        d = max(si - 1, 0)
+        cx = (tx0 + tx1) // 2
+        half = max(3, (tx1 - tx0) // 2)
+        creep = 0
+        if kind == "walk":
+            creep = (-1, 0, 1, 0)[phase % 4]  # barely crawls
+        elif kind == "lunge":
+            creep = 1
+        # central trunk column down to the ground line
+        buf.fill_rect(cx - 1 + creep, hip_y, cx + 1 + creep, GY, sr, si, part="trunk")
+        # splayed roots gripping the ground (tapering lines from a mid fork)
+        fork_y = GY - max(3, (GY - hip_y) // 2)
+        for off, idx in ((-half, d), (-half // 2, si), (half // 2, d), (half, si)):
+            buf.line(cx + creep, fork_y, cx + off + creep, GY, sr, idx, part="root")
+
+
 HUMANOID_LEGS = HumanoidLegs()
 OGRE_STUMPS = OgreStumps()
 SEGMENTED_PILLARS = SegmentedPillars()
@@ -1481,6 +1504,7 @@ WRAITH_TAIL = WraithTail()
 FLYING_MOUNT = FlyingMount()
 CAVALRY_STEED = CavalrySteed()
 NAGA_COIL = NagaCoil()
+ROOT_LEGS = RootLegs()
 
 # Spec ``base`` key -> part. Adding a base archetype = one entry here + the class.
 LOCOMOTION_PARTS = {
@@ -1494,6 +1518,7 @@ LOCOMOTION_PARTS = {
     "mount": FLYING_MOUNT,
     "cavalry": CAVALRY_STEED,
     "naga": NAGA_COIL,
+    "root": ROOT_LEGS,
 }
 
 

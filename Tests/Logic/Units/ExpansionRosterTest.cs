@@ -191,6 +191,18 @@ public class ExpansionRosterTest
     }
 
     [TestCase]
+    public void SporekeepIsAMythicEscrowConduitSpawner()
+    {
+        var u = Find("sporekeep_monolith");
+        AssertThat(u.Rarity).IsEqual(Rarity.Mythic);
+        AssertThat(u.Element).IsEqual(Element.Venom);
+        AssertThat(u.Tier).IsEqual(3);
+        AssertThat(u.ConduitEscrowPerSecond > 0f).IsTrue();
+        AssertThat(u.SpawnDefId).IsEqual("spore_wisp");
+        AssertThat(u.SpawnCap > 0).IsTrue();
+    }
+
+    [TestCase]
     public void CloudwhaleIsAMythicShelterBarge()
     {
         var u = Find("frostbarge_cloudwhale");

@@ -85,6 +85,9 @@ public static class UnitLore
         ["rimecoil"] = new(
             "Rimecoil of the Still Word",
             "It does not need you dead. It needs you still. The two tend to follow."),
+        ["sporekeep_monolith"] = new(
+            "The Sporekeep",
+            "It does not fight. It plants, and waits, and the garden settles every debt."),
         ["elder_drake"] = new(
             "Elder Drake — Court Rental",
             "On loan from the Wyrmcourt. Do read the damage clauses."),

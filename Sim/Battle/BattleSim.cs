@@ -108,6 +108,7 @@ public sealed class BattleSim
         ProcessTurrets(state);
         ProcessEdicts(state);
         ProcessAscension(state);
+        ProcessEscrowConduit(state);
         ProcessParleys(state);
         MoveUnits(state);
         ProcessTimeline(state);
@@ -1845,6 +1846,43 @@ public sealed class BattleSim
                     * (isFirst ? 1f : _config.EdictRunnerUpPct);
                 player.AscensionMeter += surge;
                 player.AscensionFromEdicts += surge;
+            }
+        }
+    }
+
+    /// <summary>sporekeep's forward escrow-conduit: live conduits feed their owner's
+    /// Dragon-summoning escrow flat per tick, under the same gates as channeling (Dragon tier,
+    /// equipped dragon, none on field, not escrow-stalled). Completes the summon when full.</summary>
+    private void ProcessEscrowConduit(BattleState state)
+    {
+        foreach (var side in Sides)
+        {
+            var player = state.Player(side);
+            if (player.EscrowStallTicks > 0 || player.AscensionTier < 4
+                || player.EquippedDragonId is null
+                || !_defs.TryGetValue(player.EquippedDragonId, out var dragonDef)
+                || DragonOnField(state, side))
+            {
+                continue;
+            }
+            var perSecond = 0f;
+            foreach (var unit in state.Units)
+            {
+                if (unit.Side == side && unit.IsAlive && unit.Def.ConduitEscrowPerSecond > 0f)
+                {
+                    perSecond += unit.Def.ConduitEscrowPerSecond;
+                }
+            }
+            if (perSecond <= 0f)
+            {
+                continue;
+            }
+            var effectiveCost = _config.SummoningCost * (1f - player.Buffs.SummonCostPct);
+            player.SummoningProgress = MathF.Min(
+                effectiveCost, player.SummoningProgress + perSecond / _config.TickRate);
+            if (player.SummoningProgress >= effectiveCost)
+            {
+                SpawnUnit(state, side, dragonDef);
             }
         }
     }

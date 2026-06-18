@@ -43,6 +43,8 @@ public static class UnitCatalog
         ["tempest_choir"] = Rarity.Epic,
         ["stormwright"] = Rarity.Mythic,
         ["frostbarge_cloudwhale"] = Rarity.Mythic,
+        ["sporekeep_monolith"] = Rarity.Mythic,
+        ["the_tithe"] = Rarity.Mythic,
     };
 
     private static IReadOnlyList<UnitDef> ApplyRarity(IReadOnlyList<UnitDef> defs)
@@ -564,6 +566,26 @@ public static class UnitCatalog
             ProjectileFreezeTicks = 24,
             BonusVsImpairedPct = 0.5f,
             Attack = new AttackArchetype(AttackClass.Magic, AttackPose.Shoot, AttackForm.Shard),
+        },
+
+        // Sporekeep Monolith (Venom, monolith) — Mythic. "The Garden Pays Rent." A rooted
+        // forward escrow-conduit (+2 escrow/s) that births spore-wisp saplings (cap 4) and
+        // bursts a venom death-cloud when destroyed. Immobile-slow, defenseless-ish.
+        new UnitDef(
+            Id: "sporekeep_monolith", DisplayName: "The Sporekeep", Tier: 3,
+            TypeClass: TypeClass.Support, Element: Element.Venom,
+            MaxHp: 700, Damage: 10, ForeswingTicks: 12, BackswingTicks: 20,
+            Range: 5f, RangeMin: 0f, IsArea: false, MoveSpeed: 0.6f,
+            KnockbackCount: 1, DeployCost: 320, DeployCooldownTicks: 420,
+            Stratum: Stratum.Ground, CanTargetGround: true, CanTargetAir: false)
+        {
+            ConduitEscrowPerSecond = 2f,
+            SpawnDefId = "spore_wisp",
+            SpawnCadenceTicks = 180,
+            SpawnCap = 4,
+            OnDeathBlastDamage = 40,
+            OnDeathBlastRadius = 3f,
+            Attack = new AttackArchetype(AttackClass.Magic, AttackPose.Channel, AttackForm.Ball),
         },
     });
 

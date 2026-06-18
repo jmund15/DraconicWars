@@ -160,6 +160,11 @@ public sealed record UnitDef(
 
     public int ConduitContributeCap { get; init; }
 
+    /// <summary>&gt;0: while alive this unit feeds its owner's Dragon-summoning escrow
+    /// (SummoningProgress) this much per second — a forward conduit (sporekeep). Gated by the
+    /// owner's EscrowStallTicks, like channeling.</summary>
+    public float ConduitEscrowPerSecond { get; init; }
+
     /// <summary>&gt;0: allies within HasteHaloRadius gain this attack-speed fraction (fed into
     /// the shared ScaledTicks channel — non-stacking, best halo wins). tempest_choir's halo.</summary>
     public float HasteHaloSpeedPct { get; init; }
