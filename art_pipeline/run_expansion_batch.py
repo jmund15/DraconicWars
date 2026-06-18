@@ -44,6 +44,21 @@ UNITS: list[dict] = [
         "palette_overrides": {},
         "foreswing_ticks": 8, "backswing_ticks": 12,
     },
+    {
+        # Ember Arbalest: Common Fire sniper on the proven sniper_biped rig (same
+        # template as quarry_slinger/dune_marksman). Glass heavy crossbow — one big
+        # bolt, slow cycle. No new form. Ticks mirror the catalog UnitDef.
+        "name": "ember_arbalest",
+        "typeclass": "sniper_biped",
+        "element": "fire",
+        "canvas": "48x64",
+        "size_class": "small",
+        "props": ["crossbow"],
+        "seed": 11,
+        "proportions": {"head_fwd": 2},
+        "palette_overrides": {},
+        "foreswing_ticks": 14, "backswing_ticks": 24,
+    },
 ]
 
 

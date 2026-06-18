@@ -26,4 +26,17 @@ public class ExpansionRosterTest
         AssertThat(skylance.Rarity).IsEqual(Rarity.Uncommon);
         AssertThat(skylance.CanTargetAir).IsTrue();
     }
+
+    [TestCase]
+    public void EmberArbalestIsAGlassSingleTargetGroundSniper()
+    {
+        var u = Find("ember_arbalest");
+        AssertThat(u.TypeClass).IsEqual(TypeClass.Sniper);
+        AssertThat(u.Element).IsEqual(Element.Fire);
+        AssertThat(u.Rarity).IsEqual(Rarity.Common);
+        AssertThat(u.IsArea).IsFalse();
+        AssertThat(u.CanTargetAir).IsFalse();
+        // Sniper dead-zone: it cannot fight point-blank, so a rusher beats it.
+        AssertThat(u.RangeMin > 0f).IsTrue();
+    }
 }

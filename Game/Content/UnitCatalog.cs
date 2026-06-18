@@ -316,6 +316,20 @@ public static class UnitCatalog
         {
             ProjectileSpeed = 3f,
         },
+
+        // Proven sniper_biped rig (same as quarry_slinger/dune_marksman): a Common
+        // glass-cannon Fire sniper. Big single bolt, slow cycle, no AA, sniper dead-zone
+        // (RangeMin) — anti-tank burst that dies if rushed. No new sim mechanic.
+        new UnitDef(
+            Id: "ember_arbalest", DisplayName: "Ember Arbalest", Tier: 1,
+            TypeClass: TypeClass.Sniper, Element: Element.Fire,
+            MaxHp: 70, Damage: 42, ForeswingTicks: 14, BackswingTicks: 24,
+            Range: 7.5f, RangeMin: 2.5f, IsArea: false, MoveSpeed: 1.5f,
+            KnockbackCount: 1, DeployCost: 90, DeployCooldownTicks: 200,
+            Stratum: Stratum.Ground, CanTargetGround: true, CanTargetAir: false)
+        {
+            Attack = new AttackArchetype(AttackClass.Physical, AttackPose.Shoot, AttackForm.Arrow),
+        },
     });
 
     /// <summary>FirstPlayable + both expansions — the complete muster roll.</summary>

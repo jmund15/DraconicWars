@@ -43,6 +43,9 @@ public static class UnitLore
         ["skylance_emberknight"] = new(
             "Emberknight of the Skylance",
             "Knighted on a drake too young to land; both still learning the fall."),
+        ["ember_arbalest"] = new(
+            "Arbalest of the Cinderwatch",
+            "She winds the windlass slow. Whatever she points it at has time to understand."),
         ["elder_drake"] = new(
             "Elder Drake — Court Rental",
             "On loan from the Wyrmcourt. Do read the damage clauses."),
