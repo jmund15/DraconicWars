@@ -25,6 +25,11 @@ public sealed record UnitDef(
     bool CanTargetGround,
     bool CanTargetAir)
 {
+    /// <summary>Collection rarity (decoupled from <see cref="Tier"/>): drives
+    /// units-per-form, kit uniqueness, Sigil cost, and visual flair — never raw power or
+    /// mana. Defaults to Common; Draconic is dragons only.</summary>
+    public Rarity Rarity { get; init; } = Rarity.Common;
+
     /// <summary>Set when this def is an in-battle Rebreathing variant: the element the
     /// company was originally sworn to. Null means fighting under its native Breath.</summary>
     public Element? NativeElement { get; init; }

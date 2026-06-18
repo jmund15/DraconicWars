@@ -99,6 +99,42 @@ public static class MetaProgression
         return null;
     }
 
+    /// <summary>Sigil cost to unlock a warband unit of the given rarity — a balance-inert
+    /// acquisition schedule (rarity gates collection effort, never power). Common is free
+    /// (base unlock). Draconic dragons are NOT bought here (egg/bond acquisition) — callers
+    /// route them through the dragon-unlock path. Numbers provisional.</summary>
+    public static int SigilUnlockCost(DraconicWars.Sim.Units.Rarity rarity)
+    {
+        return rarity switch
+        {
+            DraconicWars.Sim.Units.Rarity.Common => 0,
+            DraconicWars.Sim.Units.Rarity.Uncommon => 1,
+            DraconicWars.Sim.Units.Rarity.Rare => 3,
+            DraconicWars.Sim.Units.Rarity.Epic => 8,
+            DraconicWars.Sim.Units.Rarity.Mythic => 20,
+            _ => throw new ArgumentOutOfRangeException(nameof(rarity)),
+        };
+    }
+
+    /// <summary>Max Mythic units fielded in one loadout — apex scarcity (mirrors the
+    /// 1-dragon rule). See roster-expansion-40.md §2.</summary>
+    public const int MaxMythicPerLoadout = 1;
+
+    /// <summary>True if the loadout respects the Mythic cap (at most one Mythic equipped).</summary>
+    public static bool LoadoutMythicCapOk(
+        System.Collections.Generic.IEnumerable<DraconicWars.Sim.Units.UnitDef> loadout)
+    {
+        var mythics = 0;
+        foreach (var unit in loadout)
+        {
+            if (unit.Rarity == DraconicWars.Sim.Units.Rarity.Mythic)
+            {
+                mythics++;
+            }
+        }
+        return mythics <= MaxMythicPerLoadout;
+    }
+
     public static bool TryBuyLevel(PlayerProfile profile, string unitId)
     {
         if (!profile.UnitLevels.TryGetValue(unitId, out var level))
