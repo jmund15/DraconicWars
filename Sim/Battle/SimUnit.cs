@@ -44,6 +44,12 @@ public sealed class SimUnit
     /// <summary>Counts down to the next deferred spawn (spawner units only).</summary>
     public int SpawnTimer { get; set; }
 
+    /// <summary>Temporary defensive-element override (mossmite's mark); null = use
+    /// Def.Element. Read by the counter lookup in ScaledDamage.</summary>
+    public Element? ElementOverride { get; set; }
+
+    public int ElementOverrideTicks { get; set; }
+
     public bool IsAlive => Hp > 0;
 
     public Stratum Stratum => Def.Stratum;

@@ -132,4 +132,19 @@ public sealed record UnitDef(
     public int SpawnCadenceTicks { get; init; }
 
     public int SpawnCap { get; init; }
+
+    /// <summary>Counter declarations (roster-expansion-40.md §5): when this unit ATTACKS a
+    /// defender whose effective element matches, MassiveVsElement deals x3 and StrongVsElement
+    /// x1.5. ResistantVsElement is defensive: incoming damage of that element is x0.25.</summary>
+    public Element? StrongVsElement { get; init; }
+
+    public Element? MassiveVsElement { get; init; }
+
+    public Element? ResistantVsElement { get; init; }
+
+    /// <summary>Non-null: each contact overrides the target's DEFENSIVE element to this for
+    /// OverrideTargetTicks, so allied counters land (mossmite's counter-flip).</summary>
+    public Element? OverrideTargetElement { get; init; }
+
+    public int OverrideTargetTicks { get; init; }
 }

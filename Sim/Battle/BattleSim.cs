@@ -991,6 +991,15 @@ public sealed class BattleSim
                 }
             }
 
+            if (unit.ElementOverrideTicks > 0)
+            {
+                unit.ElementOverrideTicks--;
+                if (unit.ElementOverrideTicks == 0)
+                {
+                    unit.ElementOverride = null;
+                }
+            }
+
             if (unit.StunTicks > 0)
             {
                 // Frozen: tick the timer but advance no attack phase this tick.
@@ -1358,11 +1367,28 @@ public sealed class BattleSim
                 ElementSynergies.TierFor(state, attacker.Side, Element.Venom)];
         }
 
+        if (defender is not null)
+        {
+            var effElement = defender.ElementOverride ?? defender.Def.Element;
+            if (attacker.Def.MassiveVsElement == effElement)
+            {
+                multiplier += 2f;
+            }
+            else if (attacker.Def.StrongVsElement == effElement)
+            {
+                multiplier += 0.5f;
+            }
+        }
+
         var reduction = 0f;
         if (defender is not null && defender.Def.Element == Element.Stone)
         {
             reduction = ElementSynergies.StoneDamageReductionPct[
                 ElementSynergies.TierFor(state, defender.Side, Element.Stone)];
+        }
+        if (defender is not null && defender.Def.ResistantVsElement == attacker.Def.Element)
+        {
+            reduction = MathF.Max(reduction, 0.75f);
         }
 
         return (int)MathF.Round(attacker.Def.Damage * multiplier * (1f - reduction));
@@ -1389,6 +1415,12 @@ public sealed class BattleSim
         if (!survived)
         {
             return;
+        }
+
+        if (attacker.Def.OverrideTargetElement is { } overrideElement)
+        {
+            defender.ElementOverride = overrideElement;
+            defender.ElementOverrideTicks = attacker.Def.OverrideTargetTicks;
         }
 
         if (attacker.Def.Element == Element.Frost)
