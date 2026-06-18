@@ -34,6 +34,10 @@ public sealed class PlayerState
 
     public float SummoningProgress { get; set; }
 
+    /// <summary>While &gt;0, this side cannot channel mana into Dragon summoning — its
+    /// escrow is stalled (the_tithe's economy attack). Ticks down each tick.</summary>
+    public int EscrowStallTicks { get; set; }
+
     public float BreathEnergySeconds { get; set; }
 
     public int BreathPulseCounter { get; set; }

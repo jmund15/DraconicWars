@@ -418,6 +418,10 @@ public sealed class BattleSim
     private void TryChannelMana(BattleState state, PlayerSide side, int amount)
     {
         var player = state.Player(side);
+        if (player.EscrowStallTicks > 0)
+        {
+            return;
+        }
         if (player.AscensionTier < 4
             || player.EquippedDragonId is null
             || !_defs.TryGetValue(player.EquippedDragonId, out var dragonDef)
@@ -1063,7 +1067,7 @@ public sealed class BattleSim
             {
                 SpawnProjectile(state, attacker,
                     attacker.Def.PrefersFarthestTarget ? targets[^1] : targets[0]);
-                FinishContact(attacker);
+                FinishContact(state, attacker);
                 return;
             }
             if (attacker.Def.IsArea)
@@ -1080,7 +1084,7 @@ public sealed class BattleSim
             }
             SeedZone(state, attacker, targets[0].X);
             ApplyShove(state, attacker);
-            FinishContact(attacker);
+            FinishContact(state, attacker);
             return;
         }
 
@@ -1090,16 +1094,29 @@ public sealed class BattleSim
         {
             DamageSpire(state, attacker.Side, ScaledDamage(state, attacker));
             ApplyShove(state, attacker);
-            FinishContact(attacker);
+            FinishContact(state, attacker);
         }
     }
 
-    private static void FinishContact(SimUnit attacker)
+    private void FinishContact(BattleState state, SimUnit attacker)
     {
         attacker.HasStruck = true;
         if (attacker.Def.TollRampPct > 0f)
         {
             attacker.TollCount++;
+        }
+        if (attacker.Def.DrainManaOnContact > 0 || attacker.Def.EscrowStallOnContact > 0)
+        {
+            var enemy = state.Player(Opponent(attacker.Side));
+            if (attacker.Def.DrainManaOnContact > 0)
+            {
+                enemy.Mana = MathF.Max(0f, enemy.Mana - attacker.Def.DrainManaOnContact);
+            }
+            if (attacker.Def.EscrowStallOnContact > 0)
+            {
+                enemy.EscrowStallTicks =
+                    Math.Max(enemy.EscrowStallTicks, attacker.Def.EscrowStallOnContact);
+            }
         }
     }
 
@@ -1437,6 +1454,10 @@ public sealed class BattleSim
         foreach (var side in Sides)
         {
             var player = state.Player(side);
+            if (player.EscrowStallTicks > 0)
+            {
+                player.EscrowStallTicks--;
+            }
             if (player.AscensionTier >= 4)
             {
                 continue;

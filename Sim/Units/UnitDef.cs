@@ -115,4 +115,12 @@ public sealed record UnitDef(
 
     /// <summary>&gt;0: a non-pierce projectile applies an AoE of this radius at its impact.</summary>
     public float ProjectileSplashRadius { get; init; }
+
+    /// <summary>&gt;0: each contact drains this much mana from the enemy player's wallet
+    /// (the_tithe's siphon). See roster-expansion-40.md §5.</summary>
+    public int DrainManaOnContact { get; init; }
+
+    /// <summary>&gt;0: each contact sets the enemy's escrow-stall timer to at least this
+    /// many ticks, freezing their Dragon-summoning channel (the_tithe).</summary>
+    public int EscrowStallOnContact { get; init; }
 }
