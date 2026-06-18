@@ -10,7 +10,40 @@ using DraconicWars.Sim.Units;
 /// </summary>
 public static class UnitCatalog
 {
-    public static readonly IReadOnlyList<UnitDef> FirstPlayable = new[]
+    /// <summary>Collection rarity per unit (roster-expansion-40.md §1) — decoupled from
+    /// Tier, applied to the rosters below. Ids absent here default to Common.</summary>
+    private static readonly Dictionary<string, Rarity> Rarities = new()
+    {
+        ["elder_drake"] = Rarity.Draconic,
+        ["pyraxis"] = Rarity.Draconic,
+        ["stone_ram"] = Rarity.Uncommon,
+        ["storm_gryphon"] = Rarity.Uncommon,
+        ["cinder_wyrmling"] = Rarity.Uncommon,
+        ["pyre_ogre"] = Rarity.Uncommon,
+        ["rime_sentry"] = Rarity.Uncommon,
+        ["quarry_slinger"] = Rarity.Uncommon,
+        ["spark_courier"] = Rarity.Uncommon,
+        ["cinder_acolyte"] = Rarity.Rare,
+        ["ash_revenant"] = Rarity.Rare,
+        ["glacier_adept"] = Rarity.Rare,
+        ["bog_stalker"] = Rarity.Rare,
+        ["plague_bell"] = Rarity.Rare,
+        ["gale_harrier"] = Rarity.Rare,
+        ["boreal_colossus"] = Rarity.Epic,
+        ["deepway_bulwark"] = Rarity.Epic,
+    };
+
+    private static IReadOnlyList<UnitDef> ApplyRarity(IReadOnlyList<UnitDef> defs)
+    {
+        var result = new List<UnitDef>(defs.Count);
+        foreach (var def in defs)
+        {
+            result.Add(def with { Rarity = Rarities.GetValueOrDefault(def.Id, Rarity.Common) });
+        }
+        return result;
+    }
+
+    public static readonly IReadOnlyList<UnitDef> FirstPlayable = ApplyRarity(new[]
     {
         new UnitDef(
             Id: "kobold_spearman", DisplayName: "Kobold Spearman", Tier: 1,
@@ -98,7 +131,7 @@ public static class UnitCatalog
             Range: 2.8f, RangeMin: 0f, IsArea: true, MoveSpeed: 1.8f,
             KnockbackCount: 6, DeployCost: 0, DeployCooldownTicks: 0,
             Stratum: Stratum.Air, CanTargetGround: true, CanTargetAir: true),
-    };
+    });
 
     /// <summary>The rental dragon every loadout fields until a real dragon is bonded.</summary>
     public const string RentalDragonId = "elder_drake";
@@ -109,7 +142,7 @@ public static class UnitCatalog
     /// Distributed across the campaign by the unlock schedule (Campaign Full) — not
     /// part of the first-playable loadout.
     /// </summary>
-    public static readonly IReadOnlyList<UnitDef> RosterExpansion = new[]
+    public static readonly IReadOnlyList<UnitDef> RosterExpansion = ApplyRarity(new[]
     {
         // Fire — 4 total with the kobold (5 with the ogre).
         new UnitDef(
@@ -263,7 +296,7 @@ public static class UnitCatalog
         {
             StrafeDistance = 3.5f,
         },
-    };
+    });
 
     /// <summary>FirstPlayable + the expansion — the complete v1 muster roll.</summary>
     public static readonly IReadOnlyList<UnitDef> FullRoster =
