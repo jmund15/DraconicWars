@@ -11,8 +11,11 @@ Format: `<category> · <class> · <scope> · <title>` (with optional ` [after: <
 Active [ ] items only.
 -->
 
-Last synced: 2026-06-14
+Last synced: 2026-06-18
 
 ## Active
 - meta · chore · 2 · Populate project_subsystems registry (seed-state) [after: concurrent art_pipeline work settles]
 - chore · refactor · 2 · Localize baseline-synced .claude/ files for DraconicWars
+- sim · feat · 3 · Stormwright shell should be shoot-down-able (projectile-Hp/Stratum-as-target infra)
+- sim · debug · 1 · Decide Wrath-vs-i-frame/untargetable knockback semantics
+- sim · fix · 1 · Conduit sell refund clamps to post-sale wallet cap
