@@ -147,6 +147,12 @@ public static class UnitCatalog
             Stratum: Stratum.Air, CanTargetGround: true, CanTargetAir: true)
         {
             StrongVsElement = Element.Venom, // counter wheel: Fire burns the rot
+            // "It Only Gets Hotter": a burn aura + a death-detonation (flat — no
+            // ramping/duration-scaling field exists; the ramp nuance is deferred).
+            AuraDamagePerTick = 3,
+            AuraRadius = 3f,
+            OnDeathBlastDamage = 100,
+            OnDeathBlastRadius = 3f,
         },
     });
 
@@ -271,9 +277,9 @@ public static class UnitCatalog
         // Stone — 4 total with the warden and ram.
         new UnitDef(
             Id: "quarry_slinger", DisplayName: "Quarry Slinger", Tier: 2,
-            TypeClass: TypeClass.Sniper, Element: Element.Stone,
+            TypeClass: TypeClass.Ranged, Element: Element.Stone,
             MaxHp: 130, Damage: 34, ForeswingTicks: 13, BackswingTicks: 20,
-            Range: 8.5f, RangeMin: 2.5f, IsArea: false, MoveSpeed: 1.5f,
+            Range: 8.5f, RangeMin: 0f, IsArea: false, MoveSpeed: 1.5f,
             KnockbackCount: 2, DeployCost: 170, DeployCooldownTicks: 240,
             Stratum: Stratum.Ground, CanTargetGround: true, CanTargetAir: true)
         {
@@ -290,6 +296,10 @@ public static class UnitCatalog
             Stratum: Stratum.Ground, CanTargetGround: true, CanTargetAir: false)
         {
             Unstaggerable = true,
+            // "The Opinion Holds": a DR-ramp that effectively never resets — Unstaggerable
+            // means combat KB never wipes the Vigil accrual; only Wrath displaces it.
+            VigilDrPerSecond = 0.05f,
+            VigilDrMaxPct = 0.5f,
         },
 
         // Storm — 5 total with the monk, marksman, and gryphon.
@@ -331,6 +341,7 @@ public static class UnitCatalog
             Stratum: Stratum.Air, CanTargetGround: true, CanTargetAir: true)
         {
             ProjectileSpeed = 3f,
+            Attack = new AttackArchetype(AttackClass.Physical, AttackPose.Shoot, AttackForm.Arrow),
         },
 
         // Proven sniper_biped rig (same as quarry_slinger/dune_marksman): a Common

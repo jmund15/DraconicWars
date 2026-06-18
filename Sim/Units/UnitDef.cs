@@ -203,8 +203,8 @@ public sealed record UnitDef(
     public int EscrowStallOnContact { get; init; }
 
     /// <summary>Non-null: this unit births SpawnDefId chaff every SpawnCadenceTicks at its
-    /// own position, capped at SpawnCap live spawns on its side (sporekeep, Sythraal). Chaff
-    /// carries no SpawnDefId, so it never recurses.</summary>
+    /// own position, capped at SpawnCap live spawns on its side (sporekeep). Chaff carries no
+    /// SpawnDefId, so it never recurses.</summary>
     public string? SpawnDefId { get; init; }
 
     public int SpawnCadenceTicks { get; init; }

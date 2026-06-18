@@ -232,6 +232,12 @@ public sealed class BattleSim
                 // Forced knockback: pushes without i-frames and without consuming
                 // HP-threshold knockbacks (design.md §4); still interrupts the attack.
                 // Moves even the Unstaggerable — Wrath is the one force that does.
+                // Terravossk's charter: the DR-ramp discharges as a shockwave "when Wrath
+                // displaces it" — release the stored charge before it resets.
+                if (unit.Def.ShockwaveDamage > 0)
+                {
+                    EmitShockwave(state, unit);
+                }
                 unit.X = Math.Clamp(
                     unit.X + pushDirection * _config.WrathKnockbackDistance,
                     0f, _config.LaneLength);
@@ -948,8 +954,13 @@ public sealed class BattleSim
             if (conduits.Count > 0)
             {
                 var cap = conduits[0].Def.ConduitContributeCap;
-                var contributors = cap > 0 ? Math.Min(conduits.Count, cap) : conduits.Count;
-                AddMana(player, conduits[0].Def.ConduitManaPerSecond * contributors / _config.TickRate);
+                var limit = cap > 0 ? Math.Min(conduits.Count, cap) : conduits.Count;
+                var perSecond = 0f;
+                for (var i = 0; i < limit; i++)
+                {
+                    perSecond += conduits[i].Def.ConduitManaPerSecond; // sum each contributor's own rate
+                }
+                AddMana(player, perSecond / _config.TickRate);
             }
 
             var breathRegenPerTick = _config.BreathMaxSeconds
@@ -1244,12 +1255,16 @@ public sealed class BattleSim
                 {
                     DealDamage(state, attacker, target);
                 }
+                SeedZone(state, attacker, targets[0].X);
             }
             else
             {
-                DealDamage(state, attacker, SelectTarget(attacker, targets));
+                var struck = SelectTarget(attacker, targets);
+                DealDamage(state, attacker, struck);
+                // Seed at the unit actually struck (air/farthest retargeting can differ from
+                // the nearest), so a lingering zone lands at the real impact point.
+                SeedZone(state, attacker, struck.X);
             }
-            SeedZone(state, attacker, targets[0].X);
             ApplyShove(state, attacker);
             ApplyGrab(state, attacker);
             FinishContact(state, attacker);
@@ -1268,18 +1283,25 @@ public sealed class BattleSim
 
     private void FinishContact(BattleState state, SimUnit attacker)
     {
-        // Two-phase sacrifice: the first contact consumes the steed (the wake was seeded in
-        // SeedZone while HasStruck was still false) and drops the rider to footman pace.
+        // Two-phase sacrifice: the FIRST contact (enemy or spire) consumes the steed — drop to
+        // footman pace and seed the one-time venom wake here, so it fires regardless of target.
         if (attacker.Def.DismountSpeed > 0f && !attacker.HasStruck)
         {
             attacker.MoveSpeedOverride = attacker.Def.DismountSpeed;
+            if (attacker.Def.ZoneRadius > 0f)
+            {
+                SeedZoneAt(state, attacker, attacker.X);
+            }
         }
         attacker.HasStruck = true;
         if (attacker.Def.TollRampPct > 0f)
         {
             attacker.TollCount++;
         }
-        if (attacker.Def.DrainManaOnContact > 0 || attacker.Def.EscrowStallOnContact > 0)
+        // Economy siphon requires the attacker to be SURFACED — a burrowed (untargetable)
+        // the_tithe must erupt to drain mana / stall escrow, not siphon from underground.
+        if (attacker.Targetable
+            && (attacker.Def.DrainManaOnContact > 0 || attacker.Def.EscrowStallOnContact > 0))
         {
             var enemy = state.Player(Opponent(attacker.Side));
             if (attacker.Def.DrainManaOnContact > 0)
@@ -1300,12 +1322,19 @@ public sealed class BattleSim
         {
             return;
         }
-        // A dismount unit's zone IS the one-time sacrifice wake — only on the first contact
-        // (HasStruck is still false here; FinishContact sets it after).
-        if (attacker.Def.DismountSpeed > 0f && attacker.HasStruck)
+        // A dismount unit's zone is its ONE-TIME sacrifice wake, seeded in FinishContact on the
+        // first contact (enemy OR spire) — never via this per-contact path.
+        if (attacker.Def.DismountSpeed > 0f)
         {
             return;
         }
+        SeedZoneAt(state, attacker, impactX);
+    }
+
+    /// <summary>Unconditional zone-add (no kit gating) — the shared core of SeedZone and the
+    /// dismount sacrifice wake. Caps owned zones at 3 (the lane is tolled, never tiled).</summary>
+    private void SeedZoneAt(BattleState state, SimUnit attacker, float impactX)
+    {
         state.Zones.Add(new LaneZone
         {
             Side = attacker.Side,
@@ -1415,9 +1444,10 @@ public sealed class BattleSim
         var best = 0f;
         foreach (var ally in state.Units)
         {
-            if (ally.Side != defender.Side || !ally.IsAlive || ally.Def.ShelterDrPct <= 0f)
+            if (ally.Side != defender.Side || !ally.IsAlive || ally.Def.ShelterDrPct <= 0f
+                || ReferenceEquals(ally, defender))
             {
-                continue;
+                continue; // the lee covers allies, never the barge itself (it dies to anti-air)
             }
             if (MathF.Abs(ally.X - defender.X) <= ally.Def.ShelterRadius
                 && ally.Def.ShelterDrPct > best)
@@ -1440,9 +1470,10 @@ public sealed class BattleSim
             foreach (var ally in state.Units)
             {
                 if (ally.Side != shelterer.Side || !ally.IsAlive
+                    || ReferenceEquals(ally, shelterer)
                     || MathF.Abs(ally.X - shelterer.X) > shelterer.Def.ShelterRadius)
                 {
-                    continue;
+                    continue; // regen the lee's allies, not the barge itself
                 }
                 ally.Hp = Math.Min(ally.Def.MaxHp, ally.Hp + shelterer.Def.ShelterRegenPerTick);
             }
@@ -1700,12 +1731,14 @@ public sealed class BattleSim
         }
 
         var preHitHp = defender.Hp;
-        var survived = ApplyDirectDamage(
-            state, attacker.Side, defender, ScaledDamage(state, attacker, defender));
+        var damage = ScaledDamage(state, attacker, defender);
+        var survived = ApplyDirectDamage(state, attacker.Side, defender, damage);
         if (attacker.Def.LifestealPct > 0f)
         {
-            var dealt = Math.Max(0, preHitHp - Math.Max(0, defender.Hp));
-            dealt = Math.Min(dealt, preHitHp);
+            // Credit from the damage that actually landed, capped at the victim's HP (no
+            // overkill). Using the snapshot avoids reading post-hit Hp, which a same-tick
+            // revive (ash_revenant) would otherwise inflate and deny the lifesteal.
+            var dealt = Math.Min(damage, preHitHp);
             attacker.Hp = Math.Min(
                 attacker.Def.MaxHp,
                 attacker.Hp + (int)MathF.Round(dealt * attacker.Def.LifestealPct));
