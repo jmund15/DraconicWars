@@ -102,6 +102,7 @@ public sealed class BattleSim
         ProcessCombat(state);
         ProcessProjectiles(state);
         ProcessFieldEffects(state);
+        ProcessContagion(state);
         ProcessSummons(state);
         ProcessTurrets(state);
         ProcessEdicts(state);
@@ -294,6 +295,15 @@ public sealed class BattleSim
         if (defender.Def.Tier >= 4)
         {
             state.Player(defender.Side).SummoningProgress = 0f;
+        }
+        if (defender.PoisonBaseDamage > 0 && defender.PoisonSpreadRadius > 0f)
+        {
+            // A poisoned death spreads the plague to fresh neighbours (deferred — flushed in
+            // ProcessContagion after iteration), each generation a depth deeper.
+            state.PendingContagion.Add(new PendingPoison(
+                defender.X, defender.Side, defender.PoisonContagionDepth + 1,
+                defender.PoisonBaseDamage, defender.PoisonDurationTicks,
+                defender.PoisonSpreadRadius, defender.PoisonDepthBonus));
         }
         if (defender.Def.OnDeathBlastDamage > 0)
         {
@@ -1378,6 +1388,58 @@ public sealed class BattleSim
         }
     }
 
+    private static void ApplyPoison(SimUnit target, int depth, int baseDamage,
+        int durationTicks, float spreadRadius, float depthBonus)
+    {
+        target.PoisonTicks = durationTicks;
+        target.PoisonBaseDamage = baseDamage;
+        target.PoisonContagionDepth = depth;
+        target.PoisonSpreadRadius = spreadRadius;
+        target.PoisonDepthBonus = depthBonus;
+        target.PoisonDurationTicks = durationTicks;
+    }
+
+    /// <summary>Sythraal's contagion: ticks the poison DoT (depth-scaled) on every poisoned
+    /// unit — deaths here queue the next chain generation via ApplyDirectDamage — then flushes
+    /// the deferred spreads onto fresh same-side neighbours within range.</summary>
+    private void ProcessContagion(BattleState state)
+    {
+        foreach (var unit in state.Units.ToList())
+        {
+            if (!unit.IsAlive || unit.PoisonTicks <= 0)
+            {
+                continue;
+            }
+            var dot = (int)MathF.Round(
+                unit.PoisonBaseDamage * (1f + unit.PoisonContagionDepth * unit.PoisonDepthBonus));
+            if (dot > 0 && !ApplyDirectDamage(state, Opponent(unit.Side), unit, dot))
+            {
+                continue; // died — its spread was queued by the death path
+            }
+            unit.PoisonTicks--;
+            if (unit.PoisonTicks <= 0)
+            {
+                unit.PoisonBaseDamage = 0; // poison ran its course
+            }
+        }
+        state.Units.RemoveAll(unit => !unit.IsAlive);
+
+        foreach (var spread in state.PendingContagion)
+        {
+            foreach (var unit in state.Units)
+            {
+                if (unit.Side != spread.Side || !unit.IsAlive || unit.PoisonBaseDamage > 0
+                    || MathF.Abs(unit.X - spread.X) > spread.SpreadRadius)
+                {
+                    continue;
+                }
+                ApplyPoison(unit, spread.Depth, spread.BaseDamage, spread.DurationTicks,
+                    spread.SpreadRadius, spread.DepthBonus);
+            }
+        }
+        state.PendingContagion.Clear();
+    }
+
     private void SpawnProjectile(BattleState state, SimUnit attacker, SimUnit target)
     {
         state.Projectiles.Add(new SimProjectile
@@ -1582,6 +1644,14 @@ public sealed class BattleSim
         {
             defender.ElementOverride = overrideElement;
             defender.ElementOverrideTicks = attacker.Def.OverrideTargetTicks;
+        }
+
+        if (attacker.Def.PoisonOnHitTicks > 0)
+        {
+            ApplyPoison(defender, depth: 0, baseDamage: attacker.Def.PoisonDamagePerTick,
+                durationTicks: attacker.Def.PoisonOnHitTicks,
+                spreadRadius: attacker.Def.ContagionRadius,
+                depthBonus: attacker.Def.ContagionDepthBonus);
         }
 
         if (attacker.Def.Element == Element.Frost)

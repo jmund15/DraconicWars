@@ -52,6 +52,20 @@ public sealed class SimUnit
     /// in any freeze zone and on freeze. At the zone's threshold the unit is frozen.</summary>
     public int FreezeDwellTicks { get; set; }
 
+    // Contagion poison (Sythraal). The recipe rides on the unit so a death can spawn the next
+    // chain generation even after the dragon that started it is gone.
+    public int PoisonTicks { get; set; }
+
+    public int PoisonBaseDamage { get; set; }
+
+    public int PoisonContagionDepth { get; set; }
+
+    public float PoisonSpreadRadius { get; set; }
+
+    public float PoisonDepthBonus { get; set; }
+
+    public int PoisonDurationTicks { get; set; }
+
     /// <summary>Temporary defensive-element override (mossmite's mark); null = use
     /// Def.Element. Read by the counter lookup in ScaledDamage.</summary>
     public Element? ElementOverride { get; set; }

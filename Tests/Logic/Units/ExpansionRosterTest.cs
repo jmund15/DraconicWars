@@ -140,4 +140,25 @@ public class ExpansionRosterTest
         AssertThat(u.ZoneFreezeDwellTicks > 0 && u.ZoneFreezeTicks > 0).IsTrue();
         AssertThat(u.DeployCost).IsEqual(0);
     }
+
+    [TestCase]
+    public void SythraalIsADraconicContagionDragon()
+    {
+        var u = Find("sythraal");
+        AssertThat(u.Rarity).IsEqual(Rarity.Draconic);
+        AssertThat(u.Element).IsEqual(Element.Venom);
+        AssertThat(u.Tier).IsEqual(4);
+        AssertThat(u.PoisonOnHitTicks > 0).IsTrue();
+        AssertThat(u.ContagionRadius > 0f).IsTrue();
+        AssertThat(u.DeployCost).IsEqual(0);
+    }
+
+    [TestCase]
+    public void AllFiveDragonsAreDraconic()
+    {
+        foreach (var id in new[] { "pyraxis", "voltherax", "glacereth", "sythraal", "terravossk" })
+        {
+            AssertThat(Find(id).Rarity).IsEqual(Rarity.Draconic);
+        }
+    }
 }

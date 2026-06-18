@@ -70,6 +70,9 @@ public static class UnitLore
         ["glacereth"] = new(
             "Glacereth, the Long Winter",
             "It does not chase. The cold is patient, and the cold always arrives."),
+        ["sythraal"] = new(
+            "Sythraal, the Spreading Rot",
+            "Cut down the poisoned, and the rot only finds new lungs. There is always more."),
         ["elder_drake"] = new(
             "Elder Drake — Court Rental",
             "On loan from the Wyrmcourt. Do read the damage clauses."),

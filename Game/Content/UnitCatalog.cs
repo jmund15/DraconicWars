@@ -473,6 +473,23 @@ public static class UnitCatalog
             ZoneFreezeTicks = 60,
             Attack = new AttackArchetype(AttackClass.Magic, AttackPose.Cast, AttackForm.Shard),
         },
+
+        // Sythraal (Venom) — "There's Always More." Its bite poisons; a poisoned enemy's
+        // death spreads the plague to fresh neighbours, each generation deadlier (contagion).
+        new UnitDef(
+            Id: "sythraal", DisplayName: "Sythraal, the Spreading Rot", Tier: 4,
+            TypeClass: TypeClass.Aerial, Element: Element.Venom,
+            MaxHp: 1450, Damage: 60, ForeswingTicks: 10, BackswingTicks: 14,
+            Range: 2.5f, RangeMin: 0f, IsArea: true, MoveSpeed: 1.7f,
+            KnockbackCount: 4, DeployCost: 0, DeployCooldownTicks: 0,
+            Stratum: Stratum.Air, CanTargetGround: true, CanTargetAir: true)
+        {
+            PoisonOnHitTicks = 90,
+            PoisonDamagePerTick = 6,
+            ContagionRadius = 3f,
+            ContagionDepthBonus = 0.4f,
+            Attack = new AttackArchetype(AttackClass.Magic, AttackPose.Cast, AttackForm.Ball),
+        },
     });
 
     /// <summary>FirstPlayable + both expansions — the complete muster roll.</summary>

@@ -4,6 +4,12 @@ using System;
 using System.Collections.Generic;
 using DraconicWars.Sim.Core;
 
+/// <summary>A queued contagion spread (Sythraal): poison the side's units near X with the
+/// recipe at the next chain depth. Created when a poisoned unit dies, flushed after iteration.</summary>
+public readonly record struct PendingPoison(
+    float X, PlayerSide Side, int Depth, int BaseDamage, int DurationTicks,
+    float SpreadRadius, float DepthBonus);
+
 public sealed class BattleState
 {
     public required BattleConfig Config { get; init; }
@@ -27,6 +33,10 @@ public sealed class BattleState
     /// <summary>Real in-flight projectiles (roster-expansion-40.md §5): travel the lane,
     /// snapshot damage at spawn, hit the first body swept over. Outlive their caster.</summary>
     public List<SimProjectile> Projectiles { get; } = new();
+
+    /// <summary>Deferred contagion spreads (Sythraal): a poisoned unit's death queues a spread
+    /// here; flushed AFTER unit iteration so the chain never mutates the list mid-loop.</summary>
+    public List<PendingPoison> PendingContagion { get; } = new();
 
     public required SimRng PactRng { get; init; }
 

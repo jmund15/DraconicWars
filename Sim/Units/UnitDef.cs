@@ -198,4 +198,16 @@ public sealed record UnitDef(
     public Element? OverrideTargetElement { get; init; }
 
     public int OverrideTargetTicks { get; init; }
+
+    /// <summary>&gt;0: each hit poisons the target (a damage-over-time for this many ticks at
+    /// PoisonDamagePerTick). When a poisoned enemy dies it spreads to fresh neighbours within
+    /// ContagionRadius (the contagion chain), each generation dealing
+    /// 1 + depth*ContagionDepthBonus the base poison (Sythraal — "There's Always More").</summary>
+    public int PoisonOnHitTicks { get; init; }
+
+    public int PoisonDamagePerTick { get; init; }
+
+    public float ContagionRadius { get; init; }
+
+    public float ContagionDepthBonus { get; init; }
 }
