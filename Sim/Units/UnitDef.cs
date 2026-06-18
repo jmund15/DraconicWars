@@ -109,6 +109,13 @@ public sealed record UnitDef(
     /// <summary>Combat knockback never moves or interrupts it; Wrath still does.</summary>
     public bool Unstaggerable { get; init; }
 
+    /// <summary>&gt;0: when this unit's Vigil DR-ramp reaches its cap, the charge releases as a
+    /// lane shockwave dealing this much damage to every enemy within ShockwaveRange, then the
+    /// ramp resets to charge again (Terravossk — "the wall hits back").</summary>
+    public int ShockwaveDamage { get; init; }
+
+    public float ShockwaveRange { get; init; }
+
     /// <summary>First contact per life skips the wind-up and hits this much harder.</summary>
     public float FirstStrikeBonusPct { get; init; }
 

@@ -116,4 +116,16 @@ public class ExpansionRosterTest
         // Escrow-summoned crescendo, not mana-deployed.
         AssertThat(u.DeployCost).IsEqual(0);
     }
+
+    [TestCase]
+    public void TerravosskIsADraconicUnstaggerableShockwaveDragon()
+    {
+        var u = Find("terravossk");
+        AssertThat(u.Rarity).IsEqual(Rarity.Draconic);
+        AssertThat(u.Element).IsEqual(Element.Stone);
+        AssertThat(u.Tier).IsEqual(4);
+        AssertThat(u.Unstaggerable).IsTrue();
+        AssertThat(u.ShockwaveDamage > 0 && u.ShockwaveRange > 0f).IsTrue();
+        AssertThat(u.DeployCost).IsEqual(0);
+    }
 }

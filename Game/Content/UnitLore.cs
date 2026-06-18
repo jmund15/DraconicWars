@@ -64,6 +64,9 @@ public static class UnitLore
         ["voltherax"] = new(
             "Voltherax, the Late Thunder",
             "By the time the thunder reaches you, the bolt has already chosen."),
+        ["terravossk"] = new(
+            "Terravossk, the Unmoved",
+            "It does not dodge. It saves every blow you land, and returns them all at once."),
         ["elder_drake"] = new(
             "Elder Drake — Court Rental",
             "On loan from the Wyrmcourt. Do read the damage clauses."),

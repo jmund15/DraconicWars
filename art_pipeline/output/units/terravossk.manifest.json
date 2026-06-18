@@ -1,0 +1,79 @@
+{
+  "name": "terravossk",
+  "typeclass": "aerial_flyer",
+  "element": "stone",
+  "size_class": "boss",
+  "frame_w": 96,
+  "frame_h": 96,
+  "animations": [
+    {
+      "name": "idle",
+      "row": 0,
+      "frames": 6,
+      "fps": 7,
+      "loop": true
+    },
+    {
+      "name": "fly",
+      "row": 1,
+      "frames": 6,
+      "fps": 10,
+      "loop": true
+    },
+    {
+      "name": "attack",
+      "row": 2,
+      "frames": 7,
+      "fps": 12,
+      "loop": false,
+      "contact_frame": 2
+    },
+    {
+      "name": "death",
+      "row": 3,
+      "frames": 8,
+      "fps": 10,
+      "loop": false
+    }
+  ],
+  "foreswing_ticks": 14,
+  "backswing_ticks": 20,
+  "attack_pose": "aerial_flyer",
+  "ramps_used": [
+    "ink",
+    "leather",
+    "mauve_grey",
+    "stone"
+  ],
+  "pivot": "bottom_center",
+  "ground_y": 93,
+  "facing": "right",
+  "body_size": {
+    "width": 76,
+    "height": 71,
+    "wingspan": 76,
+    "head_w": 14,
+    "head_h": 14
+  },
+  "lint": {
+    "whitelist_colors": [
+      "e6904e",
+      "ffffff"
+    ],
+    "prop_colors": [],
+    "airborne_animations": [
+      "idle",
+      "fly",
+      "attack",
+      "death"
+    ],
+    "detail_exempt_colors": [
+      "2e222f",
+      "313638",
+      "374e4a",
+      "7a3045",
+      "9e4539",
+      "cd683d"
+    ]
+  }
+}

@@ -437,6 +437,23 @@ public static class UnitCatalog
             ManaRefundCapPerShot = 24,
             Attack = new AttackArchetype(AttackClass.Magic, AttackPose.Cast, AttackForm.Ball),
         },
+
+        // Terravossk (Stone) — "Make Me Move." Unstaggerable; its DR-ramp charges while
+        // engaged and discharges as a lane shockwave at cap, then re-ramps.
+        new UnitDef(
+            Id: "terravossk", DisplayName: "Terravossk, the Unmoved", Tier: 4,
+            TypeClass: TypeClass.Aerial, Element: Element.Stone,
+            MaxHp: 1700, Damage: 75, ForeswingTicks: 14, BackswingTicks: 20,
+            Range: 2.5f, RangeMin: 0f, IsArea: true, MoveSpeed: 1.4f,
+            KnockbackCount: 6, DeployCost: 0, DeployCooldownTicks: 0,
+            Stratum: Stratum.Air, CanTargetGround: true, CanTargetAir: true)
+        {
+            Unstaggerable = true,
+            VigilDrPerSecond = 0.08f,
+            VigilDrMaxPct = 0.4f,
+            ShockwaveDamage = 60,
+            ShockwaveRange = 6f,
+        },
     });
 
     /// <summary>FirstPlayable + both expansions — the complete muster roll.</summary>

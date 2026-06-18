@@ -1051,6 +1051,16 @@ public sealed class BattleSim
             if (unit.Def.VigilDrMaxPct > 0f && unit.AttackPhase != AttackPhase.None)
             {
                 unit.VigilTicks++;
+                if (unit.Def.ShockwaveDamage > 0 && unit.Def.VigilDrPerSecond > 0f)
+                {
+                    var capTicks = (int)(unit.Def.VigilDrMaxPct
+                        / unit.Def.VigilDrPerSecond * _config.TickRate);
+                    if (unit.VigilTicks >= capTicks)
+                    {
+                        EmitShockwave(state, unit);
+                        unit.VigilTicks = 0; // charge spent — ramp again
+                    }
+                }
             }
 
             switch (unit.AttackPhase)
@@ -1329,6 +1339,21 @@ public sealed class BattleSim
         grabbed.PhaseTicksLeft = 0;
         grabbed.VigilTicks = 0;
         grabbed.TollCount = 0;
+    }
+
+    /// <summary>Terravossk's Vigil-cap release: a lane shockwave damaging every targetable
+    /// enemy within ShockwaveRange of the source. Instant, non-pierce, self-contained.</summary>
+    private void EmitShockwave(BattleState state, SimUnit source)
+    {
+        foreach (var other in state.Units.ToList())
+        {
+            if (other.Side == source.Side || !other.IsAlive || !other.Targetable
+                || MathF.Abs(other.X - source.X) > source.Def.ShockwaveRange)
+            {
+                continue;
+            }
+            ApplyDirectDamage(state, source.Side, other, source.Def.ShockwaveDamage);
+        }
     }
 
     private void SpawnProjectile(BattleState state, SimUnit attacker, SimUnit target)
