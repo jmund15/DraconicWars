@@ -587,6 +587,24 @@ public static class UnitCatalog
             OnDeathBlastRadius = 3f,
             Attack = new AttackArchetype(AttackClass.Magic, AttackPose.Channel, AttackForm.Ball),
         },
+
+        // The Tithe (Stone, burrower) — Mythic. "The Tithe Comes Due." A glass-HP sapper that
+        // burrows untargetable (PhaseDuration 90 of every 120t — the hard cap before forced
+        // surface) to slip past the front, then siphons 25 enemy mana + stalls their Dragon
+        // escrow 5s on contact. The only economy-denial unit; all primitives already shipped.
+        new UnitDef(
+            Id: "the_tithe", DisplayName: "The Tithe", Tier: 3,
+            TypeClass: TypeClass.Sniper, Element: Element.Stone,
+            MaxHp: 140, Damage: 14, ForeswingTicks: 8, BackswingTicks: 14,
+            Range: 1.2f, RangeMin: 0f, IsArea: false, MoveSpeed: 2.2f,
+            KnockbackCount: 1, DeployCost: 300, DeployCooldownTicks: 420,
+            Stratum: Stratum.Ground, CanTargetGround: true, CanTargetAir: false)
+        {
+            PhaseCadenceTicks = 120,
+            PhaseDurationTicks = 90,
+            DrainManaOnContact = 25,
+            EscrowStallOnContact = 150,
+        },
     });
 
     /// <summary>FirstPlayable + both expansions — the complete muster roll.</summary>

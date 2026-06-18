@@ -2934,6 +2934,83 @@ def construct_config_from_spec(spec: dict | None) -> BipedConfig:
     return cfg
 
 
+class WormTemplate:
+    """A segmented burrower breaching the lane: a chain of overlapping ellipse segments
+    arcing out of the ground and back in, head at the front. Directly implements the
+    BodyPlanTemplate contract (no skeleton). Band-safe — overlapping ellipse segments, never
+    a wide flat fill. Both ends rest on the ground line (a breach, not a float)."""
+
+    ROLE_DEFAULTS = {
+        "body": ("@primary", 2),
+        "belly": ("@secondary", 2),
+        "accent": ("@primary", "@accent"),
+        "eye": ("mauve_grey", 4),
+    }
+    WHITELIST_ROLES = ("accent", "eye")
+    canvas = (48, 32)
+
+    def __init__(self, cfg=None):
+        pass
+
+    def animations(self):
+        return FP_BIPED_ANIMS  # idle 2 / walk 4 / attack 4 / death 3
+
+    def poses(self, anim: str, contact_idx: int) -> list[dict]:
+        if anim == "idle":
+            return [{"peak": 8}, {"peak": 7}]
+        if anim == "walk":
+            return [{"peak": p} for p in (7, 8, 9, 8)]  # peristalsis ripple
+        if anim == "attack":
+            table = {
+                "windup": {"peak": 10},
+                "windup2": {"peak": 11},
+                "contact": {"peak": 9, "lunge": 5, "maw": True},
+                "recover": {"peak": 8, "lunge": 2},
+                "settle": {"peak": 8},
+            }
+            return [dict(table[k]) for k in attack_pose_keys(contact_idx)]
+        if anim == "death":
+            return [{"peak": 5}, {"peak": 3}, {"peak": 1}]  # the arc flattens / sinks
+        raise KeyError(anim)
+
+    def draw_pose(self, buf: PixelBuffer, pose: dict, unit: dict, pal: Palette) -> None:
+        colors = unit["colors"]
+        body, belly, acc = colors["body"], colors["belly"], colors["accent"]
+        dark = max(body[1] - 1, 0)
+        W, H = self.canvas
+        GY = ground_row(H)
+        cx = W // 2 - 1
+        peak = pose.get("peak", 8)
+        lunge = pose.get("lunge", 0)
+        maw = pose.get("maw", False)
+        n = 6
+        span = 17
+        seg = []
+        for i in range(n):
+            t = i / (n - 1)                       # 0 (back) .. 1 (front/head)
+            end = i == 0 or i == n - 1
+            rw = 4 if end else 5
+            rh = 3 if end else 4
+            x = cx - span + round(t * 2 * span) + lunge
+            # inverted-U arc: ends rest on the ground line, the middle humps up
+            y = GY - rh - round(peak * math.sin(math.pi * t))
+            seg.append((x, y, rw, rh))
+        # back-to-front so the head segment composites on top
+        for i, (x, y, rw, rh) in enumerate(seg):
+            idx = dark if i % 2 == 0 else body[1]
+            buf.fill_ellipse(x, y, rw, rh, body[0], idx, part=f"seg{i}")
+        # pale plated underside on the apex segment
+        ax, ay, arw, arh = seg[n // 2]
+        buf.fill_ellipse(ax, ay + 1, arw - 1, 1, belly[0], belly[1], part="belly")
+        # head (front): eye, a chitin accent ridge, and a maw on the strike
+        hx, hy, hrw, hrh = seg[-1]
+        eo = unit.get("eye_offset", (0, 0))
+        buf.set_px(hx + eo[0], hy - 1 + eo[1], *colors["eye"], part="eye", no_outline=True)
+        buf.fill_ellipse(hx, hy - hrh, 2, 1, acc[0], acc[1], part="accent")
+        if maw:
+            buf.fill_rect(hx + hrw - 1, hy, hx + hrw + 1, hy + 1, body[0], dark, part="maw")
+
+
 def make_template(typeclass: str, spec: dict | None = None):
     if typeclass in BIPED_CONFIGS:
         return BipedTemplate(biped_config_from_spec(typeclass, spec))
@@ -2947,8 +3024,10 @@ def make_template(typeclass: str, spec: dict | None = None):
         return SiegeMachineTemplate()
     if typeclass == "slime":
         return SlimeTemplate()
+    if typeclass == "burrower":
+        return WormTemplate()
     raise KeyError(f"unknown typeclass '{typeclass}'; available: {TEMPLATE_NAMES}")
 
 
 TEMPLATE_NAMES = (sorted(BIPED_CONFIGS)
-                  + ["ogre", "construct", "aerial_flyer", "siege_machine", "slime"])
+                  + ["ogre", "construct", "aerial_flyer", "siege_machine", "slime", "burrower"])

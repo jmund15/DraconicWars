@@ -1,0 +1,66 @@
+{
+  "name": "the_tithe",
+  "typeclass": "burrower",
+  "element": "stone",
+  "size_class": "small",
+  "frame_w": 48,
+  "frame_h": 32,
+  "animations": [
+    {
+      "name": "idle",
+      "row": 0,
+      "frames": 2,
+      "fps": 7,
+      "loop": true
+    },
+    {
+      "name": "walk",
+      "row": 1,
+      "frames": 4,
+      "fps": 10,
+      "loop": true
+    },
+    {
+      "name": "attack",
+      "row": 2,
+      "frames": 4,
+      "fps": 12,
+      "loop": false,
+      "contact_frame": 1
+    },
+    {
+      "name": "death",
+      "row": 3,
+      "frames": 3,
+      "fps": 10,
+      "loop": false
+    }
+  ],
+  "foreswing_ticks": 8,
+  "backswing_ticks": 14,
+  "attack_pose": "burrower",
+  "ramps_used": [
+    "ink",
+    "leather",
+    "mauve_grey",
+    "stone"
+  ],
+  "pivot": "bottom_center",
+  "ground_y": 29,
+  "facing": "right",
+  "body_size": {
+    "width": 43,
+    "height": 18,
+    "head_w": 0,
+    "head_h": 0
+  },
+  "lint": {
+    "whitelist_colors": [
+      "e6904e",
+      "ffffff"
+    ],
+    "prop_colors": [],
+    "airborne_animations": [],
+    "detail_exempt_colors": []
+  }
+}

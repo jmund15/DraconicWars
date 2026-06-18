@@ -259,6 +259,16 @@ UNITS: list[dict] = [
         "palette_overrides": {},
         "foreswing_ticks": 12, "backswing_ticks": 20,
     },
+    {
+        "name": "the_tithe",
+        "typeclass": "burrower",
+        "element": "stone",
+        "canvas": "48x32",
+        "size_class": "small",
+        "props": [],
+        "palette_overrides": {},
+        "foreswing_ticks": 8, "backswing_ticks": 14,
+    },
 ]
 
 

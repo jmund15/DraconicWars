@@ -216,6 +216,29 @@ public class ExpansionRosterTest
     }
 
     [TestCase]
+    public void TheTitheIsAMythicBurrowingEconomySapper()
+    {
+        var u = Find("the_tithe");
+        AssertThat(u.Rarity).IsEqual(Rarity.Mythic);
+        AssertThat(u.Element).IsEqual(Element.Stone);
+        AssertThat(u.Tier).IsEqual(3);
+        // Burrows untargetable, then siphons mana + stalls escrow on contact.
+        AssertThat(u.PhaseCadenceTicks > 0 && u.PhaseDurationTicks > 0).IsTrue();
+        AssertThat(u.DrainManaOnContact > 0).IsTrue();
+        AssertThat(u.EscrowStallOnContact > 0).IsTrue();
+    }
+
+    [TestCase]
+    public void AllFourMythicsAreMythic()
+    {
+        foreach (var id in new[]
+                 { "stormwright", "frostbarge_cloudwhale", "sporekeep_monolith", "the_tithe" })
+        {
+            AssertThat(Find(id).Rarity).IsEqual(Rarity.Mythic);
+        }
+    }
+
+    [TestCase]
     public void AllFiveDragonsAreDraconic()
     {
         foreach (var id in new[] { "pyraxis", "voltherax", "glacereth", "sythraal", "terravossk" })
