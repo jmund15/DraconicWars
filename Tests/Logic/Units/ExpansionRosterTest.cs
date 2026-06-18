@@ -128,4 +128,16 @@ public class ExpansionRosterTest
         AssertThat(u.ShockwaveDamage > 0 && u.ShockwaveRange > 0f).IsTrue();
         AssertThat(u.DeployCost).IsEqual(0);
     }
+
+    [TestCase]
+    public void GlacerethIsADraconicFreezeFieldDragon()
+    {
+        var u = Find("glacereth");
+        AssertThat(u.Rarity).IsEqual(Rarity.Draconic);
+        AssertThat(u.Element).IsEqual(Element.Frost);
+        AssertThat(u.Tier).IsEqual(4);
+        AssertThat(u.ZoneRadius > 0f).IsTrue();
+        AssertThat(u.ZoneFreezeDwellTicks > 0 && u.ZoneFreezeTicks > 0).IsTrue();
+        AssertThat(u.DeployCost).IsEqual(0);
+    }
 }

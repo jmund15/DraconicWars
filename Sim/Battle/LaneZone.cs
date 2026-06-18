@@ -15,5 +15,11 @@ public sealed class LaneZone
 
     public required int DamagePerTick { get; init; }
 
+    /// <summary>&gt;0: enemies accumulating this many ticks of dwell across freeze fields are
+    /// frozen for <see cref="FreezeTicks"/> (Glacereth). 0 = an ordinary slow zone.</summary>
+    public int FreezeDwellThreshold { get; init; }
+
+    public int FreezeTicks { get; init; }
+
     public int TicksLeft { get; set; }
 }

@@ -1124,6 +1124,9 @@ public sealed class BattleSim
             }
         }
 
+        // Units chilled by a freeze field this tick — their dwell accrues; everyone else's
+        // dwell resets after the loop (so freeze needs sustained/overlapping exposure).
+        var chilledThisTick = new HashSet<int>();
         for (var i = state.Zones.Count - 1; i >= 0; i--)
         {
             var zone = state.Zones[i];
@@ -1144,10 +1147,27 @@ public sealed class BattleSim
                     unit.SlowPct = zone.SlowPct;
                     unit.SlowTicks = Math.Max(unit.SlowTicks, 8);
                 }
+                if (zone.FreezeDwellThreshold > 0)
+                {
+                    chilledThisTick.Add(unit.InstanceId);
+                    unit.FreezeDwellTicks++; // overlapping fields accrue faster
+                    if (unit.FreezeDwellTicks >= zone.FreezeDwellThreshold)
+                    {
+                        unit.StunTicks = Math.Max(unit.StunTicks, zone.FreezeTicks);
+                        unit.FreezeDwellTicks = 0;
+                    }
+                }
             }
             if (zone.TicksLeft <= 0)
             {
                 state.Zones.RemoveAt(i);
+            }
+        }
+        foreach (var unit in state.Units)
+        {
+            if (unit.FreezeDwellTicks > 0 && !chilledThisTick.Contains(unit.InstanceId))
+            {
+                unit.FreezeDwellTicks = 0;
             }
         }
         state.Units.RemoveAll(unit => !unit.IsAlive);
@@ -1263,6 +1283,8 @@ public sealed class BattleSim
             Radius = attacker.Def.ZoneRadius,
             SlowPct = attacker.Def.ZoneSlowPct,
             DamagePerTick = attacker.Def.ZoneDamagePerTick,
+            FreezeDwellThreshold = attacker.Def.ZoneFreezeDwellTicks,
+            FreezeTicks = attacker.Def.ZoneFreezeTicks,
             TicksLeft = attacker.Def.ZoneDurationTicks,
         });
         // Cap 3 per side — the lane can be tolled, never tiled.

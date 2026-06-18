@@ -67,6 +67,9 @@ public static class UnitLore
         ["terravossk"] = new(
             "Terravossk, the Unmoved",
             "It does not dodge. It saves every blow you land, and returns them all at once."),
+        ["glacereth"] = new(
+            "Glacereth, the Long Winter",
+            "It does not chase. The cold is patient, and the cold always arrives."),
         ["elder_drake"] = new(
             "Elder Drake — Court Rental",
             "On loan from the Wyrmcourt. Do read the damage clauses."),

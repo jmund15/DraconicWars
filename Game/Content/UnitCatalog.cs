@@ -454,6 +454,25 @@ public static class UnitCatalog
             ShockwaveDamage = 60,
             ShockwaveRange = 6f,
         },
+
+        // Glacereth (Frost) — "Stay a While." Seeds lingering frost fields that slow + chip,
+        // and freeze any enemy that dwells in / overlaps them long enough.
+        new UnitDef(
+            Id: "glacereth", DisplayName: "Glacereth, the Long Winter", Tier: 4,
+            TypeClass: TypeClass.Aerial, Element: Element.Frost,
+            MaxHp: 1500, Damage: 65, ForeswingTicks: 12, BackswingTicks: 18,
+            Range: 6f, RangeMin: 0f, IsArea: true, MoveSpeed: 1.5f,
+            KnockbackCount: 4, DeployCost: 0, DeployCooldownTicks: 0,
+            Stratum: Stratum.Air, CanTargetGround: true, CanTargetAir: true)
+        {
+            ZoneRadius = 3f,
+            ZoneSlowPct = 0.5f,
+            ZoneDurationTicks = 200,
+            ZoneDamagePerTick = 2,
+            ZoneFreezeDwellTicks = 40,
+            ZoneFreezeTicks = 60,
+            Attack = new AttackArchetype(AttackClass.Magic, AttackPose.Cast, AttackForm.Shard),
+        },
     });
 
     /// <summary>FirstPlayable + both expansions — the complete muster roll.</summary>

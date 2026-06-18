@@ -48,6 +48,10 @@ public sealed class SimUnit
     /// that periodically go untargetable (spore_wisp). Drives the Targetable toggle.</summary>
     public int PhaseClock { get; set; }
 
+    /// <summary>Accumulated ticks of dwell in enemy freeze fields (Glacereth); resets when not
+    /// in any freeze zone and on freeze. At the zone's threshold the unit is frozen.</summary>
+    public int FreezeDwellTicks { get; set; }
+
     /// <summary>Temporary defensive-element override (mossmite's mark); null = use
     /// Def.Element. Read by the counter lookup in ScaledDamage.</summary>
     public Element? ElementOverride { get; set; }

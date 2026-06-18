@@ -85,6 +85,12 @@ public sealed record UnitDef(
 
     public int ZoneDamagePerTick { get; init; }
 
+    /// <summary>&gt;0: enemies that accumulate this many ticks of dwell in / overlap with this
+    /// unit's seeded zones freeze for ZoneFreezeTicks (Glacereth — "Stay a While").</summary>
+    public int ZoneFreezeDwellTicks { get; init; }
+
+    public int ZoneFreezeTicks { get; init; }
+
     /// <summary>&gt;0: each contact force-shoves all non-Unstaggerable enemies within
     /// ShoveRadius ahead of it backward (Wrath-style: no i-frames, interrupts).</summary>
     public float ShoveDistance { get; init; }
