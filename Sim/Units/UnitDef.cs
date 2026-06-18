@@ -50,6 +50,13 @@ public sealed record UnitDef(
     /// is present, falling back to the normal nearest target otherwise (glide_manta).</summary>
     public bool PrefersAirTarget { get; init; }
 
+    /// <summary>&gt;0: the unit cycles through this many ticks, going untargetable (phased,
+    /// immune) for the last PhaseDurationTicks of every period — an evasive i-frame window
+    /// it still acts through (spore_wisp). Begins solid on deploy.</summary>
+    public int PhaseCadenceTicks { get; init; }
+
+    public int PhaseDurationTicks { get; init; }
+
     /// <summary>&gt;0: rises once per life at this fraction of MaxHp. Every death —
     /// including the one it stands back up from — pays the killer in full.</summary>
     public float ReviveHpPct { get; init; }

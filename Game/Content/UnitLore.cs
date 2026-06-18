@@ -49,6 +49,9 @@ public static class UnitLore
         ["glide_manta"] = new(
             "Glide-Ray of the Still Word",
             "Nothing crosses her stretch of sky twice. The first crossing, she allows."),
+        ["spore_wisp"] = new(
+            "Mote of the Rotmarsh",
+            "Swing all you like. The swing is the part it enjoys."),
         ["elder_drake"] = new(
             "Elder Drake — Court Rental",
             "On loan from the Wyrmcourt. Do read the damage clauses."),

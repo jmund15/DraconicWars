@@ -98,6 +98,7 @@ public sealed class BattleSim
         ProcessCommands(state, commands);
         ProcessLastStand(state);
         TickEconomy(state);
+        ProcessPhasing(state);
         ProcessCombat(state);
         ProcessProjectiles(state);
         ProcessFieldEffects(state);
@@ -967,6 +968,24 @@ public sealed class BattleSim
         var windows = 1 + (tick - _config.SuddenDeathStartTick) / _config.SuddenDeathEscalationTicks;
         return _config.CrescendoDripMultiplier
             * MathF.Pow(_config.SuddenDeathEscalationFactor, windows);
+    }
+
+    /// <summary>Advances each phase-shifter's cycle and toggles its Targetable gate: solid
+    /// for the leading window, untargetable (phased, immune) for the trailing
+    /// PhaseDurationTicks. Units without the kit are untouched, so the_tithe's submerge gate
+    /// is never stomped.</summary>
+    private void ProcessPhasing(BattleState state)
+    {
+        foreach (var unit in state.Units)
+        {
+            if (!unit.IsAlive || unit.Def.PhaseCadenceTicks <= 0)
+            {
+                continue;
+            }
+            unit.PhaseClock = (unit.PhaseClock + 1) % unit.Def.PhaseCadenceTicks;
+            var solidTicks = unit.Def.PhaseCadenceTicks - unit.Def.PhaseDurationTicks;
+            unit.Targetable = unit.PhaseClock < solidTicks;
+        }
     }
 
     private void ProcessCombat(BattleState state)

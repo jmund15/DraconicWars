@@ -77,6 +77,21 @@ UNITS: list[dict] = [
         "palette_overrides": {"accent": ["frost", 3]},
         "foreswing_ticks": 6, "backswing_ticks": 10,
     },
+    {
+        # Spore Wisp: graduated demo form (aerial_flyer wisp body_plan, proven by
+        # demo_wisp). Common Venom evasive harasser — a formless mote ringed by orbiting
+        # spores (distinct from mossmite's insect_wing). Periodically phases out (sim
+        # PhaseCadenceTicks). The wisp core uses BELLY, sidestepping the hot/accent cap.
+        "name": "spore_wisp",
+        "typeclass": "aerial_flyer",
+        "element": "venom",
+        "canvas": "32x32",
+        "size_class": "small",
+        "props": [],
+        "flyer": {"body_plan": "wisp", "eye_px": 1},
+        "palette_overrides": {},
+        "foreswing_ticks": 6, "backswing_ticks": 10,
+    },
 ]
 
 

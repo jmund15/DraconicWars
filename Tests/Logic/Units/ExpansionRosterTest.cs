@@ -52,4 +52,17 @@ public class ExpansionRosterTest
         // No strafe — it holds airspace rather than overshooting.
         AssertThat(u.StrafeDistance).IsEqual(0f);
     }
+
+    [TestCase]
+    public void SporeWispIsACommonPhasingVenomHarasser()
+    {
+        var u = Find("spore_wisp");
+        AssertThat(u.TypeClass).IsEqual(TypeClass.Ranged);
+        AssertThat(u.Element).IsEqual(Element.Venom);
+        AssertThat(u.Rarity).IsEqual(Rarity.Common);
+        AssertThat(u.CanTargetAir).IsTrue();
+        // Periodic i-frame window: phased ticks are a real fraction of the cycle.
+        AssertThat(u.PhaseCadenceTicks > 0).IsTrue();
+        AssertThat(u.PhaseDurationTicks > 0 && u.PhaseDurationTicks < u.PhaseCadenceTicks).IsTrue();
+    }
 }

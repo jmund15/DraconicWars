@@ -44,6 +44,10 @@ public sealed class SimUnit
     /// <summary>Counts down to the next deferred spawn (spawner units only).</summary>
     public int SpawnTimer { get; set; }
 
+    /// <summary>Position within the phase-shift cycle (0..PhaseCadenceTicks-1) for units
+    /// that periodically go untargetable (spore_wisp). Drives the Targetable toggle.</summary>
+    public int PhaseClock { get; set; }
+
     /// <summary>Temporary defensive-element override (mossmite's mark); null = use
     /// Def.Element. Read by the counter lookup in ScaledDamage.</summary>
     public Element? ElementOverride { get; set; }

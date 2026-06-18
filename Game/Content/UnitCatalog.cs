@@ -344,6 +344,22 @@ public static class UnitCatalog
         {
             PrefersAirTarget = true,
         },
+
+        // Graduated demo form (aerial_flyer wisp): a Common Venom evasive harasser. Floats
+        // in the air stratum (only AA reaches it) and periodically phases out for an i-frame
+        // window (PhaseCadenceTicks/PhaseDurationTicks) — low damage, hard to pin down.
+        new UnitDef(
+            Id: "spore_wisp", DisplayName: "Spore Wisp", Tier: 1,
+            TypeClass: TypeClass.Ranged, Element: Element.Venom,
+            MaxHp: 60, Damage: 8, ForeswingTicks: 6, BackswingTicks: 10,
+            Range: 5.5f, RangeMin: 0f, IsArea: false, MoveSpeed: 2.0f,
+            KnockbackCount: 2, DeployCost: 65, DeployCooldownTicks: 100,
+            Stratum: Stratum.Air, CanTargetGround: true, CanTargetAir: true)
+        {
+            PhaseCadenceTicks = 90,
+            PhaseDurationTicks = 18,
+            Attack = new AttackArchetype(AttackClass.Magic, AttackPose.Cast, AttackForm.Ball),
+        },
     });
 
     /// <summary>FirstPlayable + both expansions — the complete muster roll.</summary>
