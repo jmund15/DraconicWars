@@ -59,6 +59,24 @@ UNITS: list[dict] = [
         "palette_overrides": {},
         "foreswing_ticks": 14, "backswing_ticks": 24,
     },
+    {
+        # Glide Manta: graduated demo form (aerial_flyer manta body_plan, proven by
+        # demo_manta). Common Frost anti-air interceptor — a sky-ray that prioritizes
+        # airborne prey (sim PrefersAirTarget). Frost ramp = a rime sky-ray.
+        "name": "glide_manta",
+        "typeclass": "aerial_flyer",
+        "element": "frost",
+        "canvas": "48x48",
+        "size_class": "medium",
+        "props": [],
+        "flyer": {"body_plan": "manta", "eye_px": 1},
+        # Frost's accent_index (4) collides with the flyer 'hot' step (frost[4]=8fd3ff),
+        # so the bright maw-glow geometry counts as whitelisted accent and blows the 6px
+        # detail cap. Move accent off index 4 → the maw glow stays bright 'hot' geometry
+        # (>=3px, uncapped) while the small accent detail reads as a distinct icy blue.
+        "palette_overrides": {"accent": ["frost", 3]},
+        "foreswing_ticks": 6, "backswing_ticks": 10,
+    },
 ]
 
 

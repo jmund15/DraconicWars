@@ -330,6 +330,20 @@ public static class UnitCatalog
         {
             Attack = new AttackArchetype(AttackClass.Physical, AttackPose.Shoot, AttackForm.Arrow),
         },
+
+        // Graduated demo form (aerial_flyer manta): a Common Frost anti-air interceptor.
+        // PrefersAirTarget makes it hunt enemy flyers first, falling back to ground when
+        // the sky is clear. No strafe — it holds the lane's airspace.
+        new UnitDef(
+            Id: "glide_manta", DisplayName: "Glide Manta", Tier: 1,
+            TypeClass: TypeClass.Aerial, Element: Element.Frost,
+            MaxHp: 120, Damage: 12, ForeswingTicks: 6, BackswingTicks: 10,
+            Range: 1.4f, RangeMin: 0f, IsArea: false, MoveSpeed: 2.8f,
+            KnockbackCount: 2, DeployCost: 70, DeployCooldownTicks: 110,
+            Stratum: Stratum.Air, CanTargetGround: true, CanTargetAir: true)
+        {
+            PrefersAirTarget = true,
+        },
     });
 
     /// <summary>FirstPlayable + both expansions — the complete muster roll.</summary>

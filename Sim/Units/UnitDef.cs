@@ -46,6 +46,10 @@ public sealed record UnitDef(
     /// <summary>Lobbed shots strike the FARTHEST enemy in band, arcing over screens.</summary>
     public bool PrefersFarthestTarget { get; init; }
 
+    /// <summary>Anti-air interceptor: strikes the nearest AIR-stratum enemy in band when one
+    /// is present, falling back to the normal nearest target otherwise (glide_manta).</summary>
+    public bool PrefersAirTarget { get; init; }
+
     /// <summary>&gt;0: rises once per life at this fraction of MaxHp. Every death —
     /// including the one it stands back up from — pays the killer in full.</summary>
     public float ReviveHpPct { get; init; }

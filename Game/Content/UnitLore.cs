@@ -46,6 +46,9 @@ public static class UnitLore
         ["ember_arbalest"] = new(
             "Arbalest of the Cinderwatch",
             "She winds the windlass slow. Whatever she points it at has time to understand."),
+        ["glide_manta"] = new(
+            "Glide-Ray of the Still Word",
+            "Nothing crosses her stretch of sky twice. The first crossing, she allows."),
         ["elder_drake"] = new(
             "Elder Drake — Court Rental",
             "On loan from the Wyrmcourt. Do read the damage clauses."),

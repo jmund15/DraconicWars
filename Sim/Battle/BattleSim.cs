@@ -1135,8 +1135,7 @@ public sealed class BattleSim
         {
             if (attacker.Def.ProjectileSpeed > 0f)
             {
-                SpawnProjectile(state, attacker,
-                    attacker.Def.PrefersFarthestTarget ? targets[^1] : targets[0]);
+                SpawnProjectile(state, attacker, SelectTarget(attacker, targets));
                 FinishContact(state, attacker);
                 return;
             }
@@ -1149,8 +1148,7 @@ public sealed class BattleSim
             }
             else
             {
-                DealDamage(state, attacker,
-                    attacker.Def.PrefersFarthestTarget ? targets[^1] : targets[0]);
+                DealDamage(state, attacker, SelectTarget(attacker, targets));
             }
             SeedZone(state, attacker, targets[0].X);
             ApplyShove(state, attacker);
@@ -1632,6 +1630,23 @@ public sealed class BattleSim
             .OrderBy(pair => pair.Distance)
             .ThenBy(pair => pair.Unit.InstanceId)
             .Select(pair => pair.Unit);
+    }
+
+    /// <summary>Picks one target from an in-band list (already nearest-first, InstanceId
+    /// tie-broken). PrefersAirTarget narrows to air-stratum enemies when any are present;
+    /// PrefersFarthestTarget then takes the farthest rather than the nearest.</summary>
+    private static SimUnit SelectTarget(SimUnit attacker, List<SimUnit> targets)
+    {
+        IReadOnlyList<SimUnit> pool = targets;
+        if (attacker.Def.PrefersAirTarget)
+        {
+            var air = targets.Where(t => t.Stratum == Stratum.Air).ToList();
+            if (air.Count > 0)
+            {
+                pool = air;
+            }
+        }
+        return attacker.Def.PrefersFarthestTarget ? pool[^1] : pool[0];
     }
 
     private float? SpireDistance(BattleState state, SimUnit unit)

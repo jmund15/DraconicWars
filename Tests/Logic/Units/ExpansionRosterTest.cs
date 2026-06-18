@@ -39,4 +39,17 @@ public class ExpansionRosterTest
         // Sniper dead-zone: it cannot fight point-blank, so a rusher beats it.
         AssertThat(u.RangeMin > 0f).IsTrue();
     }
+
+    [TestCase]
+    public void GlideMantaIsACommonAntiAirInterceptor()
+    {
+        var u = Find("glide_manta");
+        AssertThat(u.TypeClass).IsEqual(TypeClass.Aerial);
+        AssertThat(u.Element).IsEqual(Element.Frost);
+        AssertThat(u.Rarity).IsEqual(Rarity.Common);
+        AssertThat(u.PrefersAirTarget).IsTrue();
+        AssertThat(u.CanTargetAir).IsTrue();
+        // No strafe — it holds airspace rather than overshooting.
+        AssertThat(u.StrafeDistance).IsEqual(0f);
+    }
 }
