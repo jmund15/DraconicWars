@@ -1560,7 +1560,7 @@ public sealed class BattleSim
                 continue;
             }
 
-            var step = unit.Def.MoveSpeed / state.Config.TickRate
+            var step = (unit.MoveSpeedOverride ?? unit.Def.MoveSpeed) / state.Config.TickRate
                 * (1f + state.Player(unit.Side).Buffs.SpeedPct);
             if (unit.SlowTicks > 0)
             {

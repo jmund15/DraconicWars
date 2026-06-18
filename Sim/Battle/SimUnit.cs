@@ -32,6 +32,11 @@ public sealed class SimUnit
     /// ownership link.</summary>
     public int StunTicks { get; set; }
 
+    /// <summary>Per-instance movement-speed override (units/sec); null falls back to
+    /// Def.MoveSpeed. UnitDef is an immutable shared record, so kits that change one
+    /// unit's pace (e.g. plaguecharger's dismount) write it here.</summary>
+    public float? MoveSpeedOverride { get; set; }
+
     public bool IsAlive => Hp > 0;
 
     public Stratum Stratum => Def.Stratum;
