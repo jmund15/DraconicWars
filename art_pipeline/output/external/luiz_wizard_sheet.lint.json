@@ -1,0 +1,144 @@
+{
+  "sheet": "output\\external\\luiz_wizard_sheet.png",
+  "manifest": "output\\external\\luiz_wizard.manifest.json",
+  "profile": "external",
+  "passed": true,
+  "checks": {
+    "on_palette": {
+      "passed": true,
+      "off_palette_colors": {},
+      "severity": "error"
+    },
+    "no_aa": {
+      "passed": true,
+      "semi_transparent_pixels": 0,
+      "samples": [],
+      "severity": "warning"
+    },
+    "orphan_pixels": {
+      "passed": true,
+      "count": 0,
+      "offenders": [],
+      "whitelist": [],
+      "severity": "error"
+    },
+    "outline_1px": {
+      "passed": false,
+      "boundary_dark_coverage": 0.676,
+      "light_boundary_samples": [
+        [
+          10,
+          9,
+          "8ff8e2"
+        ],
+        [
+          58,
+          9,
+          "8ff8e2"
+        ],
+        [
+          106,
+          9,
+          "8ff8e2"
+        ],
+        [
+          154,
+          9,
+          "8ff8e2"
+        ],
+        [
+          202,
+          9,
+          "8ff8e2"
+        ],
+        [
+          250,
+          9,
+          "8ff8e2"
+        ],
+        [
+          8,
+          10,
+          "8ff8e2"
+        ],
+        [
+          9,
+          10,
+          "8ff8e2"
+        ],
+        [
+          11,
+          10,
+          "30e1b9"
+        ],
+        [
+          56,
+          10,
+          "8ff8e2"
+        ],
+        [
+          57,
+          10,
+          "8ff8e2"
+        ],
+        [
+          59,
+          10,
+          "30e1b9"
+        ]
+      ],
+      "ink_2x2_blocks": [],
+      "severity": "warning"
+    },
+    "frames": {
+      "passed": true,
+      "failures": [],
+      "severity": "error"
+    },
+    "banding": {
+      "passed": false,
+      "max_run": 6,
+      "offenders": [
+        {
+          "orientation": "vertical",
+          "at": [
+            216,
+            27
+          ],
+          "length": 7
+        }
+      ],
+      "severity": "warning"
+    },
+    "manifest_contract": {
+      "passed": true,
+      "errors": [],
+      "severity": "error"
+    },
+    "body_size": {
+      "passed": true,
+      "errors": [],
+      "warnings": [
+        "body height 53 over target 28",
+        "body width 48 over target 18"
+      ],
+      "measured": {
+        "width": 48,
+        "height": 53
+      },
+      "rules": {
+        "min_h": 24,
+        "max_h": 28,
+        "min_w": 14,
+        "max_w": 18
+      },
+      "severity": "error"
+    },
+    "whitelist_cap": {
+      "passed": true,
+      "cap": 6,
+      "offenders": [],
+      "severity": "error"
+    }
+  }
+}
