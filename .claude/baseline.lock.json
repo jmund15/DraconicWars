@@ -1130,6 +1130,10 @@
     ".claude/worklog-titles.md": {
       "status": "watch",
       "layer": "universal"
+    },
+    ".claude/commands/part_drive.md": {
+      "status": "tracked",
+      "hash": "fc774e579991aa50961a79137756399632c65e217768dbfdda5f58f3dc7b05e5"
     }
   }
 }
